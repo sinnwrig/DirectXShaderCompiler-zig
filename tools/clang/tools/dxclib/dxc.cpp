@@ -62,7 +62,16 @@
 #include "llvm/Support/Path.h"
 #include "llvm/Support/raw_ostream.h"
 #ifdef _WIN32
+//#------------------
+//# Mach change start
+//#------------------
+// #include <comdef.h>
+#ifdef _MSC_VER
 #include <comdef.h>
+#endif // _MSC_VER
+//#------------------
+//# Mach change start
+//#------------------
 #include <dia2.h>
 #endif
 #include <algorithm>

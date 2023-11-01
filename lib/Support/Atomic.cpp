@@ -32,7 +32,14 @@ void sys::MemoryFence() {
 #else
 #  if defined(GNU_ATOMICS)
   __sync_synchronize();
-#  elif defined(_MSC_VER)
+//#------------------
+//# Mach change start
+//#------------------
+// #  elif defined(_MSC_VER)
+#  elif defined(_MSC_VER) || defined(__clang__)
+//#------------------
+//# Mach change end
+//#------------------
   MemoryBarrier();
 #  else
 # error No memory fence implementation for your platform!
