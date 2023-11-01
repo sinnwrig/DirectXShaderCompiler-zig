@@ -8,7 +8,7 @@
 
 #ifndef LLVM_SUPPORT_ZIG_GNU_WIN_ADAPTER_H
 #define LLVM_SUPPORT_ZIG_GNU_WIN_ADAPTER_H
-#ifdef __clang__ && !defined(_MSC_VER) && defined(_WIN32) // Zig windows-gnu target
+#if defined(__clang__) && !defined(_MSC_VER) && defined(_WIN32) // Zig windows-gnu target
 
 // General
 //-------------------------------------------------------------
@@ -540,5 +540,5 @@ public:
   }
 };
 
-#endif // #ifdef __clang__ && !defined(_MSC_VER) && defined(_WIN32) // Zig windows-gnu target
+#endif // defined(__clang__) && !defined(_MSC_VER) && defined(_WIN32) // Zig windows-gnu target
 #endif // LLVM_SUPPORT_ZIG_GNU_WIN_ADAPTER_H
