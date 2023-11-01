@@ -15,6 +15,14 @@
 #ifndef LLVM_SUPPORT_WIN_ADAPTER_H
 #define LLVM_SUPPORT_WIN_ADAPTER_H
 
+//#------------------
+//# Mach change start
+//#------------------
+#include "ZigGNUWinAdapter.h"
+//#------------------
+//# Mach change end
+//#------------------
+
 #ifndef _WIN32
 
 #ifdef __cplusplus
