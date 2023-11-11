@@ -81,13 +81,7 @@ if (${ENABLE_SPIRV_CODEGEN})
         # Avoid exception handling warning from MSVC.
         # This add_compile_options() will only affect the current directory and its subdirectories.
         if (WIN32)
-          #------------------
-          # Mach change start
-          #------------------
-          # add_compile_options(/EHs)
-          #------------------
-          # Mach change end
-          #------------------
+          add_compile_options(/EHs)
         else(WIN32)
           # Disable all warnings in subproject RE2
           add_compile_options(-w)

@@ -25,23 +25,17 @@ add_llvm_external_project(clang-tools-extra extra)
 # HLSL Change Starts
 add_subdirectory(dxcompiler)
 add_subdirectory(dxclib)
-#------------------
-# Mach change start
-#------------------
-# add_subdirectory(dxc)
-# add_subdirectory(dxa)
-# add_subdirectory(dxopt)
-# add_subdirectory(dxl)
-# add_subdirectory(dxr)
-# add_subdirectory(dxv)
+add_subdirectory(dxc)
+add_subdirectory(dxa)
+add_subdirectory(dxopt)
+add_subdirectory(dxl)
+add_subdirectory(dxr)
+add_subdirectory(dxv)
 
-# # These targets can currently only be built on Windows.
-# if (WIN32)
-# add_subdirectory(d3dcomp)
-# add_subdirectory(dxrfallbackcompiler)
-# add_subdirectory(dxlib-sample)
-# endif (WIN32)
-#------------------
-# Mach change end
-#------------------
+# These targets can currently only be built on Windows.
+if (WIN32)
+add_subdirectory(d3dcomp)
+add_subdirectory(dxrfallbackcompiler)
+add_subdirectory(dxlib-sample)
+endif (WIN32)
 # HLSL Change Ends

@@ -54,13 +54,7 @@ set(SOURCES
   dxcompilerobj.cpp
   dxcvalidator.cpp
   DXCompiler.cpp
-  #------------------
-  # Mach change start
-  #------------------
-  # DXCompiler.rc
-  #------------------
-  # Mach change end
-  #------------------
+  DXCompiler.rc
   DXCompiler.def
   dxcfilesystem.cpp
   dxillib.cpp
@@ -110,17 +104,11 @@ set(LIBRARIES
   libclang
   )
 
-#------------------
-# Mach change start
-#------------------
-# if(WIN32)
-#   set(LIBRARIES
-#     ${LIBRARIES} 
-#     LLVMDxilDia)
-# endif(WIN32)
-#------------------
-# Mach change end
-#------------------
+if(WIN32)
+  set(LIBRARIES
+    ${LIBRARIES} 
+    LLVMDxilDia)
+endif(WIN32)
 
 set(GENERATED_HEADERS
   ClangAttrClasses
@@ -137,14 +125,7 @@ if (WIN32)
   find_package(DiaSDK REQUIRED) # Used for constants and declarations.
 endif (WIN32)
 
-#------------------
-# Mach change start
-#------------------
-# add_clang_library(dxcompiler SHARED ${SOURCES})
-add_clang_library(dxcompiler STATIC ${SOURCES})
-#------------------
-# Mach change end
-#------------------
+add_clang_library(dxcompiler SHARED ${SOURCES})
 add_dependencies(dxcompiler TablegenHLSLOptions) 
 if (WIN32)
   # No DxcEtw on non-Windows platforms.

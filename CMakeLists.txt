@@ -107,27 +107,21 @@ endif()
 option(DXC_DISABLE_ALLOCATOR_OVERRIDES "Disable usage of allocator overrides" OFF)
 mark_as_advanced(DXC_DISABLE_ALLOCATOR_OVERRIDES)
 
-#------------------
-# Mach change start
-#------------------
-# # adjust link option to enable debugging from kernel mode; not compatible with incremental linking
-# if(NOT CMAKE_VERSION VERSION_LESS "3.13" AND WIN32 AND NOT CMAKE_C_COMPILER_ARCHITECTURE_ID STREQUAL "ARM64EC")
-#   add_link_options(/DEBUGTYPE:CV,FIXUP,PDATA /INCREMENTAL:NO)
-# endif()
+# adjust link option to enable debugging from kernel mode; not compatible with incremental linking
+if(NOT CMAKE_VERSION VERSION_LESS "3.13" AND WIN32 AND NOT CMAKE_C_COMPILER_ARCHITECTURE_ID STREQUAL "ARM64EC")
+  add_link_options(/DEBUGTYPE:CV,FIXUP,PDATA /INCREMENTAL:NO)
+endif()
 
-# # enable control flow guard
-# if(WIN32)
-# add_compile_options(/guard:cf)
-# add_link_options(/guard:cf)
-# endif(WIN32)
+# enable control flow guard
+if(WIN32)
+add_compile_options(/guard:cf)
+add_link_options(/guard:cf)
+endif(WIN32)
 
-# # Enable CET Shadow Stack
-# if(WIN32 AND NOT (CMAKE_C_COMPILER_ARCHITECTURE_ID MATCHES "ARM.*"))
-#   add_link_options(/CETCOMPAT)
-# endif()
-#------------------
-# Mach change end
-#------------------
+# Enable CET Shadow Stack
+if(WIN32 AND NOT (CMAKE_C_COMPILER_ARCHITECTURE_ID MATCHES "ARM.*"))
+  add_link_options(/CETCOMPAT)
+endif()
 
 # HLSL Change Ends
 
@@ -810,16 +804,9 @@ endif()
 
 include(CoverageReport)
 
-#------------------
-# Mach change start
-#------------------
-# # HLSL Change begin - Set default distribution value.
-# set(LLVM_DISTRIBUTION_COMPONENTS "dxc;dxcompiler;dxc-headers" CACHE STRING "")
-# # HLSL Change end - Set default distribution value.
-set(LLVM_DISTRIBUTION_COMPONENTS "dxcompiler;dxc-headers" CACHE STRING "")
-#------------------
-# Mach change end
-#------------------
+# HLSL Change begin - Set default distribution value.
+set(LLVM_DISTRIBUTION_COMPONENTS "dxc;dxcompiler;dxc-headers" CACHE STRING "")
+# HLSL Change end - Set default distribution value.
 
 # This must be at the end of the LLVM root CMakeLists file because it must run
 # after all targets are created.

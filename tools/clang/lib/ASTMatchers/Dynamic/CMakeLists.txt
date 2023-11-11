@@ -12,12 +12,6 @@ add_clang_library(clangDynamicASTMatchers
   clangBasic
   )
 
-#------------------
-# Mach change start
-#------------------
-# # HLSL Changes Start
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj") # otherwise will hit fatal error C1128 on x64
-# # HLSL Changes End
-#------------------
-# Mach change end
-#------------------
+# HLSL Changes Start
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj") # otherwise will hit fatal error C1128 on x64
+# HLSL Changes End
