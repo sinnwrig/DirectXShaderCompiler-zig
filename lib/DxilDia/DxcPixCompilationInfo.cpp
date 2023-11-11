@@ -49,7 +49,10 @@ namespace dxil_debug_info {
 
 struct CompilationInfo : public IDxcPixCompilationInfo {
 private:
-  DXC_MICROCOM_TM_REF_FIELDS();
+  // Mach change start
+  // DXC_MICROCOM_TM_REF_FIELDS();
+  DXC_MICROCOM_TM_REF_FIELDS()
+  // Mach change end
 
   dxil_dia::Session *m_pSession;
   llvm::NamedMDNode *m_contents;

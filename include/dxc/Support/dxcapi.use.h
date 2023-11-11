@@ -16,8 +16,10 @@
 
 namespace dxc {
 
-extern const char *kDxCompilerLib;
-extern const char *kDxilLib;
+// Mach change start: static
+// extern const char *kDxCompilerLib;
+// extern const char *kDxilLib;
+// Mach change end
 
 // Helper class to dynamically load the dxcompiler or a compatible libraries.
 class DxcDllSupport {
@@ -87,9 +89,11 @@ public:
 
   ~DxcDllSupport() { Cleanup(); }
 
-  HRESULT Initialize() {
-    return InitializeInternal(kDxCompilerLib, "DxcCreateInstance");
-  }
+  // Mach change start: static
+  // HRESULT Initialize() {
+  //   return InitializeInternal(kDxCompilerLib, "DxcCreateInstance");
+  // }
+  // Mach change end
 
   HRESULT InitializeForDll(LPCSTR dll, LPCSTR entryPoint) {
     return InitializeInternal(dll, entryPoint);

@@ -13,6 +13,9 @@
 #ifndef __DXC_API__
 #define __DXC_API__
 
+// Mach change start: static
+#define DXC_API_IMPORT
+// Mach change end
 #ifdef _WIN32
 #ifndef DXC_API_IMPORT
 #define DXC_API_IMPORT __declspec(dllimport)
@@ -23,7 +26,10 @@
 #endif
 #endif
 
-#ifdef _WIN32
+// Mach change start
+// #ifdef _WIN32
+#ifdef _MSC_VER
+// Mach change end
 
 #ifndef CROSS_PLATFORM_UUIDOF
 // Warning: This macro exists in WinAdapter.h as well
@@ -34,7 +40,12 @@
 #else
 
 #include "WinAdapter.h"
+// Mach change start
+// #include <dlfcn.h>
+#if HAVE_DLFCN_H
 #include <dlfcn.h>
+#endif
+// Mach change end
 #endif
 
 struct IMalloc;

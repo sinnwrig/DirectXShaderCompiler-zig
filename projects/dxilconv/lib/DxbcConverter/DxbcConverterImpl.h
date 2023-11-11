@@ -285,7 +285,10 @@ public:
 /// translation.
 class DxbcConverter : public IDxbcConverter {
 protected:
-  DXC_MICROCOM_TM_REF_FIELDS();
+  // Mach change start
+  // DXC_MICROCOM_TM_REF_FIELDS();
+  DXC_MICROCOM_TM_REF_FIELDS()
+  // Mach change end
 
 public:
   DXC_MICROCOM_TM_ADDREF_RELEASE_IMPL();

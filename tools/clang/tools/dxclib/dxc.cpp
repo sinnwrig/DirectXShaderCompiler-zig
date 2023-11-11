@@ -62,16 +62,12 @@
 #include "llvm/Support/Path.h"
 #include "llvm/Support/raw_ostream.h"
 #ifdef _WIN32
-//#------------------
-//# Mach change start
-//#------------------
+// Mach change start
 // #include <comdef.h>
 #ifdef _MSC_VER
 #include <comdef.h>
 #endif // _MSC_VER
-//#------------------
-//# Mach change start
-//#------------------
+// Mach change end
 #include <dia2.h>
 #endif
 #include <algorithm>
@@ -689,14 +685,18 @@ public:
   HRESULT insertIncludeFile(LPCWSTR pFilename, IDxcBlobEncoding *pBlob,
                             UINT32 dataLen) {
     try {
-#ifdef _WIN32
-      includeFiles.try_emplace(std::wstring(pFilename), pBlob);
-#else
+// Mach change start
+// #ifdef _WIN32
+//       includeFiles.try_emplace(std::wstring(pFilename), pBlob);
+// #else
+// Mach change end
       // Note: try_emplace is only available in C++17 on Linux.
       // try_emplace does nothing if the key already exists in the map.
       if (includeFiles.find(std::wstring(pFilename)) == includeFiles.end())
         includeFiles.emplace(std::wstring(pFilename), pBlob);
-#endif // _WIN32
+// Mach change start
+// #endif // _WIN32
+// Mach change end
     }
     CATCH_CPP_RETURN_HRESULT()
     return S_OK;
@@ -1255,8 +1255,11 @@ void WriteDxCompilerVersionInfo(llvm::raw_ostream &OS, const char *ExternalLib,
     CComPtr<IDxcVersionInfo2> VerInfo2;
 #endif // SUPPORT_QUERY_GIT_COMMIT_INFO
 
-    const char *dllName = !ExternalLib ? kDxCompilerLib : ExternalLib;
-    std::string compilerName(dllName);
+    // Mach change start: static
+    // const char *dllName = !ExternalLib ? kDxCompilerLib : ExternalLib;
+    // std::string compilerName(dllName);
+    std::string compilerName("");
+    // Mach change end
     if (ExternalFn)
       compilerName = compilerName + "!" + ExternalFn;
 
@@ -1276,51 +1279,55 @@ void WriteDxCompilerVersionInfo(llvm::raw_ostream &OS, const char *ExternalLib,
       OS << compilerName;
     }
 
-#ifdef _WIN32
-    unsigned int version[4];
-    if (GetDLLFileVersionInfo(dllName, version)) {
-      // back-compat - old dev buidls had version 3.7.0.0
-      if (version[0] == 3 && version[1] == 7 && version[2] == 0 &&
-          version[3] == 0) {
-#endif
-        OS << "(dev"
-#ifdef SUPPORT_QUERY_GIT_COMMIT_INFO
-           << ";" << commitCount << "-"
-           << (commitHash.m_pData ? commitHash.m_pData : "<unknown-git-hash>")
-#endif // SUPPORT_QUERY_GIT_COMMIT_I#else
-           << ")";
-#ifdef _WIN32
-      } else {
-        std::string productVersion;
-        if (GetDLLProductVersionInfo(dllName, productVersion)) {
-          OS << " - " << productVersion;
-        }
-      }
-    }
-#endif
+// Mach change start: static
+// #ifdef _WIN32
+//     unsigned int version[4];
+//     if (GetDLLFileVersionInfo(dllName, version)) {
+//       // back-compat - old dev buidls had version 3.7.0.0
+//       if (version[0] == 3 && version[1] == 7 && version[2] == 0 &&
+//           version[3] == 0) {
+// #endif
+//         OS << "(dev"
+// #ifdef SUPPORT_QUERY_GIT_COMMIT_INFO
+//            << ";" << commitCount << "-"
+//            << (commitHash.m_pData ? commitHash.m_pData : "<unknown-git-hash>")
+// #endif // SUPPORT_QUERY_GIT_COMMIT_I#else
+//            << ")";
+// #ifdef _WIN32
+//       } else {
+//         std::string productVersion;
+//         if (GetDLLProductVersionInfo(dllName, productVersion)) {
+//           OS << " - " << productVersion;
+//         }
+//       }
+//     }
+// #endif
+// Mach change end
   }
 }
 
 // Writes compiler version info to stream
 void WriteDXILVersionInfo(llvm::raw_ostream &OS, DxcDllSupport &DxilSupport) {
-  if (DxilSupport.IsEnabled()) {
-    CComPtr<IDxcVersionInfo> VerInfo;
-    if (SUCCEEDED(DxilSupport.CreateInstance(CLSID_DxcValidator, &VerInfo))) {
-      UINT32 validatorMajor, validatorMinor = 0;
-      VerInfo->GetVersion(&validatorMajor, &validatorMinor);
-      OS << "; " << kDxilLib << ": " << validatorMajor << "." << validatorMinor;
+  // Mach change start: static
+  // if (DxilSupport.IsEnabled()) {
+  //   CComPtr<IDxcVersionInfo> VerInfo;
+  //   if (SUCCEEDED(DxilSupport.CreateInstance(CLSID_DxcValidator, &VerInfo))) {
+  //     UINT32 validatorMajor, validatorMinor = 0;
+  //     VerInfo->GetVersion(&validatorMajor, &validatorMinor);
+  //     OS << "; " << kDxilLib << ": " << validatorMajor << "." << validatorMinor;
 
-    }
-    // dxil.dll 1.0 did not support IdxcVersionInfo
-    else {
-      OS << "; " << kDxilLib << ": " << 1 << "." << 0;
-    }
-    unsigned int version[4];
-    if (GetDLLFileVersionInfo(kDxilLib, version)) {
-      OS << "(" << version[0] << "." << version[1] << "." << version[2] << "."
-         << version[3] << ")";
-    }
-  }
+  //   }
+  //   // dxil.dll 1.0 did not support IdxcVersionInfo
+  //   else {
+  //     OS << "; " << kDxilLib << ": " << 1 << "." << 0;
+  //   }
+  //   unsigned int version[4];
+  //   if (GetDLLFileVersionInfo(kDxilLib, version)) {
+  //     OS << "(" << version[0] << "." << version[1] << "." << version[2] << "."
+  //        << version[3] << ")";
+  //   }
+  // }
+  // Mach change end
 }
 
 } // namespace dxc
@@ -1332,10 +1339,12 @@ void DxcContext::GetCompilerVersionInfo(llvm::raw_string_ostream &OS) {
       m_Opts.ExternalFn.empty() ? nullptr : m_Opts.ExternalFn.data(),
       m_dxcSupport);
 
-  // Print validator if exists
-  DxcDllSupport DxilSupport;
-  DxilSupport.InitializeForDll(kDxilLib, "DxcCreateInstance");
-  WriteDXILVersionInfo(OS, DxilSupport);
+  // Mach change start: static
+  // // Print validator if exists
+  // DxcDllSupport DxilSupport;
+  // DxilSupport.InitializeForDll(kDxilLib, "DxcCreateInstance");
+  // WriteDXILVersionInfo(OS, DxilSupport);
+  // Mach change end
 }
 
 #ifndef VERSION_STRING_SUFFIX
@@ -1406,7 +1415,10 @@ static LONG CALLBACK ExceptionFilter(PEXCEPTION_POINTERS pExceptionInfo) {
 }
 #endif
 
-#ifdef _WIN32
+// Mach change start
+// #ifdef _WIN32
+#if defined(_WIN32) && !defined(__clang__)
+// Mach change end
 int dxc::main(int argc, const wchar_t **argv_) {
 #else
 int dxc::main(int argc, const char **argv_) {

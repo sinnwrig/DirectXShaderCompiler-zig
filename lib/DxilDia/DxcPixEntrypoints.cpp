@@ -239,7 +239,10 @@ protected:
   Entrypoint(IMalloc *pMalloc, IInterface *pI)
       : m_pMalloc(pMalloc), m_pReal(pI) {}
 
-  DXC_MICROCOM_TM_REF_FIELDS();
+  // Mach change start
+  // DXC_MICROCOM_TM_REF_FIELDS();
+  DXC_MICROCOM_TM_REF_FIELDS()
+  // Mach change end
   CComPtr<IInterface> m_pReal;
 
   template <typename F, typename... A> HRESULT InvokeOnReal(F pFn, A... Args) {

@@ -11,7 +11,10 @@
 
 #include "dxclib/dxc.h"
 
-#ifdef _WIN32
+// Mach change start
+// #ifdef _WIN32
+#if defined(_WIN32) && !defined(__clang__)
+// Mach change end
 int __cdecl wmain(int argc, const wchar_t **argv_) {
   return dxc::main(argc, argv_);
 #else

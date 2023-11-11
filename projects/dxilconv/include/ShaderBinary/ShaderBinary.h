@@ -11,13 +11,9 @@
 
 #pragma once
 
-//#------------------
-//# Mach change start
-//#------------------
+// Mach change start
 #include "dxc/Support/WinIncludes.h"
-//#------------------
-//# Mach change end
-//#------------------
+// Mach change end
 
 // has dependencies on D3D10TokenizedProgramFormat.hpp! make sure to include
 // that too!

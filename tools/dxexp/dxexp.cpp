@@ -13,16 +13,12 @@
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 
-//#------------------
-//# Mach change start
-//#------------------
+// Mach change start
 // #include <atlbase.h>
 #ifndef __clang__ // Zig
 #include <atlbase.h>
 #endif // __clang__ // Zig
-//#------------------
-//# Mach change end
-//#------------------
+// Mach change end
 #include <d3d12.h>
 #include <dxgi1_4.h>
 #include <stdio.h>

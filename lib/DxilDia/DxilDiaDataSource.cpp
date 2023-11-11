@@ -59,14 +59,10 @@ getMemBufferFromStream(IStream *pStream, std::vector<char> &DataContainer,
 
   STATSTG statstg;
   IFT(pStream->Stat(&statstg, STATFLAG_NONAME));
-  //#------------------
-  //# Mach change start
-  //#------------------
+  // Mach change start
   // size_t size = statstg.cbSize.LowPart;
   size_t size = statstg.cbSize.u.LowPart;
-  //#------------------
-  //# Mach change end
-  //#------------------
+  // Mach change end
 
   DataContainer.resize(size);
   ULONG read;

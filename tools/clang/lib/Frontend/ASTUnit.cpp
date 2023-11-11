@@ -11,6 +11,12 @@
 //
 //===----------------------------------------------------------------------===//
 
+// Mach change start
+#ifndef MS_SUPPORT_VARIABLE_LANGOPTS
+#define MS_SUPPORT_VARIABLE_LANGOPTS
+#endif // MS_SUPPORT_VARIABLE_LANGOPTS
+// Mach change end
+
 #include "clang/Frontend/ASTUnit.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/ASTContext.h"

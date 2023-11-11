@@ -913,16 +913,12 @@ public:
   // Member templates useful for various batch operations over CFGs.
   //===--------------------------------------------------------------------===//
 
-  //#------------------
-  //# Mach change start
-  //#------------------
+  // Mach change start
   // template <typename CALLBACK>
   // void VisitBlockStmts(CALLBACK& O) const {
   template <typename CALLBACKA>
   void VisitBlockStmts(CALLBACKA& O) const {
-  //#------------------
-  //# Mach change end
-  //#------------------
+  // Mach change end
     for (const_iterator I=begin(), E=end(); I != E; ++I)
       for (CFGBlock::const_iterator BI=(*I)->begin(), BE=(*I)->end();
            BI != BE; ++BI) {

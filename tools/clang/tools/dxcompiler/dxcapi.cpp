@@ -29,7 +29,9 @@
 #include <memory>
 
 HRESULT CreateDxcCompiler(REFIID riid, _Out_ LPVOID *ppv);
-HRESULT CreateDxcDiaDataSource(REFIID riid, _Out_ LPVOID *ppv);
+// Mach change start: static
+// HRESULT CreateDxcDiaDataSource(REFIID riid, _Out_ LPVOID *ppv);
+// Mach change end
 HRESULT CreateDxcIntelliSense(REFIID riid, _Out_ LPVOID *ppv);
 HRESULT CreateDxcCompilerArgs(REFIID riid, _Out_ LPVOID *ppv);
 HRESULT CreateDxcUtils(REFIID riid, _Out_ LPVOID *ppv);
@@ -57,17 +59,23 @@ HRESULT CreateDxcContainerReflection(REFIID riid, _Out_ LPVOID *ppv) {
 }
 
 HRESULT CreateDxcContainerBuilder(REFIID riid, _Out_ LPVOID *ppv) {
-  // Call dxil.dll's containerbuilder
-  *ppv = nullptr;
+  // Mach change start: static
+  // // Call dxil.dll's containerbuilder
+  // *ppv = nullptr;
+  // Mach change end
   const char *warning;
-  HRESULT hr = DxilLibCreateInstance(CLSID_DxcContainerBuilder,
-                                     (IDxcContainerBuilder **)ppv);
-  if (FAILED(hr)) {
+  // Mach change start: static
+  // HRESULT hr = DxilLibCreateInstance(CLSID_DxcContainerBuilder,
+  //                                    (IDxcContainerBuilder **)ppv);
+  // if (FAILED(hr)) {
+  // Mach change end
     warning = "Unable to create container builder from dxil.dll. Resulting "
               "container will not be signed.\n";
-  } else {
-    return hr;
-  }
+  // Mach change start: static
+  // } else {
+  //   return hr;
+  // }
+  // Mach change end
 
   CComPtr<DxcContainerBuilder> Result =
       DxcContainerBuilder::Alloc(DxcGetThreadMallocNoRef());
@@ -87,11 +95,15 @@ static HRESULT ThreadMallocDxcCreateInstance(REFCLSID rclsid, REFIID riid,
   } else if (IsEqualCLSID(rclsid, CLSID_DxcUtils)) {
     hr = CreateDxcUtils(riid, ppv);
   } else if (IsEqualCLSID(rclsid, CLSID_DxcValidator)) {
-    if (DxilLibIsEnabled()) {
-      hr = DxilLibCreateInstance(rclsid, riid, (IUnknown **)ppv);
-    } else {
+    // Mach change start: static
+    // if (DxilLibIsEnabled()) {
+    //   hr = DxilLibCreateInstance(rclsid, riid, (IUnknown **)ppv);
+    // } else {
+    // Mach change end
       hr = CreateDxcValidator(riid, ppv);
-    }
+    // Mach change start: static
+    // }
+    // Mach change end
   } else if (IsEqualCLSID(rclsid, CLSID_DxcAssembler)) {
     hr = CreateDxcAssembler(riid, ppv);
   } else if (IsEqualCLSID(rclsid, CLSID_DxcOptimizer)) {
@@ -109,12 +121,14 @@ static HRESULT ThreadMallocDxcCreateInstance(REFCLSID rclsid, REFIID riid,
   } else if (IsEqualCLSID(rclsid, CLSID_DxcLinker)) {
     hr = CreateDxcLinker(riid, ppv);
   }
-// Note: The following targets are not yet enabled for non-Windows platforms.
-#ifdef _WIN32
-  else if (IsEqualCLSID(rclsid, CLSID_DxcDiaDataSource)) {
-    hr = CreateDxcDiaDataSource(riid, ppv);
-  }
-#endif
+// Mach change start: static
+// // Note: The following targets are not yet enabled for non-Windows platforms.
+// #ifdef _WIN32
+//   else if (IsEqualCLSID(rclsid, CLSID_DxcDiaDataSource)) {
+//     hr = CreateDxcDiaDataSource(riid, ppv);
+//   }
+// #endif
+// Mach change end
   else {
     hr = REGDB_E_CLASSNOTREG;
   }

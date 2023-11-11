@@ -27,7 +27,10 @@ void WriteDxCompilerVersionInfo(llvm::raw_ostream &OS, const char *ExternalLib,
 void WriteDXILVersionInfo(llvm::raw_ostream &OS,
                           dxc::DxcDllSupport &DxilSupport);
 
-#ifdef _WIN32
+// Mach change start
+// #ifdef _WIN32
+#if defined(_WIN32) && !defined(__clang__)
+// Mach change end
 int main(int argc, const wchar_t **argv_);
 #else
 int main(int argc, const char **argv_);

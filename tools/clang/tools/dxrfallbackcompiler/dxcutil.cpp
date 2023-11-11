@@ -48,9 +48,11 @@ namespace {
 // AssembleToContainer helper functions.
 
 bool CreateValidator(CComPtr<IDxcValidator> &pValidator) {
-  if (DxilLibIsEnabled()) {
-    DxilLibCreateInstance(CLSID_DxcValidator, &pValidator);
-  }
+  // Mach change start: static
+  // if (DxilLibIsEnabled()) {
+  //   DxilLibCreateInstance(CLSID_DxcValidator, &pValidator);
+  // }
+  // Mach change end
   bool bInternalValidator = false;
   if (pValidator == nullptr) {
     IFT(CreateDxcValidator(IID_PPV_ARGS(&pValidator)));

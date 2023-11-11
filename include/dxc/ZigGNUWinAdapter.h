@@ -11,6 +11,72 @@
 
 #if defined(__clang__) && !defined(_MSC_VER) && defined(_WIN32) // Zig windows-gnu target
 
+// MinGW UUIDOF specializations
+//-------------------------------------------------------------
+// This is needed because clang GNU target / MinGW headers will emit references to e.g.
+//
+// error: undefined symbol: _GUID const& __mingw_uuidof<IDxcSystemAccess>()
+//
+// which do not match MSVC.
+#include <guiddef.h>
+#include <stdint.h>
+
+#ifdef __cplusplus
+#define MINGW_UUIDOF(type, spec)                                              \
+    extern "C++" {                                                            \
+    struct __declspec(uuid(spec)) type;                                       \
+    template<> const GUID &__mingw_uuidof<type>() {                           \
+        static constexpr IID __uuid_inst = guid_from_string(spec);            \
+        return __uuid_inst;                                                   \
+    }                                                                         \
+    template<> const GUID &__mingw_uuidof<type*>() {                          \
+        return __mingw_uuidof<type>();                                        \
+    }                                                                         \
+    }
+
+constexpr uint8_t nybble_from_hex(char c) {
+  return ((c >= '0' && c <= '9')
+              ? (c - '0')
+              : ((c >= 'a' && c <= 'f')
+                     ? (c - 'a' + 10)
+                     : ((c >= 'A' && c <= 'F') ? (c - 'A' + 10)
+                                               : /* Should be an error */ -1)));
+}
+
+constexpr uint8_t byte_from_hex(char c1, char c2) {
+  return nybble_from_hex(c1) << 4 | nybble_from_hex(c2);
+}
+
+constexpr uint8_t byte_from_hexstr(const char str[2]) {
+  return nybble_from_hex(str[0]) << 4 | nybble_from_hex(str[1]);
+}
+
+constexpr GUID guid_from_string(const char str[37]) {
+  return GUID{static_cast<uint32_t>(byte_from_hexstr(str)) << 24 |
+                  static_cast<uint32_t>(byte_from_hexstr(str + 2)) << 16 |
+                  static_cast<uint32_t>(byte_from_hexstr(str + 4)) << 8 |
+                  byte_from_hexstr(str + 6),
+              static_cast<uint16_t>(
+                  static_cast<uint16_t>(byte_from_hexstr(str + 9)) << 8 |
+                  byte_from_hexstr(str + 11)),
+              static_cast<uint16_t>(
+                  static_cast<uint16_t>(byte_from_hexstr(str + 14)) << 8 |
+                  byte_from_hexstr(str + 16)),
+              {byte_from_hexstr(str + 19), byte_from_hexstr(str + 21),
+               byte_from_hexstr(str + 24), byte_from_hexstr(str + 26),
+               byte_from_hexstr(str + 28), byte_from_hexstr(str + 30),
+               byte_from_hexstr(str + 32), byte_from_hexstr(str + 34)}};
+}
+
+#ifdef ZIG_MINGW_DECLARE_SPECIALIZATIONS
+#define CROSS_PLATFORM_UUIDOF(type, spec) MINGW_UUIDOF(type, spec)
+#else // ZIG_MINGW_DECLARE_SPECIALIZATIONS
+#define CROSS_PLATFORM_UUIDOF(type, spec)
+#endif // ZIG_MINGW_DECLARE_SPECIALIZATIONS
+#endif // __cplusplus
+
+
+
 // General
 //-------------------------------------------------------------
 // mingw-w64 tends to define it as 0x0502 in its headers.
@@ -563,8 +629,9 @@ HRESULT UInt32Mult(UINT a, UINT b, UINT *out);
 #define D3D12_SHVER_GET_MINOR(_Version) \
     (((_Version) >> 0) & 0xf)
 
-#define D3D_NAME_STENCIL_REF ((D3D_NAME)69)
-#define D3D_NAME_INNER_COVERAGE	((D3D_NAME)70)
+// TODO: #ifndef?
+// #define D3D_NAME_STENCIL_REF ((D3D_NAME)69)
+// #define D3D_NAME_INNER_COVERAGE	((D3D_NAME)70)
 
 #define D3D_SHADER_REQUIRES_DOUBLES                                                         0x00000001
 #define D3D_SHADER_REQUIRES_EARLY_DEPTH_STENCIL                                             0x00000002
@@ -1020,6 +1087,30 @@ public:
     return s;
   }
 };
+
+//===--------- Convert argv to wchar ----------------===//
+class WArgV {
+  std::vector<std::wstring> WStringVector;
+  std::vector<const wchar_t *> WCharPtrVector;
+
+public:
+  WArgV(int argc, const char **argv);
+  const wchar_t **argv() { return WCharPtrVector.data(); }
+};
+
+
+
+#ifdef ZIG_MINGW_DECLARE_SPECIALIZATIONS
+#include "dxc/dxcapi.h"
+#include "dxc/dxcapi.internal.h"
+#include "dxc/dxcisense.h"
+#include "dxc/dxctools.h"
+CROSS_PLATFORM_UUIDOF(IDiaDataSource, "79F1BB5F-B66E-48e5-B6A9-1545C323CA3D")
+CROSS_PLATFORM_UUIDOF(ID3D12LibraryReflection, "8E349D19-54DB-4A56-9DC9-119D87BDB804")
+CROSS_PLATFORM_UUIDOF(ID3D12ShaderReflection, "5A58797D-A72C-478D-8BA2-EFC6B0EFE88E")
+CROSS_PLATFORM_UUIDOF(IDxcPixDxilDebugInfoFactory, "9c2a040d-8068-44ec-8c68-8bfef1b43789")
+#endif // ZIG_MINGW_DECLARE_SPECIALIZATIONS
+
 #endif // __cplusplus
 
 #endif // defined(__clang__) && !defined(_MSC_VER) && defined(_WIN32) // Zig windows-gnu target

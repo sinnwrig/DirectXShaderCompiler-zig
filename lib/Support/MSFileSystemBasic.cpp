@@ -14,6 +14,9 @@
 
 #ifdef _WIN32
 
+// Mach change start
+#define ZIG_MINGW_DECLARE_SPECIALIZATIONS
+// Mach change end
 #include "dxc/Support/WinIncludes.h"
 
 #include <D3Dcommon.h>
@@ -70,16 +73,12 @@ static HRESULT CopyStatStg(const STATSTG *statStg,
   lpFindFileData->ftCreationTime = statStg->ctime;
   lpFindFileData->ftLastAccessTime = statStg->atime;
   lpFindFileData->ftLastWriteTime = statStg->mtime;
-  //#------------------
-  //# Mach change start
-  //#------------------
+  // Mach change start
   // lpFindFileData->nFileSizeLow = statStg->cbSize.LowPart;
   // lpFindFileData->nFileSizeHigh = statStg->cbSize.HighPart;
   lpFindFileData->nFileSizeLow = statStg->cbSize.u.LowPart;
   lpFindFileData->nFileSizeHigh = statStg->cbSize.u.HighPart;
-  //#------------------
-  //# Mach change end
-  //#------------------
+  // Mach change end
   if (statStg->pwcsName != nullptr) {
     IFC(StringCchCopyW(lpFindFileData->cFileName,
                        _countof(lpFindFileData->cFileName), statStg->pwcsName));
@@ -850,16 +849,12 @@ long MSFileSystemForIface::lseek(int fd, long offset, int origin) throw() {
   }
 
   GetHandleStream(GetHandleForFD(fd), &stream);
-  //#------------------
-  //# Mach change start
-  //#------------------
+  // Mach change start
   // li.HighPart = 0;
   // li.LowPart = offset;
   li.u.HighPart = 0;
   li.u.LowPart = offset;
-  //#------------------
-  //# Mach change end
-  //#------------------
+  // Mach change end
   IFC(stream->Seek(li, origin, &uli));
 
 Cleanup:
@@ -868,26 +863,18 @@ Cleanup:
     return -1;
   }
 
-  //#------------------
-  //# Mach change start
-  //#------------------
+  // Mach change start
   // if (uli.HighPart > 0) {
   if (uli.u.HighPart > 0) {
-  //#------------------
-  //# Mach change end
-  //#------------------
+  // Mach change end
     errno = EOVERFLOW;
     return -1;
   }
 
-  //#------------------
-  //# Mach change start
-  //#------------------
+  // Mach change start
   // return uli.LowPart;
   return uli.u.LowPart;
-  //#------------------
-  //# Mach change end
-  //#------------------
+  // Mach change end
 }
 
 int MSFileSystemForIface::setmode(int fd, int mode) throw() { return 0; }

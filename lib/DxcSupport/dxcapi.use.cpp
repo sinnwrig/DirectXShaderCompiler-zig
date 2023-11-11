@@ -15,16 +15,21 @@
 
 #include "dxc/Support/FileIOHelper.h"
 #include "dxc/Support/Global.h"
-#include "dxc/Support/SharedLibAffix.h" // header generated during DXC build
+// Mach change start: static
+// #include "dxc/Support/SharedLibAffix.h" // header generated during DXC build
+// Mach change end
 #include "dxc/Support/Unicode.h"
 #include "dxc/Support/WinFunctions.h"
 
 namespace dxc {
 
-const char *kDxCompilerLib =
-    CMAKE_SHARED_LIBRARY_PREFIX "dxcompiler" CMAKE_SHARED_LIBRARY_SUFFIX;
-const char *kDxilLib =
-    CMAKE_SHARED_LIBRARY_PREFIX "dxil" CMAKE_SHARED_LIBRARY_SUFFIX;
+// Mach change start: static
+// const char *kDxCompilerLib =
+//     CMAKE_SHARED_LIBRARY_PREFIX "dxcompiler" CMAKE_SHARED_LIBRARY_SUFFIX;
+// const char *kDxilLib =
+//     CMAKE_SHARED_LIBRARY_PREFIX "dxil" CMAKE_SHARED_LIBRARY_SUFFIX;
+//
+// Mach change end
 
 #ifdef _WIN32
 static void TrimEOL(char *pMsg) {
@@ -74,9 +79,11 @@ void IFT_Data(HRESULT hr, LPCWSTR data) {
 }
 
 void EnsureEnabled(DxcDllSupport &dxcSupport) {
-  if (!dxcSupport.IsEnabled()) {
-    IFT(dxcSupport.Initialize());
-  }
+  // Mach change start: static
+  // if (!dxcSupport.IsEnabled()) {
+  //   IFT(dxcSupport.Initialize());
+  // }
+  // Mach change end
 }
 
 void ReadFileIntoBlob(DxcDllSupport &dxcSupport, LPCWSTR pFileName,

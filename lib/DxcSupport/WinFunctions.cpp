@@ -13,6 +13,28 @@
 //
 //===----------------------------------------------------------------------===//
 
+// Mach change start
+#ifdef __clang__
+#include <fcntl.h>
+#include <map>
+#include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+#include "dxc/Support/WinFunctions.h"
+#include "dxc/Support/microcom.h"
+
+HRESULT UInt32Mult(UINT a, UINT b, UINT *out) {
+  uint64_t result = (uint64_t)a * (uint64_t)b;
+  if (result > uint64_t(UINT_MAX))
+    return ERROR_ARITHMETIC_OVERFLOW;
+
+  *out = (uint32_t)result;
+  return S_OK;
+}
+#endif
+// Mach change end
+
 #ifndef _WIN32
 #include <fcntl.h>
 #include <map>

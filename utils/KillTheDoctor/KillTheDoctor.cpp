@@ -396,9 +396,7 @@ int main(int argc, char **argv) {
                << ec.message() << '\n';
         return -1;
       }
-      //#------------------
-      //# Mach change start
-      //#------------------
+      // Mach change start
       // a.LowPart = KernelTime.dwLowDateTime;
       // a.HighPart = KernelTime.dwHighDateTime;
       // b.LowPart = UserTime.dwLowDateTime;
@@ -407,9 +405,7 @@ int main(int argc, char **argv) {
       a.u.HighPart = KernelTime.dwHighDateTime;
       b.u.LowPart = UserTime.dwLowDateTime;
       b.u.HighPart = UserTime.dwHighDateTime;
-      //#------------------
-      //# Mach change end
-      //#------------------
+      // Mach change end
       // Convert 100-nanosecond units to milliseconds.
       uint64_t TotalTimeMiliseconds = (a.QuadPart + b.QuadPart) / 10000;
       // Handle the case where the process has been running for more than 49

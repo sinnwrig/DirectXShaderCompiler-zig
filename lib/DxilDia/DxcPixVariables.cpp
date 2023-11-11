@@ -84,7 +84,10 @@ dxil_debug_info::DxcPixVariable<T>::GetStorage(IDxcPixDxilStorage **ppStorage) {
 namespace dxil_debug_info {
 class DxcPixDxilLiveVariables : public IDxcPixDxilLiveVariables {
 private:
-  DXC_MICROCOM_TM_REF_FIELDS();
+  // Mach change start
+  // DXC_MICROCOM_TM_REF_FIELDS();
+  DXC_MICROCOM_TM_REF_FIELDS()
+  // Mach change end
   CComPtr<DxcPixDxilDebugInfo> m_pDxilDebugInfo;
   std::vector<const VariableInfo *> m_LiveVars;
 

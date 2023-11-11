@@ -7,10 +7,22 @@
 //
 //===----------------------------------------------------------------------===//
 
+// Mach change start
+#include "dxc/Support/WinIncludes.h"
+#include "dxc/dxcapi.h"
+#include "dxc/dxcapi.internal.h"
+#include "dxc/dxcisense.h"
+#include "dxc/dxctools.h"
+#include "dxc/WinAdapter.h"
+// Mach change end
+
 #include "assert.h"
 #include "dxc/Support/WinFunctions.h"
-#include "dxc/Support/WinIncludes.h"
-#ifndef _WIN32
+// Mach change start
+// #include "dxc/Support/WinIncludes.h"
+// #ifndef _WIN32
+#if defined(_WIN32) || defined(__clang__)
+// Mach change end
 
 #include "dxc/Support/Unicode.h"
 
@@ -22,6 +34,9 @@ void *CAllocator::Reallocate(void *p, size_t nBytes) throw() {
 void *CAllocator::Allocate(size_t nBytes) throw() { return malloc(nBytes); }
 void CAllocator::Free(void *p) throw() { free(p); }
 
+// Mach change start
+#ifndef __clang__
+// Mach change end
 //===--------------------------- BSTR Allocation --------------------------===//
 
 void SysFreeString(BSTR bstrString) {
@@ -51,6 +66,9 @@ BSTR SysAllocStringLen(const OLECHAR *strIn, UINT ui) {
 
   return strOut;
 }
+// Mach change start
+#endif
+// Mach change end
 
 //===---------------------- Char converstion ------------------------------===//
 
@@ -97,6 +115,9 @@ bool CComBSTR::operator==(const CComBSTR &bstrSrc) const throw() {
   return wcscmp(m_str, bstrSrc.m_str) == 0;
 }
 
+// Mach change start
+#ifndef __clang__
+// Mach change end
 //===--------------------------- WArgV -------------------------------===//
 WArgV::WArgV(int argc, const char **argv)
     : WStringVector(argc), WCharPtrVector(argc) {
@@ -112,5 +133,8 @@ WArgV::WArgV(int argc, const char **argv)
     WCharPtrVector[i] = WStringVector[i].data();
   }
 }
+// Mach change start
+#endif
+// Mach change end
 
 #endif
