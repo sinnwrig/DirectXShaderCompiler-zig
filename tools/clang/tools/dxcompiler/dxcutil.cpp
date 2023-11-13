@@ -50,7 +50,7 @@ namespace {
 // AssembleToContainer helper functions.
 
 bool CreateValidator(CComPtr<IDxcValidator> &pValidator) {
-  // Mach change start: static
+  // Mach change start: static dxil
   // if (DxilLibIsEnabled()) {
   //   DxilLibCreateInstance(CLSID_DxcValidator, &pValidator);
   // }

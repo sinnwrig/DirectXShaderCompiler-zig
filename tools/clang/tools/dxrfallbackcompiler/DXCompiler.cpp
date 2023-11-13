@@ -58,7 +58,7 @@ static HRESULT InitMaybeFail() throw() {
   }
   fsSetup = true;
   IFC(hlsl::SetupRegistryPassForHLSL());
-  // Mach change start: static
+  // Mach change start: static dxil
   // IFC(DxilLibInitialize());
   // Mach change end
   if (hlsl::options::initHlslOptTable()) {
@@ -94,7 +94,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD Reason, LPVOID reserved) {
     ::hlsl::options::cleanupHlslOptTable();
     ::llvm::sys::fs::CleanupPerThreadFileSystem();
     ::llvm::llvm_shutdown();
-    // Mach change start: static
+    // Mach change start: static dxil
     // if (reserved ==
     //     NULL) { // FreeLibrary has been called or the DLL load failed
     //   DxilLibCleanup(DxilLibCleanUpType::UnloadLibrary);

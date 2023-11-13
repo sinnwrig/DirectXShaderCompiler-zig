@@ -15,17 +15,21 @@
 
 #include "dxc/Support/FileIOHelper.h"
 #include "dxc/Support/Global.h"
-// Mach change start: static
+// Mach change start: static dxcompiler
+// Mach change start: static dxil
 // #include "dxc/Support/SharedLibAffix.h" // header generated during DXC build
+// Mach change end
 // Mach change end
 #include "dxc/Support/Unicode.h"
 #include "dxc/Support/WinFunctions.h"
 
 namespace dxc {
 
-// Mach change start: static
+// Mach change start: static dxcompiler
 // const char *kDxCompilerLib =
 //     CMAKE_SHARED_LIBRARY_PREFIX "dxcompiler" CMAKE_SHARED_LIBRARY_SUFFIX;
+// Mach change end
+// Mach change start: static dxil
 // const char *kDxilLib =
 //     CMAKE_SHARED_LIBRARY_PREFIX "dxil" CMAKE_SHARED_LIBRARY_SUFFIX;
 //
@@ -79,7 +83,7 @@ void IFT_Data(HRESULT hr, LPCWSTR data) {
 }
 
 void EnsureEnabled(DxcDllSupport &dxcSupport) {
-  // Mach change start: static
+  // Mach change start: static dxcompiler
   // if (!dxcSupport.IsEnabled()) {
   //   IFT(dxcSupport.Initialize());
   // }

@@ -16,8 +16,10 @@
 
 namespace dxc {
 
-// Mach change start: static
+// Mach change start: static dxcompiler
 // extern const char *kDxCompilerLib;
+// Mach change end
+// Mach change start: static dxil
 // extern const char *kDxilLib;
 // Mach change end
 
@@ -89,7 +91,7 @@ public:
 
   ~DxcDllSupport() { Cleanup(); }
 
-  // Mach change start: static
+  // Mach change start: static dxcompiler
   // HRESULT Initialize() {
   //   return InitializeInternal(kDxCompilerLib, "DxcCreateInstance");
   // }

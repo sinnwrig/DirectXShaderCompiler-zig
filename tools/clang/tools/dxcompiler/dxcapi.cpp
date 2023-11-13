@@ -29,7 +29,7 @@
 #include <memory>
 
 HRESULT CreateDxcCompiler(REFIID riid, _Out_ LPVOID *ppv);
-// Mach change start: static
+// Mach change start: static dxcompiler
 // HRESULT CreateDxcDiaDataSource(REFIID riid, _Out_ LPVOID *ppv);
 // Mach change end
 HRESULT CreateDxcIntelliSense(REFIID riid, _Out_ LPVOID *ppv);
@@ -59,19 +59,19 @@ HRESULT CreateDxcContainerReflection(REFIID riid, _Out_ LPVOID *ppv) {
 }
 
 HRESULT CreateDxcContainerBuilder(REFIID riid, _Out_ LPVOID *ppv) {
-  // Mach change start: static
+  // Mach change start: static dxil
   // // Call dxil.dll's containerbuilder
   // *ppv = nullptr;
   // Mach change end
   const char *warning;
-  // Mach change start: static
+  // Mach change start: static dxil
   // HRESULT hr = DxilLibCreateInstance(CLSID_DxcContainerBuilder,
   //                                    (IDxcContainerBuilder **)ppv);
   // if (FAILED(hr)) {
   // Mach change end
     warning = "Unable to create container builder from dxil.dll. Resulting "
               "container will not be signed.\n";
-  // Mach change start: static
+  // Mach change start: static dxil
   // } else {
   //   return hr;
   // }
@@ -95,13 +95,13 @@ static HRESULT ThreadMallocDxcCreateInstance(REFCLSID rclsid, REFIID riid,
   } else if (IsEqualCLSID(rclsid, CLSID_DxcUtils)) {
     hr = CreateDxcUtils(riid, ppv);
   } else if (IsEqualCLSID(rclsid, CLSID_DxcValidator)) {
-    // Mach change start: static
+    // Mach change start: static dxil
     // if (DxilLibIsEnabled()) {
     //   hr = DxilLibCreateInstance(rclsid, riid, (IUnknown **)ppv);
     // } else {
     // Mach change end
       hr = CreateDxcValidator(riid, ppv);
-    // Mach change start: static
+    // Mach change start: static dxil
     // }
     // Mach change end
   } else if (IsEqualCLSID(rclsid, CLSID_DxcAssembler)) {
@@ -121,7 +121,7 @@ static HRESULT ThreadMallocDxcCreateInstance(REFCLSID rclsid, REFIID riid,
   } else if (IsEqualCLSID(rclsid, CLSID_DxcLinker)) {
     hr = CreateDxcLinker(riid, ppv);
   }
-// Mach change start: static
+// Mach change start: static dxcompiler
 // // Note: The following targets are not yet enabled for non-Windows platforms.
 // #ifdef _WIN32
 //   else if (IsEqualCLSID(rclsid, CLSID_DxcDiaDataSource)) {

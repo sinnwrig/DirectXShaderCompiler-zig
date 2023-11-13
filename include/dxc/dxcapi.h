@@ -13,7 +13,7 @@
 #ifndef __DXC_API__
 #define __DXC_API__
 
-// Mach change start: static
+// Mach change start: static dxcompiler
 #define DXC_API_IMPORT
 // Mach change end
 #ifdef _WIN32

@@ -1255,7 +1255,7 @@ void WriteDxCompilerVersionInfo(llvm::raw_ostream &OS, const char *ExternalLib,
     CComPtr<IDxcVersionInfo2> VerInfo2;
 #endif // SUPPORT_QUERY_GIT_COMMIT_INFO
 
-    // Mach change start: static
+    // Mach change start: static dxcompiler
     // const char *dllName = !ExternalLib ? kDxCompilerLib : ExternalLib;
     // std::string compilerName(dllName);
     std::string compilerName("");
@@ -1279,7 +1279,7 @@ void WriteDxCompilerVersionInfo(llvm::raw_ostream &OS, const char *ExternalLib,
       OS << compilerName;
     }
 
-// Mach change start: static
+// Mach change start: static dxcompiler
 // #ifdef _WIN32
 //     unsigned int version[4];
 //     if (GetDLLFileVersionInfo(dllName, version)) {
@@ -1308,7 +1308,7 @@ void WriteDxCompilerVersionInfo(llvm::raw_ostream &OS, const char *ExternalLib,
 
 // Writes compiler version info to stream
 void WriteDXILVersionInfo(llvm::raw_ostream &OS, DxcDllSupport &DxilSupport) {
-  // Mach change start: static
+  // Mach change start: static dxil
   // if (DxilSupport.IsEnabled()) {
   //   CComPtr<IDxcVersionInfo> VerInfo;
   //   if (SUCCEEDED(DxilSupport.CreateInstance(CLSID_DxcValidator, &VerInfo))) {
@@ -1339,7 +1339,7 @@ void DxcContext::GetCompilerVersionInfo(llvm::raw_string_ostream &OS) {
       m_Opts.ExternalFn.empty() ? nullptr : m_Opts.ExternalFn.data(),
       m_dxcSupport);
 
-  // Mach change start: static
+  // Mach change start: static dxil
   // // Print validator if exists
   // DxcDllSupport DxilSupport;
   // DxilSupport.InitializeForDll(kDxilLib, "DxcCreateInstance");

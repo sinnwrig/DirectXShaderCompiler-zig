@@ -24,7 +24,7 @@
 
 // This declaration is used for the locally-linked validator.
 HRESULT CreateDxcValidator(REFIID riid, LPVOID *ppv);
-// Mach change start: static
+// Mach change start: static dxil
 // template <class TInterface>
 // HRESULT DxilLibCreateInstance(REFCLSID rclsid, TInterface **ppInterface);
 // Mach change end
