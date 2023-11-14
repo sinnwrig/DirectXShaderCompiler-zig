@@ -21,7 +21,7 @@
 // Mach change start
 // #include "dxc/Support/WinIncludes.h"
 // #ifndef _WIN32
-#if defined(_WIN32) || defined(__clang__)
+#if !defined(_WIN32) || defined(__clang__)
 // Mach change end
 
 #include "dxc/Support/Unicode.h"
@@ -35,7 +35,7 @@ void *CAllocator::Allocate(size_t nBytes) throw() { return malloc(nBytes); }
 void CAllocator::Free(void *p) throw() { free(p); }
 
 // Mach change start
-#ifndef __clang__
+#ifndef _WIN32
 // Mach change end
 //===--------------------------- BSTR Allocation --------------------------===//
 

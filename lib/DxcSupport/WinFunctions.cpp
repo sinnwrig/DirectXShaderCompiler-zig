@@ -14,7 +14,7 @@
 //===----------------------------------------------------------------------===//
 
 // Mach change start
-#ifdef __clang__
+#if defined(__clang__) && defined(_WIN32)
 #include <fcntl.h>
 #include <map>
 #include <string.h>
@@ -32,7 +32,7 @@ HRESULT UInt32Mult(UINT a, UINT b, UINT *out) {
   *out = (uint32_t)result;
   return S_OK;
 }
-#endif
+#endif // defined(__clang__) && defined(_WIN32)
 // Mach change end
 
 #ifndef _WIN32
