@@ -15,7 +15,7 @@
 	url = https://github.com/google/effcee
 [submodule "external/DirectX-Headers"]
 	path = external/DirectX-Headers
-	url = https://github.com/microsoft/DirectX-Headers.git
+	url = https://github.com/hexops/directx-headers
 [submodule "external/DIA"]
 	path = external/DIA
 	url = https://github.com/slimsag/DIA
