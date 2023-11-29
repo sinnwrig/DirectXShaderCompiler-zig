@@ -30,7 +30,10 @@ int WideCharToMultiByte(uint32_t CodePage, uint32_t dwFlags,
                         const wchar_t *lpWideCharStr, int cchWideChar,
                         char *lpMultiByteStr, int cbMultiByte,
                         const char *lpDefaultChar = nullptr,
-                        bool *lpUsedDefaultChar = nullptr);
+                        // Mach change start
+                        // bool *lpUsedDefaultChar = nullptr);
+                        LPBOOL lpUsedDefaultChar = nullptr);
+                        // Mach change end
 #endif // _WIN32
 
 namespace Unicode {

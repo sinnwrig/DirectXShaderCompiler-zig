@@ -16,6 +16,16 @@
 #define LLVM_SUPPORT_WIN_ADAPTER_H
 
 // Mach change start
+#ifndef _WIN32
+#include <rpcndr.h>
+#include <basetsd.h>
+#undef interface
+#undef HeapAlloc
+#undef HeapFree
+#undef __emulated_uuidof
+#undef __uuidof
+#endif
+
 #include "ZigGNUWinAdapter.h"
 // Mach change end
 
@@ -44,7 +54,9 @@
 //                             Begin: Macro Definitions
 //
 //===----------------------------------------------------------------------===//
-#define C_ASSERT(expr) static_assert((expr), "")
+// Mach change start
+// #define C_ASSERT(expr) static_assert((expr), "")
+// Mach change end
 #define ATLASSERT assert
 
 #define CoTaskMemAlloc malloc
@@ -72,11 +84,15 @@
 #define STDMETHODCALLTYPE
 #define STDMETHODIMP_(type) type STDMETHODCALLTYPE
 #define STDMETHODIMP STDMETHODIMP_(HRESULT)
-#define STDMETHOD_(type, name) virtual STDMETHODIMP_(type) name
-#define STDMETHOD(name) STDMETHOD_(HRESULT, name)
+// Mach change start
+// #define STDMETHOD_(type, name) virtual STDMETHODIMP_(type) name
+// #define STDMETHOD(name) STDMETHOD_(HRESULT, name)
+// Mach change end
 #define EXTERN_C extern "C"
 
-#define UNREFERENCED_PARAMETER(P) (void)(P)
+// Mach change start
+// #define UNREFERENCED_PARAMETER(P) (void)(P)
+// Mach change end
 
 #define RtlEqualMemory(Destination, Source, Length)                            \
   (!memcmp((Destination), (Source), (Length)))
@@ -92,8 +108,10 @@
 #define FillMemory RtlFillMemory
 #define ZeroMemory RtlZeroMemory
 
-#define FALSE 0
-#define TRUE 1
+// Mach change start
+// #define FALSE 0
+// #define TRUE 1
+// Mach change end
 
 // We ignore the code page completely on Linux.
 #define GetConsoleOutputCP() 0
@@ -223,18 +241,24 @@
 #define S_OK ((HRESULT)0L)
 #define S_FALSE ((HRESULT)1L)
 
-#define E_ABORT (HRESULT)0x80004004
-#define E_ACCESSDENIED (HRESULT)0x80070005
+// Mach change start
+// #define E_ABORT (HRESULT)0x80004004
+// #define E_ACCESSDENIED (HRESULT)0x80070005
+// Mach change end
 #define E_BOUNDS (HRESULT)0x8000000B
-#define E_FAIL (HRESULT)0x80004005
-#define E_HANDLE (HRESULT)0x80070006
-#define E_INVALIDARG (HRESULT)0x80070057
-#define E_NOINTERFACE (HRESULT)0x80004002
+// Mach change start
+// #define E_FAIL (HRESULT)0x80004005
+// #define E_HANDLE (HRESULT)0x80070006
+// #define E_INVALIDARG (HRESULT)0x80070057
+// #define E_NOINTERFACE (HRESULT)0x80004002
+// Mach change end
 #define E_NOTIMPL (HRESULT)0x80004001
 #define E_NOT_VALID_STATE (HRESULT)0x8007139F
-#define E_OUTOFMEMORY (HRESULT)0x8007000E
-#define E_POINTER (HRESULT)0x80004003
-#define E_UNEXPECTED (HRESULT)0x8000FFFF
+// Mach change start
+// #define E_OUTOFMEMORY (HRESULT)0x8007000E
+// #define E_POINTER (HRESULT)0x80004003
+// #define E_UNEXPECTED (HRESULT)0x8000FFFF
+// Mach change end
 
 #define SUCCEEDED(hr) (((HRESULT)(hr)) >= 0)
 #define FAILED(hr) (((HRESULT)(hr)) < 0)
@@ -273,8 +297,10 @@
 #define _COM_Outptr_result_maybenull_
 #define _COM_Outptr_opt_result_maybenull_
 
-#define THIS_
-#define THIS
+// Mach change start
+// #define THIS_
+// #define THIS
+// Mach change end
 #define PURE = 0
 
 #define _Maybenull_
@@ -303,20 +329,24 @@
 typedef unsigned char BYTE, UINT8;
 typedef unsigned char *LPBYTE;
 
-typedef BYTE BOOLEAN;
-typedef BOOLEAN *PBOOLEAN;
+// Mach change start
+// typedef BYTE BOOLEAN;
+// typedef BOOLEAN *PBOOLEAN;
 
-typedef bool BOOL;
+// typedef bool BOOL;
+// Mach change end
 typedef BOOL *LPBOOL;
 
-typedef int INT;
-typedef long LONG;
-typedef unsigned int UINT;
-typedef unsigned long ULONG;
-typedef long long LONGLONG;
-typedef long long LONG_PTR;
-typedef unsigned long long ULONG_PTR;
-typedef unsigned long long ULONGLONG;
+// Mach change start
+// typedef int INT;
+// typedef long LONG;
+// typedef unsigned int UINT;
+// typedef unsigned long ULONG;
+// typedef long long LONGLONG;
+// typedef long long LONG_PTR;
+// typedef unsigned long long ULONG_PTR;
+// typedef unsigned long long ULONGLONG;
+// Mach change end
 
 typedef uint16_t WORD;
 typedef uint32_t DWORD;
@@ -350,7 +380,9 @@ typedef const void *LPCVOID;
 
 typedef std::nullptr_t nullptr_t;
 
-typedef signed int HRESULT;
+// Mach change start
+// typedef signed int HRESULT;
+// Mach change end
 
 //===--------------------- Handle Types -----------------------------------===//
 
@@ -372,30 +404,34 @@ typedef void *HMODULE;
 
 //===--------------------- ID Types and Macros for COM --------------------===//
 
-#ifdef __EMULATE_UUID
-struct GUID
-#else  // __EMULATE_UUID
-// These specific definitions are required by clang -fms-extensions.
-typedef struct _GUID
-#endif // __EMULATE_UUID
-{
-  uint32_t Data1;
-  uint16_t Data2;
-  uint16_t Data3;
-  uint8_t Data4[8];
-}
-#ifdef __EMULATE_UUID
-;
-#else  // __EMULATE_UUID
-GUID;
-#endif // __EMULATE_UUID
-typedef GUID CLSID;
-typedef const GUID &REFGUID;
-typedef const GUID &REFCLSID;
+// Mach change start
+// #ifdef __EMULATE_UUID
+// struct GUID
+// #else  // __EMULATE_UUID
+// // These specific definitions are required by clang -fms-extensions.
+// typedef struct _GUID
+// #endif // __EMULATE_UUID
+// {
+//   uint32_t Data1;
+//   uint16_t Data2;
+//   uint16_t Data3;
+//   uint8_t Data4[8];
+// }
+// #ifdef __EMULATE_UUID
+// ;
+// #else  // __EMULATE_UUID
+// GUID;
+// #endif // __EMULATE_UUID
+// typedef GUID CLSID;
+// typedef const GUID &REFGUID;
+// typedef const GUID &REFCLSID;
 
-typedef GUID IID;
+// typedef GUID IID;
+// Mach change end
 typedef IID *LPIID;
-typedef const IID &REFIID;
+// Mach change start
+// typedef const IID &REFIID;
+// Mach change end
 inline bool IsEqualGUID(REFGUID rguid1, REFGUID rguid2) {
   // Optimization:
   if (&rguid1 == &rguid2)
@@ -404,13 +440,15 @@ inline bool IsEqualGUID(REFGUID rguid1, REFGUID rguid2) {
   return !memcmp(&rguid1, &rguid2, sizeof(GUID));
 }
 
-inline bool operator==(REFGUID guidOne, REFGUID guidOther) {
-  return !!IsEqualGUID(guidOne, guidOther);
-}
+// Mach change start
+// inline bool operator==(REFGUID guidOne, REFGUID guidOther) {
+//   return !!IsEqualGUID(guidOne, guidOther);
+// }
 
-inline bool operator!=(REFGUID guidOne, REFGUID guidOther) {
-  return !(guidOne == guidOther);
-}
+// inline bool operator!=(REFGUID guidOne, REFGUID guidOther) {
+//   return !(guidOne == guidOther);
+// }
+// Mach change end
 
 inline bool IsEqualIID(REFIID riid1, REFIID riid2) {
   return IsEqualGUID(riid1, riid2);
@@ -454,27 +492,32 @@ typedef struct _WIN32_FIND_DATAW {
   WCHAR cAlternateFileName[14];
 } WIN32_FIND_DATAW, *PWIN32_FIND_DATAW, *LPWIN32_FIND_DATAW;
 
-typedef union _LARGE_INTEGER {
-  struct {
-    DWORD LowPart;
-    DWORD HighPart;
-  } u;
-  LONGLONG QuadPart;
-} LARGE_INTEGER;
+// Mach change start
+// typedef union _LARGE_INTEGER {
+//   struct {
+//     DWORD LowPart;
+//     DWORD HighPart;
+//   } u;
+//   LONGLONG QuadPart;
+// } LARGE_INTEGER;
 
-typedef LARGE_INTEGER *PLARGE_INTEGER;
+// typedef LARGE_INTEGER *PLARGE_INTEGER;
 
-typedef union _ULARGE_INTEGER {
-  struct {
-    DWORD LowPart;
-    DWORD HighPart;
-  } u;
-  ULONGLONG QuadPart;
-} ULARGE_INTEGER;
+// typedef union _ULARGE_INTEGER {
+//   struct {
+//     DWORD LowPart;
+//     DWORD HighPart;
+//   } u;
+//   ULONGLONG QuadPart;
+// } ULARGE_INTEGER;
 
-typedef ULARGE_INTEGER *PULARGE_INTEGER;
+// typedef ULARGE_INTEGER *PULARGE_INTEGER;
+// Mach change end
 
-typedef struct tagSTATSTG {
+// Mach change start
+// typedef struct tagSTATSTG {
+typedef struct STATSTG {
+// Mach change end
   LPOLESTR pwcsName;
   DWORD type;
   ULARGE_INTEGER cbSize;
@@ -556,20 +599,24 @@ template <typename interface> inline GUID __emulated_uuidof();
   struct __declspec(uuid(spec)) interface;
 #endif
 
-template <typename T> inline void **IID_PPV_ARGS_Helper(T **pp) {
-  return reinterpret_cast<void **>(pp);
-}
-#define IID_PPV_ARGS(ppType) __uuidof(**(ppType)), IID_PPV_ARGS_Helper(ppType)
+// Mach change start
+// template <typename T> inline void **IID_PPV_ARGS_Helper(T **pp) {
+//   return reinterpret_cast<void **>(pp);
+// }
+// #define IID_PPV_ARGS(ppType) __uuidof(**(ppType)), IID_PPV_ARGS_Helper(ppType)
+// Mach change end
 
 #endif // __EMULATE_UUID
 
-// Needed for d3d headers, but fail to create actual interfaces
-#define DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8)           \
-  const GUID name = {l, w1, w2, {b1, b2, b3, b4, b5, b6, b7, b8}}
-#define DECLSPEC_UUID(x)
-#define MIDL_INTERFACE(x) struct DECLSPEC_UUID(x)
-#define DECLARE_INTERFACE(iface) struct iface
-#define DECLARE_INTERFACE_(iface, parent) DECLARE_INTERFACE(iface) : parent
+// Mach change start
+// // Needed for d3d headers, but fail to create actual interfaces
+// #define DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8)           \
+//   const GUID name = {l, w1, w2, {b1, b2, b3, b4, b5, b6, b7, b8}}
+// #define DECLSPEC_UUID(x)
+// #define MIDL_INTERFACE(x) struct DECLSPEC_UUID(x)
+// #define DECLARE_INTERFACE(iface) struct iface
+// #define DECLARE_INTERFACE_(iface, parent) DECLARE_INTERFACE(iface) : parent
+// Mach change end
 
 //===--------------------- COM Interfaces ---------------------------------===//
 

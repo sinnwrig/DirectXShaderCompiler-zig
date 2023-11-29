@@ -76,7 +76,10 @@ int WideCharToMultiByte(uint32_t CodePage, uint32_t /*dwFlags*/,
                         const wchar_t *lpWideCharStr, int cchWideChar,
                         char *lpMultiByteStr, int cbMultiByte,
                         const char * /*lpDefaultChar*/,
-                        bool * /*lpUsedDefaultChar*/) {
+                        // Mach change start
+                        // bool * /*lpUsedDefaultChar*/) {
+                        LPBOOL /*lpUsedDefaultChar*/) {
+                        // Mach change end
 
   if (cchWideChar == 0) {
     SetLastError(ERROR_INVALID_PARAMETER);
@@ -139,14 +142,20 @@ bool WideToEncodedString(const wchar_t *text, size_t cWide, DWORD cp,
   }
 
   int cbUTF8 = ::WideCharToMultiByte(cp, flags, text, cWide, nullptr, 0,
-                                     nullptr, pUsedDefaultChar);
+                                    // Mach change start
+                                    //  nullptr, pUsedDefaultChar);
+                                     nullptr, (LPBOOL)pUsedDefaultChar);
+                                    // Mach change end
   if (cbUTF8 == 0)
     return false;
 
   pValue->resize(cbUTF8);
 
   cbUTF8 = ::WideCharToMultiByte(cp, flags, text, cWide, &(*pValue)[0],
-                                 pValue->size(), nullptr, pUsedDefaultChar);
+                                // Mach change start
+                                //  pValue->size(), nullptr, pUsedDefaultChar);
+                                 pValue->size(), nullptr, (LPBOOL)pUsedDefaultChar);
+                                // Mach change end
   DXASSERT(cbUTF8 > 0, "otherwise contents have changed");
   DXASSERT((*pValue)[pValue->size()] == '\0',
            "otherwise string didn't null-terminate after resize() call");

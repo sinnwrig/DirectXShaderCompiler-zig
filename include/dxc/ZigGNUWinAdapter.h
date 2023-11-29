@@ -1113,5 +1113,7 @@ CROSS_PLATFORM_UUIDOF(IDxcPixDxilDebugInfoFactory, "9c2a040d-8068-44ec-8c68-8bfe
 
 #endif // __cplusplus
 
+#undef ReplaceText
+
 #endif // defined(__clang__) && !defined(_MSC_VER) && defined(_WIN32) // Zig windows-gnu target
 #endif // LLVM_SUPPORT_ZIG_GNU_WIN_ADAPTER_H
