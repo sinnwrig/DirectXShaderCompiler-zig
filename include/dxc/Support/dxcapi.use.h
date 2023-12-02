@@ -24,6 +24,9 @@ extern const char *kDxCompilerLib;
 // Helper class to dynamically load the dxcompiler or a compatible libraries.
 class DxcDllSupport {
 protected:
+  // Mach change start: static dxcompiler
+  BOOL m_initialized;
+  // Mach change end
   HMODULE m_dll;
   DxcCreateInstanceProc m_createFn;
   DxcCreateInstance2Proc m_createFn2;
@@ -77,6 +80,7 @@ protected:
 //   }
   HRESULT InitializeInternal(LPCSTR dllName, LPCSTR fnName) {
     if (strcmp(fnName, "DxcCreateInstance") == 0) {
+      m_initialized = true;
       m_createFn = &DxcCreateInstance;
       m_createFn2 = &DxcCreateInstance2;
       return S_OK;
@@ -87,9 +91,16 @@ protected:
 // Mach change end
 
 public:
-  DxcDllSupport() : m_dll(nullptr), m_createFn(nullptr), m_createFn2(nullptr) {}
+  // Mach change start: static dxcompiler
+  // DxcDllSupport() : m_dll(nullptr), m_createFn(nullptr), m_createFn2(nullptr) {}
+  DxcDllSupport() : m_initialized(false), m_dll(nullptr), m_createFn(nullptr), m_createFn2(nullptr) {}
+  // Mach change end
 
   DxcDllSupport(DxcDllSupport &&other) {
+    // Mach change start: static dxcompiler
+    m_initialized = other.m_initialized;
+    other.m_initialized = false;
+    // Mach change end
     m_dll = other.m_dll;
     other.m_dll = nullptr;
     m_createFn = other.m_createFn;
@@ -116,8 +127,11 @@ public:
   HRESULT CreateInstance(REFCLSID clsid, REFIID riid, IUnknown **pResult) {
     if (pResult == nullptr)
       return E_POINTER;
+    // Mach change start: static dxcompiler
     // if (m_dll == nullptr)
-    //   return E_FAIL;
+    if (!m_initialized)
+    // Mach change end
+      return E_FAIL;
     HRESULT hr = m_createFn(clsid, riid, (LPVOID *)pResult);
     return hr;
   }
@@ -133,17 +147,23 @@ public:
                           IUnknown **pResult) {
     if (pResult == nullptr)
       return E_POINTER;
+    // Mach change start: static dxcompiler
     // if (m_dll == nullptr)
-    //   return E_FAIL;
-    // if (m_createFn2 == nullptr)
-    //   return E_FAIL;
+    if (!m_initialized)
+    // Mach change end
+      return E_FAIL;
+    if (m_createFn2 == nullptr)
+      return E_FAIL;
     HRESULT hr = m_createFn2(pMalloc, clsid, riid, (LPVOID *)pResult);
     return hr;
   }
 
   bool HasCreateWithMalloc() const { return m_createFn2 != nullptr; }
 
-  bool IsEnabled() const { return m_dll != nullptr; }
+  // Mach change start: static dxcompiler
+  // bool IsEnabled() const { return m_dll != nullptr; }
+  bool IsEnabled() const { return m_initialized; }
+  // Mach change start
 
   void Cleanup() {
     if (m_dll != nullptr) {
@@ -158,11 +178,13 @@ public:
     }
   }
 
-  HMODULE Detach() {
-    HMODULE hModule = m_dll;
-    m_dll = nullptr;
-    return hModule;
-  }
+  // Mach change start: static dxcompiler
+  // HMODULE Detach() {
+  //   HMODULE hModule = m_dll;
+  //   m_dll = nullptr;
+  //   return hModule;
+  // }
+  // Mach change end
 };
 
 inline DxcDefine GetDefine(LPCWSTR name, LPCWSTR value) {
