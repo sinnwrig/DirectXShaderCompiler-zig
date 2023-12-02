@@ -11,12 +11,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-// Mach change start
-#ifndef MS_SUPPORT_VARIABLE_LANGOPTS
-#define MS_SUPPORT_VARIABLE_LANGOPTS
-#endif // MS_SUPPORT_VARIABLE_LANGOPTS
-// Mach change end
-
 #include "clang/Lex/Lexer.h"
 #include "UnicodeCharSets.h"
 #include "clang/Basic/CharInfo.h"

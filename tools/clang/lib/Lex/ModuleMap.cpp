@@ -12,12 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-// Mach change start
-#ifndef MS_SUPPORT_VARIABLE_LANGOPTS
-#define MS_SUPPORT_VARIABLE_LANGOPTS
-#endif // MS_SUPPORT_VARIABLE_LANGOPTS
-// Mach change end
-
 #include "clang/Lex/ModuleMap.h"
 #include "clang/Basic/CharInfo.h"
 #include "clang/Basic/Diagnostic.h"

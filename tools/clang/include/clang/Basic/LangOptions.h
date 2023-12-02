@@ -15,12 +15,6 @@
 #ifndef LLVM_CLANG_BASIC_LANGOPTIONS_H
 #define LLVM_CLANG_BASIC_LANGOPTIONS_H
 
-// Mach change start
-#ifndef MS_SUPPORT_VARIABLE_LANGOPTS
-#define MS_SUPPORT_VARIABLE_LANGOPTS
-#endif // MS_SUPPORT_VARIABLE_LANGOPTS
-// Mach change end
-
 #include "clang/Basic/CommentOptions.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/ObjCRuntime.h"
