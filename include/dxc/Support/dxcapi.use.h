@@ -16,9 +16,7 @@
 
 namespace dxc {
 
-// Mach change start: static dxcompiler
-// extern const char *kDxCompilerLib;
-// Mach change end
+extern const char *kDxCompilerLib;
 // Mach change start: static dxil
 // extern const char *kDxilLib;
 // Mach change end
@@ -30,52 +28,63 @@ protected:
   DxcCreateInstanceProc m_createFn;
   DxcCreateInstance2Proc m_createFn2;
 
+// Mach change start: static dxcompiler
+//   HRESULT InitializeInternal(LPCSTR dllName, LPCSTR fnName) {
+//     if (m_dll != nullptr)
+//       return S_OK;
+
+// #ifdef _WIN32
+//     m_dll = LoadLibraryA(dllName);
+//     if (m_dll == nullptr)
+//       return HRESULT_FROM_WIN32(GetLastError());
+//     m_createFn = (DxcCreateInstanceProc)GetProcAddress(m_dll, fnName);
+
+//     if (m_createFn == nullptr) {
+//       HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
+//       FreeLibrary(m_dll);
+//       m_dll = nullptr;
+//       return hr;
+//     }
+// #else
+//     m_dll = ::dlopen(dllName, RTLD_LAZY);
+//     if (m_dll == nullptr)
+//       return E_FAIL;
+//     m_createFn = (DxcCreateInstanceProc)::dlsym(m_dll, fnName);
+
+//     if (m_createFn == nullptr) {
+//       ::dlclose(m_dll);
+//       m_dll = nullptr;
+//       return E_FAIL;
+//     }
+// #endif
+
+//     // Only basic functions used to avoid requiring additional headers.
+//     m_createFn2 = nullptr;
+//     char fnName2[128];
+//     size_t s = strlen(fnName);
+//     if (s < sizeof(fnName2) - 2) {
+//       memcpy(fnName2, fnName, s);
+//       fnName2[s] = '2';
+//       fnName2[s + 1] = '\0';
+// #ifdef _WIN32
+//       m_createFn2 = (DxcCreateInstance2Proc)GetProcAddress(m_dll, fnName2);
+// #else
+//       m_createFn2 = (DxcCreateInstance2Proc)::dlsym(m_dll, fnName2);
+// #endif
+//     }
+
+//     return S_OK;
+//   }
   HRESULT InitializeInternal(LPCSTR dllName, LPCSTR fnName) {
-    if (m_dll != nullptr)
+    if (strcmp(fnName, "DxcCreateInstance") == 0) {
+      m_createFn = &DxcCreateInstance;
+      m_createFn2 = &DxcCreateInstance2;
       return S_OK;
-
-#ifdef _WIN32
-    m_dll = LoadLibraryA(dllName);
-    if (m_dll == nullptr)
-      return HRESULT_FROM_WIN32(GetLastError());
-    m_createFn = (DxcCreateInstanceProc)GetProcAddress(m_dll, fnName);
-
-    if (m_createFn == nullptr) {
-      HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
-      FreeLibrary(m_dll);
-      m_dll = nullptr;
-      return hr;
     }
-#else
-    m_dll = ::dlopen(dllName, RTLD_LAZY);
-    if (m_dll == nullptr)
-      return E_FAIL;
-    m_createFn = (DxcCreateInstanceProc)::dlsym(m_dll, fnName);
-
-    if (m_createFn == nullptr) {
-      ::dlclose(m_dll);
-      m_dll = nullptr;
-      return E_FAIL;
-    }
-#endif
-
-    // Only basic functions used to avoid requiring additional headers.
-    m_createFn2 = nullptr;
-    char fnName2[128];
-    size_t s = strlen(fnName);
-    if (s < sizeof(fnName2) - 2) {
-      memcpy(fnName2, fnName, s);
-      fnName2[s] = '2';
-      fnName2[s + 1] = '\0';
-#ifdef _WIN32
-      m_createFn2 = (DxcCreateInstance2Proc)GetProcAddress(m_dll, fnName2);
-#else
-      m_createFn2 = (DxcCreateInstance2Proc)::dlsym(m_dll, fnName2);
-#endif
-    }
-
-    return S_OK;
+    fprintf(stderr, "mach-dxcompiler: InitializeInternal: unknown GetProcAddress name: %s\n", fnName);
+    return E_FAIL;
   }
+// Mach change end
 
 public:
   DxcDllSupport() : m_dll(nullptr), m_createFn(nullptr), m_createFn2(nullptr) {}
@@ -91,11 +100,9 @@ public:
 
   ~DxcDllSupport() { Cleanup(); }
 
-  // Mach change start: static dxcompiler
-  // HRESULT Initialize() {
-  //   return InitializeInternal(kDxCompilerLib, "DxcCreateInstance");
-  // }
-  // Mach change end
+  HRESULT Initialize() {
+    return InitializeInternal(kDxCompilerLib, "DxcCreateInstance");
+  }
 
   HRESULT InitializeForDll(LPCSTR dll, LPCSTR entryPoint) {
     return InitializeInternal(dll, entryPoint);
@@ -109,8 +116,8 @@ public:
   HRESULT CreateInstance(REFCLSID clsid, REFIID riid, IUnknown **pResult) {
     if (pResult == nullptr)
       return E_POINTER;
-    if (m_dll == nullptr)
-      return E_FAIL;
+    // if (m_dll == nullptr)
+    //   return E_FAIL;
     HRESULT hr = m_createFn(clsid, riid, (LPVOID *)pResult);
     return hr;
   }
@@ -126,10 +133,10 @@ public:
                           IUnknown **pResult) {
     if (pResult == nullptr)
       return E_POINTER;
-    if (m_dll == nullptr)
-      return E_FAIL;
-    if (m_createFn2 == nullptr)
-      return E_FAIL;
+    // if (m_dll == nullptr)
+    //   return E_FAIL;
+    // if (m_createFn2 == nullptr)
+    //   return E_FAIL;
     HRESULT hr = m_createFn2(pMalloc, clsid, riid, (LPVOID *)pResult);
     return hr;
   }

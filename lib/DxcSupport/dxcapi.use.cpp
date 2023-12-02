@@ -26,9 +26,11 @@
 namespace dxc {
 
 // Mach change start: static dxcompiler
-// const char *kDxCompilerLib =
-//     CMAKE_SHARED_LIBRARY_PREFIX "dxcompiler" CMAKE_SHARED_LIBRARY_SUFFIX;
+#define CMAKE_SHARED_LIBRARY_PREFIX
+#define CMAKE_SHARED_LIBRARY_SUFFIX
 // Mach change end
+const char *kDxCompilerLib =
+    CMAKE_SHARED_LIBRARY_PREFIX "dxcompiler" CMAKE_SHARED_LIBRARY_SUFFIX;
 // Mach change start: static dxil
 // const char *kDxilLib =
 //     CMAKE_SHARED_LIBRARY_PREFIX "dxil" CMAKE_SHARED_LIBRARY_SUFFIX;
@@ -83,11 +85,9 @@ void IFT_Data(HRESULT hr, LPCWSTR data) {
 }
 
 void EnsureEnabled(DxcDllSupport &dxcSupport) {
-  // Mach change start: static dxcompiler
-  // if (!dxcSupport.IsEnabled()) {
-  //   IFT(dxcSupport.Initialize());
-  // }
-  // Mach change end
+  if (!dxcSupport.IsEnabled()) {
+    IFT(dxcSupport.Initialize());
+  }
 }
 
 void ReadFileIntoBlob(DxcDllSupport &dxcSupport, LPCWSTR pFileName,
