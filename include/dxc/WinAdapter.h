@@ -56,6 +56,7 @@
 //===----------------------------------------------------------------------===//
 // Mach change start
 // #define C_ASSERT(expr) static_assert((expr), "")
+#define CoTaskMemRealloc realloc
 // Mach change end
 #define ATLASSERT assert
 

@@ -28,11 +28,23 @@
 
 //===--------------------------- CAllocator -------------------------------===//
 
+// Mach change start
+// void *CAllocator::Reallocate(void *p, size_t nBytes) throw() {
+//   return realloc(p, nBytes);
+// }
+// void *CAllocator::Allocate(size_t nBytes) throw() { return malloc(nBytes); }
+// void CAllocator::Free(void *p) throw() { free(p); }
+
+// In ZigGNUWinAdapter we make use of CAllocator, and it needs to interop with the real
+// Windows COM API and use the same underlying allocator. So we redirect these allocations
+// to CoTaskMem* in all cases. On macOS/Linux these are just redirected to malloc/free
+// anyway in WinAdapter.h
 void *CAllocator::Reallocate(void *p, size_t nBytes) throw() {
-  return realloc(p, nBytes);
+  return CoTaskMemRealloc(p, nBytes);
 }
-void *CAllocator::Allocate(size_t nBytes) throw() { return malloc(nBytes); }
-void CAllocator::Free(void *p) throw() { free(p); }
+void *CAllocator::Allocate(size_t nBytes) throw() { return CoTaskMemAlloc(nBytes); }
+void CAllocator::Free(void *p) throw() { CoTaskMemFree(p); }
+// Mach change end
 
 // Mach change start
 #ifndef _WIN32
