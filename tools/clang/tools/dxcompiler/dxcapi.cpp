@@ -59,23 +59,17 @@ HRESULT CreateDxcContainerReflection(REFIID riid, _Out_ LPVOID *ppv) {
 }
 
 HRESULT CreateDxcContainerBuilder(REFIID riid, _Out_ LPVOID *ppv) {
-  // Mach change start: static dxil
-  // // Call dxil.dll's containerbuilder
-  // *ppv = nullptr;
-  // Mach change end
+  // Call dxil.dll's containerbuilder
+  *ppv = nullptr;
   const char *warning;
-  // Mach change start: static dxil
-  // HRESULT hr = DxilLibCreateInstance(CLSID_DxcContainerBuilder,
-  //                                    (IDxcContainerBuilder **)ppv);
-  // if (FAILED(hr)) {
-  // Mach change end
+  HRESULT hr = DxilLibCreateInstance(CLSID_DxcContainerBuilder,
+                                     (IDxcContainerBuilder **)ppv);
+  if (FAILED(hr)) {
     warning = "Unable to create container builder from dxil.dll. Resulting "
               "container will not be signed.\n";
-  // Mach change start: static dxil
-  // } else {
-  //   return hr;
-  // }
-  // Mach change end
+  } else {
+    return hr;
+  }
 
   CComPtr<DxcContainerBuilder> Result =
       DxcContainerBuilder::Alloc(DxcGetThreadMallocNoRef());
@@ -95,15 +89,11 @@ static HRESULT ThreadMallocDxcCreateInstance(REFCLSID rclsid, REFIID riid,
   } else if (IsEqualCLSID(rclsid, CLSID_DxcUtils)) {
     hr = CreateDxcUtils(riid, ppv);
   } else if (IsEqualCLSID(rclsid, CLSID_DxcValidator)) {
-    // Mach change start: static dxil
-    // if (DxilLibIsEnabled()) {
-    //   hr = DxilLibCreateInstance(rclsid, riid, (IUnknown **)ppv);
-    // } else {
-    // Mach change end
+    if (DxilLibIsEnabled()) {
+      hr = DxilLibCreateInstance(rclsid, riid, (IUnknown **)ppv);
+    } else {
       hr = CreateDxcValidator(riid, ppv);
-    // Mach change start: static dxil
-    // }
-    // Mach change end
+    }
   } else if (IsEqualCLSID(rclsid, CLSID_DxcAssembler)) {
     hr = CreateDxcAssembler(riid, ppv);
   } else if (IsEqualCLSID(rclsid, CLSID_DxcOptimizer)) {

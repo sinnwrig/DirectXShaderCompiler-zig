@@ -29,13 +29,11 @@ namespace dxc {
 #define CMAKE_SHARED_LIBRARY_PREFIX
 #define CMAKE_SHARED_LIBRARY_SUFFIX
 // Mach change end
+
 const char *kDxCompilerLib =
     CMAKE_SHARED_LIBRARY_PREFIX "dxcompiler" CMAKE_SHARED_LIBRARY_SUFFIX;
-// Mach change start: static dxil
-// const char *kDxilLib =
-//     CMAKE_SHARED_LIBRARY_PREFIX "dxil" CMAKE_SHARED_LIBRARY_SUFFIX;
-//
-// Mach change end
+const char *kDxilLib =
+    CMAKE_SHARED_LIBRARY_PREFIX "dxil" CMAKE_SHARED_LIBRARY_SUFFIX;
 
 #ifdef _WIN32
 static void TrimEOL(char *pMsg) {

@@ -1339,12 +1339,10 @@ void DxcContext::GetCompilerVersionInfo(llvm::raw_string_ostream &OS) {
       m_Opts.ExternalFn.empty() ? nullptr : m_Opts.ExternalFn.data(),
       m_dxcSupport);
 
-  // Mach change start: static dxil
-  // // Print validator if exists
-  // DxcDllSupport DxilSupport;
-  // DxilSupport.InitializeForDll(kDxilLib, "DxcCreateInstance");
-  // WriteDXILVersionInfo(OS, DxilSupport);
-  // Mach change end
+  // Print validator if exists
+  DxcDllSupport DxilSupport;
+  DxilSupport.InitializeForDll(kDxilLib, "DxcCreateInstance");
+  WriteDXILVersionInfo(OS, DxilSupport);
 }
 
 #ifndef VERSION_STRING_SUFFIX

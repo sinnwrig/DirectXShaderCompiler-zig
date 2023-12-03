@@ -49,6 +49,8 @@
 #include "dxc/Support/dxcapi.use.h"
 #include "dxc/Support/microcom.h"
 
+#include "MachSiegbertVogtDXCSA.h"
+
 #ifdef _WIN32
 #include "dxcetw.h"
 #endif
@@ -1077,6 +1079,15 @@ public:
                   IFT(pResult->SetOutputName(DXC_OUT_PDB, pDebugName));
                 }
               }
+            }
+
+            // Perform Mach Siegbert Vogt DX Code Signing Algorithm on the final container/blob
+            // This is a FOSS alternative to the proprietary dxil.dll code signer.
+            if (pOutputBlob && produceFullContainer) {
+              DxilContainerHeader* header = reinterpret_cast<DxilContainerHeader*>(pOutputBlob->GetBufferPointer());
+              DWORD secret[4] = {};
+              machSiegbertVogtDXCSA((BYTE*)header, pOutputBlob->GetBufferSize(), secret);
+              memcpy(&header->Hash, secret, 16);
             }
 
             if (pReflectionStream && pReflectionStream->GetPtrSize()) {

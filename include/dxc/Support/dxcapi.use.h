@@ -17,21 +17,26 @@
 namespace dxc {
 
 extern const char *kDxCompilerLib;
-// Mach change start: static dxil
-// extern const char *kDxilLib;
+extern const char *kDxilLib;
+
+// Mach change start: static dxcompiler/dxil
+extern "C" BOOL MachDxcompilerInvokeDllMain();
+extern "C" void MachDxcompilerInvokeDllShutdown();
+static bool dxcompiler_dll_loaded = false;
 // Mach change end
 
 // Helper class to dynamically load the dxcompiler or a compatible libraries.
 class DxcDllSupport {
 protected:
-  // Mach change start: static dxcompiler
+  // Mach change start: static dxcompiler/dxil
   BOOL m_initialized;
+  std::string m_dllName;
   // Mach change end
   HMODULE m_dll;
   DxcCreateInstanceProc m_createFn;
   DxcCreateInstance2Proc m_createFn2;
 
-// Mach change start: static dxcompiler
+// Mach change start: static dxcompiler/dxil
 //   HRESULT InitializeInternal(LPCSTR dllName, LPCSTR fnName) {
 //     if (m_dll != nullptr)
 //       return S_OK;
@@ -79,10 +84,44 @@ protected:
 //     return S_OK;
 //   }
   HRESULT InitializeInternal(LPCSTR dllName, LPCSTR fnName) {
+    // The compilation process occurs as follows:
+    //
+    // 1. Compilation begins
+    // 2. InitializeInternal(kDxCompilerLib, "DxcCreateInstance") is called
+    // 3. MachDxcompilerInvokeDllMain() is invoked..
+    //   3a. which calls dxcompiler.dll's DllMain entrypoint
+    //   3b. which triggers loading of dxil.dll
+    // 4. InitializeInternal(kDxilLib, "DxcCreateInstance") is called
+    //   4a. E_FAIL is returned, indicating dxil.dll is not present
+    //   4b. We silence the warning related to dxil.dll not being present and
+    //       code signing not occuring (commented out)
+    // 5. We perform Mach Siegbert Vogt DXCSA on the final container/blob before the
+    //    compiler writes it to disk.
+    //
+    // Look for "DXCSA" in the codebase to see where signing happens.
+
+    // Store which DLL this is for later, so we can MachDxcompilerInvokeDllShutdown later.
+    m_dllName = dllName;
+
+    // If this is dxil.dll, emulate that we do not have it.
+    if (strcmp(dllName, kDxilLib) == 0) {
+      return E_FAIL;
+    }
+
+    // If this is dxcompiler.dll, emulate as if we loaded it in-process.
     if (strcmp(fnName, "DxcCreateInstance") == 0) {
       m_initialized = true;
       m_createFn = &DxcCreateInstance;
       m_createFn2 = &DxcCreateInstance2;
+
+      // If this is the first time this is called, invoke DllMain() 
+      if (!dxcompiler_dll_loaded) {
+        if (!MachDxcompilerInvokeDllMain()) {
+          fprintf(stderr, "mach-dxcompiler: MachDxcompilerInvokeDllMain failed\n");
+          return E_FAIL;
+        }
+        dxcompiler_dll_loaded = true;
+      }
       return S_OK;
     }
     fprintf(stderr, "mach-dxcompiler: InitializeInternal: unknown GetProcAddress name: %s\n", fnName);
@@ -91,15 +130,17 @@ protected:
 // Mach change end
 
 public:
-  // Mach change start: static dxcompiler
+  // Mach change start: static dxcompiler/dxil
   // DxcDllSupport() : m_dll(nullptr), m_createFn(nullptr), m_createFn2(nullptr) {}
   DxcDllSupport() : m_initialized(false), m_dll(nullptr), m_createFn(nullptr), m_createFn2(nullptr) {}
   // Mach change end
 
   DxcDllSupport(DxcDllSupport &&other) {
-    // Mach change start: static dxcompiler
+    // Mach change start: static dxcompiler/dxil
     m_initialized = other.m_initialized;
     other.m_initialized = false;
+    m_dllName = other.m_dllName;
+    other.m_dllName = nullptr;
     // Mach change end
     m_dll = other.m_dll;
     other.m_dll = nullptr;
@@ -127,7 +168,7 @@ public:
   HRESULT CreateInstance(REFCLSID clsid, REFIID riid, IUnknown **pResult) {
     if (pResult == nullptr)
       return E_POINTER;
-    // Mach change start: static dxcompiler
+    // Mach change start: static dxcompiler/dxil
     // if (m_dll == nullptr)
     if (!m_initialized)
     // Mach change end
@@ -147,7 +188,7 @@ public:
                           IUnknown **pResult) {
     if (pResult == nullptr)
       return E_POINTER;
-    // Mach change start: static dxcompiler
+    // Mach change start: static dxcompiler/dxil
     // if (m_dll == nullptr)
     if (!m_initialized)
     // Mach change end
@@ -160,12 +201,18 @@ public:
 
   bool HasCreateWithMalloc() const { return m_createFn2 != nullptr; }
 
-  // Mach change start: static dxcompiler
+  // Mach change start: static dxcompiler/dxil
   // bool IsEnabled() const { return m_dll != nullptr; }
   bool IsEnabled() const { return m_initialized; }
   // Mach change start
 
   void Cleanup() {
+    // Mach change start: static dxcompiler/dxil
+    if (m_dllName == kDxCompilerLib && dxcompiler_dll_loaded) {
+      dxcompiler_dll_loaded = false;
+      MachDxcompilerInvokeDllShutdown();
+    }
+    // Mach change end
     if (m_dll != nullptr) {
       m_createFn = nullptr;
       m_createFn2 = nullptr;
@@ -178,12 +225,13 @@ public:
     }
   }
 
-  // Mach change start: static dxcompiler
+  // Mach change start: static dxcompiler/dxil
   // HMODULE Detach() {
   //   HMODULE hModule = m_dll;
   //   m_dll = nullptr;
   //   return hModule;
   // }
+  void Detach() { m_initialized = false; }
   // Mach change end
 };
 

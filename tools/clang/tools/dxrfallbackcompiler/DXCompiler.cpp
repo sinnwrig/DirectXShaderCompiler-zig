@@ -58,9 +58,7 @@ static HRESULT InitMaybeFail() throw() {
   }
   fsSetup = true;
   IFC(hlsl::SetupRegistryPassForHLSL());
-  // Mach change start: static dxil
-  // IFC(DxilLibInitialize());
-  // Mach change end
+  IFC(DxilLibInitialize());
   if (hlsl::options::initHlslOptTable()) {
     hr = E_FAIL;
     goto Cleanup;
@@ -94,14 +92,12 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD Reason, LPVOID reserved) {
     ::hlsl::options::cleanupHlslOptTable();
     ::llvm::sys::fs::CleanupPerThreadFileSystem();
     ::llvm::llvm_shutdown();
-    // Mach change start: static dxil
-    // if (reserved ==
-    //     NULL) { // FreeLibrary has been called or the DLL load failed
-    //   DxilLibCleanup(DxilLibCleanUpType::UnloadLibrary);
-    // } else { // Process termination. We should not call FreeLibrary()
-    //   DxilLibCleanup(DxilLibCleanUpType::ProcessTermination);
-    // }
-    // Mach change end
+    if (reserved ==
+        NULL) { // FreeLibrary has been called or the DLL load failed
+      DxilLibCleanup(DxilLibCleanUpType::UnloadLibrary);
+    } else { // Process termination. We should not call FreeLibrary()
+      DxilLibCleanup(DxilLibCleanUpType::ProcessTermination);
+    }
     DxcClearThreadMalloc();
     DxcCleanupThreadMalloc();
     DxcEtw_DXCompilerShutdown_Stop(S_OK);
