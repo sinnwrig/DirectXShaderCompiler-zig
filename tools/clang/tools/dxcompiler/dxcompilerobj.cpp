@@ -1085,7 +1085,7 @@ public:
             // This is a FOSS alternative to the proprietary dxil.dll code signer.
             if (pOutputBlob && produceFullContainer) {
               DxilContainerHeader* header = reinterpret_cast<DxilContainerHeader*>(pOutputBlob->GetBufferPointer());
-              DWORD secret[4] = {};
+              uint32_t secret[4] = {};
               machSiegbertVogtDXCSA((BYTE*)header, pOutputBlob->GetBufferSize(), secret);
               memcpy(&header->Hash, secret, 16);
             }
