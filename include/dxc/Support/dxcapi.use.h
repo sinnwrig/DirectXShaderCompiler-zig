@@ -14,6 +14,10 @@
 
 #include "dxc/dxcapi.h"
 
+// Mach change start: static dxcompiler/dxil
+#include <string>
+// Mach change end
+
 namespace dxc {
 
 extern const char *kDxCompilerLib;

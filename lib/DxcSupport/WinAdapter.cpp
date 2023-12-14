@@ -21,7 +21,7 @@
 // Mach change start
 // #include "dxc/Support/WinIncludes.h"
 // #ifndef _WIN32
-#if !defined(_WIN32) || defined(__clang__)
+#if !defined(_WIN32) || (defined(__clang__) && !defined(_MSC_VER))
 // Mach change end
 
 #include "dxc/Support/Unicode.h"

@@ -9,6 +9,34 @@
 #ifndef LLVM_SUPPORT_ZIG_GNU_WIN_ADAPTER_H
 #define LLVM_SUPPORT_ZIG_GNU_WIN_ADAPTER_H
 
+#if defined(__clang__) && defined(_MSC_VER) && defined(_WIN32) // Zig windows-msvc target
+
+// ETW tracing shims, because we do not use ETW (requires codegen tool)
+//
+// Event Tracing for Windows (ETW) provides application programmers the ability
+// to start and stop event tracing sessions, instrument an application to
+// provide trace events, and consume trace events.
+//---------------------------------------------------------------------
+#define DxcEtw_DXCompilerShutdown_Start()
+#define DxcEtw_DXCompilerShutdown_Stop(e)
+#define DxcEtw_DXCompilerCreateInstance_Start()
+#define DxcEtw_DXCompilerCreateInstance_Stop(hr)
+#define DxcEtw_DXCompilerCompile_Start()
+#define DxcEtw_DXCompilerCompile_Stop(hr)
+#define DxcEtw_DXCompilerDisassemble_Start()
+#define DxcEtw_DXCompilerDisassemble_Stop(hr)
+#define DxcEtw_DXCompilerPreprocess_Start()
+#define DxcEtw_DXCompilerPreprocess_Stop(hr)
+#define DxcEtw_DxcValidation_Start()
+#define DxcEtw_DxcValidation_Stop(hr)
+
+#define DxcEtw_DXCompilerInitialization_Start()
+#define DxcEtw_DXCompilerInitialization_Stop(e)
+#define EventRegisterMicrosoft_Windows_DXCompiler_API()
+#define EventUnregisterMicrosoft_Windows_DXCompiler_API()
+
+#endif // Zig windows-msvc target
+
 #if defined(__clang__) && !defined(_MSC_VER) && defined(_WIN32) // Zig windows-gnu target
 
 // MinGW UUIDOF specializations

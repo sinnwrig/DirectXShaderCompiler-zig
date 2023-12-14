@@ -19,11 +19,14 @@
 #include <map>
 #include <string.h>
 #include <sys/stat.h>
+#ifndef _MSC_VER
 #include <unistd.h>
+#endif
 
 #include "dxc/Support/WinFunctions.h"
 #include "dxc/Support/microcom.h"
 
+#ifndef _MSC_VER
 HRESULT UInt32Mult(UINT a, UINT b, UINT *out) {
   uint64_t result = (uint64_t)a * (uint64_t)b;
   if (result > uint64_t(UINT_MAX))
@@ -32,6 +35,7 @@ HRESULT UInt32Mult(UINT a, UINT b, UINT *out) {
   *out = (uint32_t)result;
   return S_OK;
 }
+#endif // _MSC_VER
 #endif // defined(__clang__) && defined(_WIN32)
 // Mach change end
 
