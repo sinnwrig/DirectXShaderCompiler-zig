@@ -87,12 +87,12 @@ Cleanup:
 #if defined(LLVM_ON_UNIX)
 // Mach change start: static dxcompiler/dxil
 // HRESULT __attribute__((constructor)) DllMain() { return InitMaybeFail(); }
-HRESULT MachDxcompiler_DllMain() { return InitMaybeFail(); }
+HRESULT Dxcompiler_DllMain() { return InitMaybeFail(); }
 // Mach change end
 
 // Mach change start: static dxcompiler/dxil
 // void __attribute__((destructor)) DllShutdown() {
-void MachDxcompiler_DllShutdown() {
+void Dxcompiler_DllShutdown() {
 // Mach change end
   DxcSetThreadMallocToDefault();
   ::hlsl::options::cleanupHlslOptTable();
@@ -103,16 +103,16 @@ void MachDxcompiler_DllShutdown() {
 }
 // Mach change start: static dxcompiler/dxil
 extern "C" {
-BOOL MachDxcompilerInvokeDllMain() {
-  return SUCCEEDED(MachDxcompiler_DllMain());
+BOOL DxcompilerInvokeDllMain() {
+  return SUCCEEDED(Dxcompiler_DllMain());
 }
-void MachDxcompilerInvokeDllShutdown() {
-  MachDxcompiler_DllShutdown();
+void DxcompilerInvokeDllShutdown() {
+  Dxcompiler_DllShutdown();
 }
 }
 // Mach change end
 #else  // LLVM_ON_UNIX
-BOOL WINAPI MachDxcompiler_DllMain(HINSTANCE hinstDLL, DWORD Reason, LPVOID reserved) {
+BOOL WINAPI Dxcompiler_DllMain(HINSTANCE hinstDLL, DWORD Reason, LPVOID reserved) {
   BOOL result = TRUE;
   if (Reason == DLL_PROCESS_ATTACH) {
     EventRegisterMicrosoft_Windows_DXCompiler_API();
@@ -142,11 +142,11 @@ BOOL WINAPI MachDxcompiler_DllMain(HINSTANCE hinstDLL, DWORD Reason, LPVOID rese
 }
 // Mach change start: static dxcompiler/dxil
 extern "C" {
-BOOL MachDxcompilerInvokeDllMain() {
-  return MachDxcompiler_DllMain(nullptr, DLL_PROCESS_ATTACH, nullptr);
+BOOL DxcompilerInvokeDllMain() {
+  return Dxcompiler_DllMain(nullptr, DLL_PROCESS_ATTACH, nullptr);
 }
-void MachDxcompilerInvokeDllShutdown() {
-  MachDxcompiler_DllMain(nullptr, DLL_PROCESS_DETACH, nullptr);
+void DxcompilerInvokeDllShutdown() {
+  Dxcompiler_DllMain(nullptr, DLL_PROCESS_DETACH, nullptr);
 }
 }
 // Mach change end

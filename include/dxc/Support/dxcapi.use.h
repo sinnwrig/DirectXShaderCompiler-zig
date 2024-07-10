@@ -24,8 +24,8 @@ extern const char *kDxCompilerLib;
 extern const char *kDxilLib;
 
 // Mach change start: static dxcompiler/dxil
-extern "C" BOOL MachDxcompilerInvokeDllMain();
-extern "C" void MachDxcompilerInvokeDllShutdown();
+extern "C" BOOL DxcompilerInvokeDllMain();
+extern "C" void DxcompilerInvokeDllShutdown();
 static bool dxcompiler_dll_loaded = false;
 // Mach change end
 
@@ -92,7 +92,7 @@ protected:
     //
     // 1. Compilation begins
     // 2. InitializeInternal(kDxCompilerLib, "DxcCreateInstance") is called
-    // 3. MachDxcompilerInvokeDllMain() is invoked..
+    // 3. DxcompilerInvokeDllMain() is invoked..
     //   3a. which calls dxcompiler.dll's DllMain entrypoint
     //   3b. which triggers loading of dxil.dll
     // 4. InitializeInternal(kDxilLib, "DxcCreateInstance") is called
@@ -104,7 +104,7 @@ protected:
     //
     // Look for "DXCSA" in the codebase to see where signing happens.
 
-    // Store which DLL this is for later, so we can MachDxcompilerInvokeDllShutdown later.
+    // Store which DLL this is for later, so we can DxcompilerInvokeDllShutdown later.
     m_dllName = dllName;
 
     // If this is dxil.dll, emulate that we do not have it.
@@ -120,15 +120,15 @@ protected:
 
       // If this is the first time this is called, invoke DllMain() 
       if (!dxcompiler_dll_loaded) {
-        if (!MachDxcompilerInvokeDllMain()) {
-          fprintf(stderr, "mach-dxcompiler: MachDxcompilerInvokeDllMain failed\n");
+        if (!DxcompilerInvokeDllMain()) {
+          fprintf(stderr, "dxcompiler: DxcompilerInvokeDllMain failed\n");
           return E_FAIL;
         }
         dxcompiler_dll_loaded = true;
       }
       return S_OK;
     }
-    fprintf(stderr, "mach-dxcompiler: InitializeInternal: unknown GetProcAddress name: %s\n", fnName);
+    fprintf(stderr, "dxcompiler: InitializeInternal: unknown GetProcAddress name: %s\n", fnName);
     return E_FAIL;
   }
 // Mach change end
@@ -214,7 +214,7 @@ public:
     // Mach change start: static dxcompiler/dxil
     if (m_dllName == kDxCompilerLib && dxcompiler_dll_loaded) {
       dxcompiler_dll_loaded = false;
-      MachDxcompilerInvokeDllShutdown();
+      DxcompilerInvokeDllShutdown();
     }
     // Mach change end
     if (m_dll != nullptr) {

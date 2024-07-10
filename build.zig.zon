@@ -1,0 +1,19 @@
+.{
+    .name = "DirectXShaderCompiler-zig",
+    .version = "0.1.0",
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "LICENSE",
+        "LICENSE-APACHE",
+        "LICENSE-MIT",
+        "README.md",
+        "update.sh",
+    },
+    .dependencies = .{
+        .@"SPIRV-Tools" = .{ 
+            .path = "external/SPIRV-Tools",
+            .lazy = true,
+        },
+    },
+}
