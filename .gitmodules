@@ -3,7 +3,7 @@
 	url = https://github.com/KhronosGroup/SPIRV-Headers
 [submodule "external/SPIRV-Tools"]
 	path = external/SPIRV-Tools
-	url = https://github.com/KhronosGroup/SPIRV-Tools
+	url = https://github.com/sinnwrig/SPIRV-Tools-zig
 [submodule "external/googletest"]
 	path = external/googletest
 	url = https://github.com/google/googletest
