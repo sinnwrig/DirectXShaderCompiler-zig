@@ -64,6 +64,7 @@ class VersionGen():
         self.latest_release_info = read_latest_release_info()
         self.current_branch = get_current_branch()
         self.rc_version_field_4_cache = None
+        self.file = None
 
     def tool_name(self):
         return self.latest_release_info.get("toolname",
@@ -111,16 +112,29 @@ class VersionGen():
              pv += '({})"'.format(get_last_commit_sha())
         return pv
 
-    def print_define(self, name, value):
-        print('#ifdef {}'.format(name))
-        print('#undef {}'.format(name))
-        print('#endif')
-        print('#define {} {}'.format(name, value))
-        print()
+    def append(self, text):
+        if self.file == None:
+            print(text)
+        else:
+            self.file.write(text + '\n')
 
-    def print_version(self):
-        print('#pragma once')
-        print()
+    def print_define(self, name, value):
+
+        self.append('#ifdef {}'.format(name))
+        self.append('#undef {}'.format(name))
+        self.append('#endif')
+        self.append('#define {} {}'.format(name, value))
+        self.append('')
+
+    def print_version(self):    
+        self.file = None
+
+        if self.options.output != None:
+            self.file = open(self.options.output, "w")
+
+        self.append('#pragma once')
+        self.append('')
+
         self.print_define('RC_COMPANY_NAME',      '"Microsoft(r) Corporation"')
         self.print_define('RC_VERSION_FIELD_1',   self.rc_version_field_1())
         self.print_define('RC_VERSION_FIELD_2',   self.rc_version_field_2())
@@ -135,11 +149,15 @@ class VersionGen():
         self.print_define('HLSL_VERSION_MACRO',   'HLSL_TOOL_NAME " " RC_FILE_VERSION')
         self.print_define('HLSL_LLVM_IDENT',      'HLSL_TOOL_NAME " " RC_PRODUCT_VERSION')
 
+        if self.file != None:
+            self.file.close()
+
 
 def main():
     p = argparse.ArgumentParser("gen_version")
     p.add_argument("--no-commit-sha", action='store_true')
     p.add_argument("--official", action="store_true")
+    p.add_argument("--output", required=False)
     args = p.parse_args()
 
     VersionGen(args).print_version() 
