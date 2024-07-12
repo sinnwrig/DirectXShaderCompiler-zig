@@ -173,7 +173,7 @@ std::wstring Disassemble(dxc::DxcDllSupport &dllSupport, IDxcBlob *pProgram) {
   CComPtr<IDxcBlobEncoding> pDbgDisassembly;
   VERIFY_SUCCEEDED(pCompiler->Disassemble(pProgram, &pDbgDisassembly));
   std::string disText = BlobToUtf8(pDbgDisassembly);
-  CA2W disTextW(disText.c_str(), CP_UTF8);
+  CA2W disTextW(disText.c_str());
   return std::wstring(disTextW);
 }
 
@@ -258,10 +258,7 @@ PassOutput RunAnnotationPasses(dxc::DxcDllSupport &dllSupport, IDxcBlob *dxil,
   VERIFY_SUCCEEDED(pOptimizer->RunOptimizer(
       dxil, Options.data(), Options.size(), &pOptimizedModule, &pText));
 
-  std::string outputText;
-  if (pText->GetBufferSize() != 0) {
-    outputText = reinterpret_cast<const char *>(pText->GetBufferPointer());
-  }
+  std::string outputText = BlobToUtf8(pText);
 
   auto disasm = ToString(Disassemble(dllSupport, pOptimizedModule));
 
@@ -275,6 +272,66 @@ PassOutput RunAnnotationPasses(dxc::DxcDllSupport &dllSupport, IDxcBlob *dxil,
 
   return {std::move(pOptimizedModule), std::move(valueLocations),
           Tokenize(outputText.c_str(), "\n")};
+}
+
+class InstructionOffsetSeekerImpl : public InstructionOffsetSeeker {
+
+  std::map<std::wstring, DWORD> m_labelToInstructionOffset;
+
+public:
+  InstructionOffsetSeekerImpl(DebuggerInterfaces &debuggerInterfaces) {
+    DWORD SourceFileOrdinal = 0;
+    CComBSTR fileName;
+    CComBSTR fileContent;
+    while (SUCCEEDED(debuggerInterfaces.compilationInfo->GetSourceFile(
+        SourceFileOrdinal, &fileName, &fileContent))) {
+      auto lines = strtok(std::wstring(fileContent), L"\n");
+      for (size_t line = 0; line < lines.size(); ++line) {
+        const wchar_t DebugLocLabel[] = L"debug-loc(";
+        auto DebugLocPos = lines[line].find(DebugLocLabel);
+        if (DebugLocPos != std::wstring::npos) {
+          auto StartLabelPos = DebugLocPos + (_countof(DebugLocLabel) - 1);
+          auto CloseDebugLocPos = lines[line].find(L")", StartLabelPos);
+          if (CloseDebugLocPos == std::string::npos) {
+            VERIFY_ARE_NOT_EQUAL(CloseDebugLocPos, std::string::npos);
+          }
+          auto Label = lines[line].substr(StartLabelPos,
+                                          CloseDebugLocPos - StartLabelPos);
+          CComPtr<IDxcPixDxilInstructionOffsets> InstructionOffsets;
+          if (FAILED((debuggerInterfaces.debugInfo
+                          ->InstructionOffsetsFromSourceLocation(
+                              fileName, line + 1, 0, &InstructionOffsets)))) {
+            VERIFY_FAIL(L"InstructionOffsetsFromSourceLocation failed");
+          }
+          auto InstructionOffsetCount = InstructionOffsets->GetCount();
+          if (InstructionOffsetCount == 0) {
+            VERIFY_FAIL(L"Instruction offset count was zero");
+          }
+          if (m_labelToInstructionOffset.find(Label) !=
+              m_labelToInstructionOffset.end()) {
+            VERIFY_FAIL(L"Duplicate label found!");
+          }
+          // Just the last offset is sufficient:
+          m_labelToInstructionOffset[Label] =
+              InstructionOffsets->GetOffsetByIndex(InstructionOffsetCount - 1);
+        }
+      }
+      SourceFileOrdinal++;
+      fileName.Empty();
+      fileContent.Empty();
+    }
+  }
+
+  virtual DWORD FindInstructionOffsetForLabel(const wchar_t *label) override {
+    VERIFY_ARE_NOT_EQUAL(m_labelToInstructionOffset.find(label),
+                         m_labelToInstructionOffset.end());
+    return m_labelToInstructionOffset[label];
+  }
+};
+
+std::unique_ptr<pix_test::InstructionOffsetSeeker>
+GatherDebugLocLabelsFromDxcUtils(DebuggerInterfaces &debuggerInterfaces) {
+  return std::make_unique<InstructionOffsetSeekerImpl>(debuggerInterfaces);
 }
 
 CComPtr<IDxcBlob> GetDebugPart(dxc::DxcDllSupport &dllSupport,
@@ -329,8 +386,7 @@ CComPtr<IDxcBlob> Compile(dxc::DxcDllSupport &dllSupport, const char *hlsl,
   if (FAILED(compilationStatus)) {
     CComPtr<IDxcBlobEncoding> pErrros;
     VERIFY_SUCCEEDED(pResult->GetErrorBuffer(&pErrros));
-    CA2W errorTextW(static_cast<const char *>(pErrros->GetBufferPointer()),
-                    CP_UTF8);
+    CA2W errorTextW(static_cast<const char *>(pErrros->GetBufferPointer()));
     WEX::Logging::Log::Error(errorTextW);
     return {};
   }
@@ -361,7 +417,7 @@ CComPtr<IDxcBlob> Compile(dxc::DxcDllSupport &dllSupport, const char *hlsl,
       CComPtr<IDxcBlobEncoding> pDbgDisassembly;
       VERIFY_SUCCEEDED(pCompiler->Disassemble(pProgramPdb, &pDbgDisassembly));
       std::string disText = BlobToUtf8(pDbgDisassembly);
-      CA2W disTextW(disText.c_str(), CP_UTF8);
+      CA2W disTextW(disText.c_str());
       WEX::Logging::Log::Comment(disTextW);
     }
 #endif

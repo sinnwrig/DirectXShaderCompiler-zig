@@ -51,51 +51,16 @@ bool processRunCommandArgs(const llvm::StringRef runCommandLine,
 void convertIDxcBlobToUint32(const CComPtr<IDxcBlob> &blob,
                              std::vector<uint32_t> *binaryWords);
 
-/// \brief Returns the absolute path to the input file of the test.
-/// The input file is expected to be located in the directory given by the
-/// testOptions::inputDataDir
-std::string getAbsPathOfInputDataFile(const llvm::StringRef filename);
-
-/// \brief Passes the HLSL input file to the DXC compiler with SPIR-V CodeGen.
-/// Returns the generated SPIR-V binary via 'generatedBinary' argument.
-/// Returns true on success, and false on failure. Writes error messages to
-/// errorMessages and stderr on failure.
-bool compileFileWithSpirvGeneration(const llvm::StringRef inputFilePath,
-                                    const llvm::StringRef entryPoint,
-                                    const llvm::StringRef targetProfile,
-                                    const std::vector<std::string> &restArgs,
-                                    std::vector<uint32_t> *generatedBinary,
-                                    std::string *errorMessages);
-
 /// \brief Passes the string HLSL code to the DXC compiler with SPIR-V CodeGen.
 /// Returns the generated SPIR-V binary via 'generatedBinary' argument.
 /// Returns true on success, and false on failure. Writes error messages to
 /// errorMessages and stderr on failure.
-bool compileCodeWithSpirvGeneration(const llvm::StringRef inputFilePath,
-                                    const llvm::StringRef code,
+bool compileCodeWithSpirvGeneration(const llvm::StringRef code,
                                     const llvm::StringRef entryPoint,
                                     const llvm::StringRef targetProfile,
                                     const std::vector<std::string> &restArgs,
                                     std::vector<uint32_t> *generatedBinary,
                                     std::string *errorMessages);
-
-/// \brief A struct to keep the input file path and HLSL code information.
-struct SourceCodeInfo {
-  const llvm::StringRef inputFilePath;
-  const llvm::StringRef code;
-};
-
-/// \brief Passes the HLSL source information to the DXC compiler with SPIR-V
-/// CodeGen. Returns the generated SPIR-V binary via 'generatedBinary' argument.
-/// Returns true on success, and false on failure. Writes error messages to
-/// errorMessages and stderr on failure. If srcInfo.code is an empty string, it
-/// reads the HLSL input from srcInfo.inputFilePath file.
-bool compileWithSpirvGeneration(const SourceCodeInfo &srcInfo,
-                                const llvm::StringRef entryPoint,
-                                const llvm::StringRef targetProfile,
-                                const std::vector<std::string> &restArgs,
-                                std::vector<uint32_t> *generatedBinary,
-                                std::string *errorMessages);
 
 } // end namespace utils
 } // end namespace spirv

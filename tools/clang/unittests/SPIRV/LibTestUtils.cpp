@@ -7,7 +7,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "FileTestUtils.h"
+#include "LibTestUtils.h"
 
 #include <algorithm>
 #include <sstream>
@@ -81,19 +81,7 @@ bool processRunCommandArgs(const llvm::StringRef runCommandLine,
       *entryPoint = tokens[i];
     } else if (tokens[i].substr(0, 17) == "-fspv-target-env=") {
       std::string targetEnvStr = tokens[i].substr(17);
-      if (targetEnvStr == "vulkan1.0")
-        *targetEnv = SPV_ENV_VULKAN_1_0;
-      else if (targetEnvStr == "vulkan1.1")
-        *targetEnv = SPV_ENV_VULKAN_1_1;
-      else if (targetEnvStr == "vulkan1.1spirv1.4")
-        *targetEnv = SPV_ENV_VULKAN_1_1_SPIRV_1_4;
-      else if (targetEnvStr == "vulkan1.2")
-        *targetEnv = SPV_ENV_VULKAN_1_2;
-      else if (targetEnvStr == "vulkan1.3")
-        *targetEnv = SPV_ENV_UNIVERSAL_1_6;
-      else if (targetEnvStr == "universal1.5")
-        *targetEnv = SPV_ENV_UNIVERSAL_1_5;
-      else {
+      if (!spvParseTargetEnv(targetEnvStr.c_str(), targetEnv)) {
         fprintf(stderr, "Error: Found unknown target environment.\n");
         return false;
       }
@@ -127,63 +115,19 @@ void convertIDxcBlobToUint32(const CComPtr<IDxcBlob> &blob,
   memcpy(binaryWords->data(), binaryStr.data(), binaryStr.size());
 }
 
-std::string getAbsPathOfInputDataFile(const llvm::StringRef filename) {
-
-  std::string path = clang::spirv::testOptions::inputDataDir;
-
-#ifdef _WIN32
-  const char sep = '\\';
-  std::replace(path.begin(), path.end(), '/', '\\');
-#else
-  const char sep = '/';
-#endif
-
-  if (path[path.size() - 1] != sep) {
-    path = path + sep;
-  }
-  path += filename;
-  return path;
-}
-
-bool compileFileWithSpirvGeneration(const llvm::StringRef inputFilePath,
+bool compileCodeWithSpirvGeneration(const llvm::StringRef code,
                                     const llvm::StringRef entryPoint,
                                     const llvm::StringRef targetProfile,
                                     const std::vector<std::string> &restArgs,
                                     std::vector<uint32_t> *generatedBinary,
                                     std::string *errorMessages) {
-  return compileWithSpirvGeneration({inputFilePath, ""}, entryPoint,
-                                    targetProfile, restArgs, generatedBinary,
-                                    errorMessages);
-}
-
-bool compileCodeWithSpirvGeneration(const llvm::StringRef inputFilePath,
-                                    const llvm::StringRef code,
-                                    const llvm::StringRef entryPoint,
-                                    const llvm::StringRef targetProfile,
-                                    const std::vector<std::string> &restArgs,
-                                    std::vector<uint32_t> *generatedBinary,
-                                    std::string *errorMessages) {
-  return compileWithSpirvGeneration({inputFilePath, code}, entryPoint,
-                                    targetProfile, restArgs, generatedBinary,
-                                    errorMessages);
-}
-
-bool compileWithSpirvGeneration(const SourceCodeInfo &srcInfo,
-                                const llvm::StringRef entryPoint,
-                                const llvm::StringRef targetProfile,
-                                const std::vector<std::string> &restArgs,
-                                std::vector<uint32_t> *generatedBinary,
-                                std::string *errorMessages) {
-  std::wstring srcFile(srcInfo.inputFilePath.begin(),
-                       srcInfo.inputFilePath.end());
+  std::wstring srcFile(L"");
   std::wstring entry(entryPoint.begin(), entryPoint.end());
   std::wstring profile(targetProfile.begin(), targetProfile.end());
 
   std::vector<std::wstring> rest;
   for (const auto &arg : restArgs)
     rest.emplace_back(arg.begin(), arg.end());
-
-  bool success = true;
 
   try {
     dxc::DxcDllSupport dllSupport;
@@ -226,13 +170,9 @@ bool compileWithSpirvGeneration(const SourceCodeInfo &srcInfo,
     IFT(dllSupport.CreateInstance(CLSID_DxcLibrary, &pLibrary));
 
     CComPtr<IDxcBlobEncoding> pSource;
-    if (srcInfo.code.empty()) {
-      IFT(pLibrary->CreateBlobFromFile(srcFile.c_str(), nullptr, &pSource));
-    } else {
-      IFT(pLibrary->CreateBlobWithEncodingOnHeapCopy(
-          srcInfo.code.data(), static_cast<uint32_t>(srcInfo.code.size()),
-          CP_UTF8, &pSource));
-    }
+    assert(!code.empty());
+    IFT(pLibrary->CreateBlobWithEncodingOnHeapCopy(
+        code.data(), static_cast<uint32_t>(code.size()), CP_UTF8, &pSource));
 
     IFT(pLibrary->CreateIncludeHandler(&pIncludeHandler));
     IFT(dllSupport.CreateInstance(CLSID_DxcCompiler, &pCompiler));
@@ -252,21 +192,17 @@ bool compileWithSpirvGeneration(const SourceCodeInfo &srcInfo,
                                   pErrorBuffer->GetBufferSize());
     *errorMessages = diagnostics;
 
-    if (SUCCEEDED(resultStatus)) {
-      CComPtr<IDxcBlobEncoding> pStdErr;
-      IFT(pResult->GetResult(&pCompiledBlob));
-      convertIDxcBlobToUint32(pCompiledBlob, generatedBinary);
-      success = true;
-    } else {
-      success = false;
+    if (!SUCCEEDED(resultStatus)) {
+      return false;
     }
-  } catch (...) {
-    // An exception has occured while running the compiler with SPIR-V
-    // Generation
-    success = false;
-  }
 
-  return success;
+    CComPtr<IDxcBlobEncoding> pStdErr;
+    IFT(pResult->GetResult(&pCompiledBlob));
+    convertIDxcBlobToUint32(pCompiledBlob, generatedBinary);
+    return true;
+  } catch (...) {
+  }
+  return false;
 }
 
 } // end namespace utils

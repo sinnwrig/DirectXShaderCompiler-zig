@@ -17,49 +17,39 @@
 namespace clang {
 namespace spirv {
 
-class FileTest : public ::testing::Test {
+class LibTest : public ::testing::Test {
 public:
   /// \brief Expected test result to be
   enum class Expect {
-    Success,    // Success (with or without warnings) - check disassembly
-    Warning,    // Success (with warnings) - check warning message
-    Failure,    // Failure (with errors) - check error message
-    ValFailure, // Validation failure (with errors) - check error message
+    Success, // Success (with or without warnings) - check disassembly
+    Warning, // Success (with warnings) - check warning message
+    Failure, // Failure (with errors) - check error message
   };
 
-  FileTest()
+  LibTest()
       : targetEnv(SPV_ENV_VULKAN_1_0), beforeHLSLLegalization(false),
         glLayout(false), dxLayout(false), scalarLayout(false) {}
 
   void setBeforeHLSLLegalization() { beforeHLSLLegalization = true; }
 
-  /// \brief Runs a test with the given input HLSL file.
-  ///
-  /// The first line of HLSL code must start with "// RUN:" and following DXC
-  /// arguments to run the test. Next lines must be proper HLSL code for the
-  /// test. It uses file check style output check e.g., "// CHECK: ...".
-  void runFileTest(llvm::StringRef path, Expect expect = Expect::Success);
-
-  /// \brief Runs a test with the given HLSL code.
+  /// \brief Runs a test with the given HLSL code, and returns the disassembled
+  /// SPIR-V that was generated. Returns the empty string if the compilation
+  /// failed.
   ///
   /// The first line of code must start with "// RUN:" and following DXC
   /// arguments to run the test. Next lines must be proper HLSL code for the
-  /// test. It uses file check style output check e.g., "// CHECK: ...".
-  void runCodeTest(llvm::StringRef code, Expect expect = Expect::Success,
-                   bool runValidation = true);
+  /// test.
+  std::string compileCodeAndGetSpirvAsm(llvm::StringRef code,
+                                        Expect expect = Expect::Success,
+                                        bool runValidation = true);
 
 private:
-  /// \brief Reads in the given input file and parses the command to get
-  /// arguments to run DXC.
-  bool parseInputFile();
   /// \brief Parses the command and gets arguments to run DXC.
   bool parseCommand();
   /// \brief Checks the compile result. Reports whether the expected compile
   /// result matches the actual result and  whether the expected validation
   /// result matches the actual one or not.
-  void checkTestResult(llvm::StringRef filename, const bool compileOk,
-                       const std::string &errorMessages, Expect expect,
-                       bool runValidation);
+  void checkTestResult(const bool compileOk, Expect expect, bool runValidation);
 
   std::string targetProfile;             ///< Target profile (argument of -T)
   std::string entryPoint;                ///< Entry point name (argument of -E)
@@ -69,7 +59,14 @@ private:
   std::string checkCommands;             ///< CHECK commands that verify output
   std::string generatedSpirvAsm;         ///< Disassembled binary (SPIR-V code)
   spv_target_env targetEnv;              ///< Environment to validate against
+
+  /// If true, the before-hlsl-legalization flag will be passed to the
+  /// validator. This relaxes the SPIR-V validation rules to account for known
+  /// invalid code that DXC generates when optimizations are turned off.
   bool beforeHLSLLegalization;
+
+  /// The next three flags are used to tell the validator which layout rules to
+  /// use.
   bool glLayout;
   bool dxLayout;
   bool scalarLayout;

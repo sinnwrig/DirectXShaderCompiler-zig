@@ -45,6 +45,7 @@
 #include "dxc/Support/dxcapi.use.h"
 #include "dxc/Support/microcom.h"
 
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringSwitch.h"
 #include "llvm/Bitcode/ReaderWriter.h"
@@ -101,6 +102,11 @@ public:
   TEST_METHOD(CompileDebugDisasmPDB)
 
   TEST_METHOD(AddToASPayload)
+  TEST_METHOD(AddToASGroupSharedPayload)
+  TEST_METHOD(AddToASGroupSharedPayload_MeshletCullSample)
+  TEST_METHOD(SignatureModification_Empty)
+  TEST_METHOD(SignatureModification_VertexIdAlready)
+  TEST_METHOD(SignatureModification_SomethingElseFirst)
 
   TEST_METHOD(PixStructAnnotation_Lib_DualRaygen)
   TEST_METHOD(PixStructAnnotation_Lib_RaygenAllocaStructAlignment)
@@ -130,6 +136,9 @@ public:
   TEST_METHOD(RootSignatureUpgrade_Annotation)
 
   TEST_METHOD(DxilPIXDXRInvocationsLog_SanityTest)
+
+  TEST_METHOD(DebugInstrumentation_TextOutput)
+  TEST_METHOD(DebugInstrumentation_BlockReport)
 
   dxc::DxcDllSupport m_dllSupport;
   VersionSupportInfo m_ver;
@@ -183,6 +192,29 @@ public:
     if (pText->GetBufferSize() != 0) {
       outputText = reinterpret_cast<const char *>(pText->GetBufferPointer());
     }
+
+    return {
+        std::move(pOptimizedModule), {}, Tokenize(outputText.c_str(), "\n")};
+  }
+
+  PassOutput RunDebugPass(IDxcBlob *dxil, int UAVSize = 1024 * 1024) {
+    CComPtr<IDxcOptimizer> pOptimizer;
+    VERIFY_SUCCEEDED(
+        m_dllSupport.CreateInstance(CLSID_DxcOptimizer, &pOptimizer));
+    std::vector<LPCWSTR> Options;
+    Options.push_back(L"-opt-mod-passes");
+    Options.push_back(L"-dxil-dbg-value-to-dbg-declare");
+    Options.push_back(L"-dxil-annotate-with-virtual-regs");
+    std::wstring debugArg =
+        L"-hlsl-dxil-debug-instrumentation,UAVSize=" + std::to_wstring(UAVSize);
+    Options.push_back(debugArg.c_str());
+
+    CComPtr<IDxcBlob> pOptimizedModule;
+    CComPtr<IDxcBlobEncoding> pText;
+    VERIFY_SUCCEEDED(pOptimizer->RunOptimizer(
+        dxil, Options.data(), Options.size(), &pOptimizedModule, &pText));
+
+    std::string outputText = BlobToUtf8(pText);
 
     return {
         std::move(pOptimizedModule), {}, Tokenize(outputText.c_str(), "\n")};
@@ -534,7 +566,7 @@ PixTest::RunDxilPIXAddTidToAmplificationShaderPayloadPass(IDxcBlob *blob) {
 
 TEST_F(PixTest, AddToASPayload) {
 
-  const char *dynamicResourceDecriptorHeapAccess = R"(
+  const char *hlsl = R"(
 struct MyPayload
 {
     float f1;
@@ -572,15 +604,162 @@ void MSMain(
 
   )";
 
-  auto as = Compile(m_dllSupport, dynamicResourceDecriptorHeapAccess, L"as_6_6",
-                    {}, L"ASMain");
+  auto as = Compile(m_dllSupport, hlsl, L"as_6_6", {}, L"ASMain");
   RunDxilPIXAddTidToAmplificationShaderPayloadPass(as);
 
-  auto ms = Compile(m_dllSupport, dynamicResourceDecriptorHeapAccess, L"ms_6_6",
-                    {}, L"MSMain");
+  auto ms = Compile(m_dllSupport, hlsl, L"ms_6_6", {}, L"MSMain");
   RunDxilPIXMeshShaderOutputPass(ms);
 }
+unsigned FindOrAddVSInSignatureElementForInstanceOrVertexID(
+    hlsl::DxilSignature &InputSignature, hlsl::DXIL::SemanticKind semanticKind);
 
+TEST_F(PixTest, SignatureModification_Empty) {
+
+  DxilSignature sig(DXIL::ShaderKind::Vertex, DXIL::SignatureKind::Input,
+                    false);
+
+  FindOrAddVSInSignatureElementForInstanceOrVertexID(
+      sig, DXIL::SemanticKind::InstanceID);
+  FindOrAddVSInSignatureElementForInstanceOrVertexID(
+      sig, DXIL::SemanticKind::VertexID);
+
+  VERIFY_ARE_EQUAL(2ull, sig.GetElements().size());
+  VERIFY_ARE_EQUAL(sig.GetElement(0).GetKind(), DXIL::SemanticKind::InstanceID);
+  VERIFY_ARE_EQUAL(sig.GetElement(0).GetCols(), 1u);
+  VERIFY_ARE_EQUAL(sig.GetElement(0).GetRows(), 1u);
+  VERIFY_ARE_EQUAL(sig.GetElement(0).GetStartCol(), 0);
+  VERIFY_ARE_EQUAL(sig.GetElement(0).GetStartRow(), 0);
+  VERIFY_ARE_EQUAL(sig.GetElement(1).GetKind(), DXIL::SemanticKind::VertexID);
+  VERIFY_ARE_EQUAL(sig.GetElement(1).GetCols(), 1u);
+  VERIFY_ARE_EQUAL(sig.GetElement(1).GetRows(), 1u);
+  VERIFY_ARE_EQUAL(sig.GetElement(1).GetStartCol(), 0);
+  VERIFY_ARE_EQUAL(sig.GetElement(1).GetStartRow(), 1);
+}
+
+TEST_F(PixTest, SignatureModification_VertexIdAlready) {
+
+  DxilSignature sig(DXIL::ShaderKind::Vertex, DXIL::SignatureKind::Input,
+                    false);
+
+  auto AddedElement =
+      llvm::make_unique<DxilSignatureElement>(DXIL::SigPointKind::VSIn);
+  AddedElement->Initialize(
+      Semantic::Get(DXIL::SemanticKind::VertexID)->GetName(),
+      hlsl::CompType::getU32(), DXIL::InterpolationMode::Constant, 1, 1, 0, 0,
+      0, {0});
+  AddedElement->SetKind(DXIL::SemanticKind::VertexID);
+  AddedElement->SetUsageMask(1);
+  sig.AppendElement(std::move(AddedElement));
+
+  FindOrAddVSInSignatureElementForInstanceOrVertexID(
+      sig, DXIL::SemanticKind::InstanceID);
+  FindOrAddVSInSignatureElementForInstanceOrVertexID(
+      sig, DXIL::SemanticKind::VertexID);
+
+  VERIFY_ARE_EQUAL(2ull, sig.GetElements().size());
+  VERIFY_ARE_EQUAL(sig.GetElement(0).GetKind(), DXIL::SemanticKind::VertexID);
+  VERIFY_ARE_EQUAL(sig.GetElement(0).GetCols(), 1u);
+  VERIFY_ARE_EQUAL(sig.GetElement(0).GetRows(), 1u);
+  VERIFY_ARE_EQUAL(sig.GetElement(0).GetStartCol(), 0);
+  VERIFY_ARE_EQUAL(sig.GetElement(0).GetStartRow(), 0);
+  VERIFY_ARE_EQUAL(sig.GetElement(1).GetKind(), DXIL::SemanticKind::InstanceID);
+  VERIFY_ARE_EQUAL(sig.GetElement(1).GetCols(), 1u);
+  VERIFY_ARE_EQUAL(sig.GetElement(1).GetRows(), 1u);
+  VERIFY_ARE_EQUAL(sig.GetElement(1).GetStartCol(), 0);
+  VERIFY_ARE_EQUAL(sig.GetElement(1).GetStartRow(), 1);
+}
+
+TEST_F(PixTest, SignatureModification_SomethingElseFirst) {
+
+  DxilSignature sig(DXIL::ShaderKind::Vertex, DXIL::SignatureKind::Input,
+                    false);
+
+  auto AddedElement =
+      llvm::make_unique<DxilSignatureElement>(DXIL::SigPointKind::VSIn);
+  AddedElement->Initialize("One", hlsl::CompType::getU32(),
+                           DXIL::InterpolationMode::Constant, 1, 6, 0, 0, 0,
+                           {0});
+  AddedElement->SetKind(DXIL::SemanticKind::Arbitrary);
+  AddedElement->SetUsageMask(1);
+  sig.AppendElement(std::move(AddedElement));
+
+  FindOrAddVSInSignatureElementForInstanceOrVertexID(
+      sig, DXIL::SemanticKind::InstanceID);
+  FindOrAddVSInSignatureElementForInstanceOrVertexID(
+      sig, DXIL::SemanticKind::VertexID);
+
+  VERIFY_ARE_EQUAL(3ull, sig.GetElements().size());
+  // Not gonna check the first one cuz that would just be grading our own
+  // homework
+  VERIFY_ARE_EQUAL(sig.GetElement(1).GetKind(), DXIL::SemanticKind::InstanceID);
+  VERIFY_ARE_EQUAL(sig.GetElement(1).GetCols(), 1u);
+  VERIFY_ARE_EQUAL(sig.GetElement(1).GetRows(), 1u);
+  VERIFY_ARE_EQUAL(sig.GetElement(1).GetStartCol(), 0);
+  VERIFY_ARE_EQUAL(sig.GetElement(1).GetStartRow(), 1);
+  VERIFY_ARE_EQUAL(sig.GetElement(2).GetKind(), DXIL::SemanticKind::VertexID);
+  VERIFY_ARE_EQUAL(sig.GetElement(2).GetCols(), 1u);
+  VERIFY_ARE_EQUAL(sig.GetElement(2).GetRows(), 1u);
+  VERIFY_ARE_EQUAL(sig.GetElement(2).GetStartCol(), 0);
+  VERIFY_ARE_EQUAL(sig.GetElement(2).GetStartRow(), 2);
+}
+
+TEST_F(PixTest, AddToASGroupSharedPayload) {
+
+  const char *hlsl = R"(
+struct Contained
+{
+    uint j;
+    float af[3];
+};
+
+struct Bigger
+{
+    half h;
+    void Init() { h = 1.f; }
+  Contained a[2];
+};
+
+struct MyPayload
+{
+    uint i;
+    Bigger big[3];
+};
+
+groupshared MyPayload payload;
+
+[numthreads(1, 1, 1)]
+void main(uint gid : SV_GroupID)
+{
+  DispatchMesh(1, 1, 1, payload);
+}
+
+  )";
+
+  auto as = Compile(m_dllSupport, hlsl, L"as_6_6", {L"-Od"}, L"main");
+  RunDxilPIXAddTidToAmplificationShaderPayloadPass(as);
+}
+
+TEST_F(PixTest, AddToASGroupSharedPayload_MeshletCullSample) {
+
+  const char *hlsl = R"(
+struct MyPayload
+{
+    uint i[32];
+};
+
+groupshared MyPayload payload;
+
+[numthreads(1, 1, 1)]
+void main(uint gid : SV_GroupID)
+{
+  DispatchMesh(1, 1, 1, payload);
+}
+
+  )";
+
+  auto as = Compile(m_dllSupport, hlsl, L"as_6_6", {L"-Od"}, L"main");
+  RunDxilPIXAddTidToAmplificationShaderPayloadPass(as);
+}
 static llvm::DIType *PeelTypedefs(llvm::DIType *diTy) {
   using namespace llvm;
   const llvm::DITypeIdentifierMap EmptyMap;
@@ -1007,7 +1186,7 @@ void RaygenCommon()
 {
     float3 rayDir;
     float3 origin;
-
+    
     // Generate a ray for a camera pixel corresponding to an index from the dispatched 2D grid.
     GenerateCameraRay(DispatchRaysIndex().xy, origin, rayDir);
 
@@ -1093,7 +1272,7 @@ void RaygenCommon()
 {
     float3 rayDir;
     float3 origin;
-
+    
     // Generate a ray for a camera pixel corresponding to an index from the dispatched 2D grid.
     GenerateCameraRay(DispatchRaysIndex().xy, origin, rayDir);
 
@@ -1771,7 +1950,7 @@ Texture2DArray<uint4> g_gbuffer : register(t0, space0);
 
 [numthreads(1, 1, 1)]
 void main()
-{
+{	
 	const Gbuffer gbuffer = loadGbuffer(int2(0,0), g_gbuffer);
     smallPayload p;
     p.i = gbuffer.materialParams1.x + gbuffer.materialParams1.y + gbuffer.materialParams1.z + gbuffer.materialParams1.w;
@@ -2135,7 +2314,7 @@ void RaygenCommon()
 {
     float3 rayDir;
     float3 origin;
-
+    
     // Generate a ray for a camera pixel corresponding to an index from the dispatched 2D grid.
     GenerateCameraRay(DispatchRaysIndex().xy, origin, rayDir);
 
@@ -2326,7 +2505,7 @@ static void VerifyOperationSucceeded(IDxcOperationResult *pResult) {
   if (FAILED(result)) {
     CComPtr<IDxcBlobEncoding> pErrors;
     VERIFY_SUCCEEDED(pResult->GetErrorBuffer(&pErrors));
-    CA2W errorsWide(BlobToUtf8(pErrors).c_str(), CP_UTF8);
+    CA2W errorsWide(BlobToUtf8(pErrors).c_str());
     WEX::Logging::Log::Comment(errorsWide);
   }
   VERIFY_SUCCEEDED(result);
@@ -2340,21 +2519,21 @@ GlobalRootSignature so_GlobalRootSignature =
 	"RootConstants(num32BitConstants=1, b8), "
 };
 
-StateObjectConfig so_StateObjectConfig =
-{
+StateObjectConfig so_StateObjectConfig = 
+{ 
     STATE_OBJECT_FLAGS_ALLOW_LOCAL_DEPENDENCIES_ON_EXTERNAL_DEFINITONS
 };
 
-LocalRootSignature so_LocalRootSignature1 =
+LocalRootSignature so_LocalRootSignature1 = 
 {
 	"RootConstants(num32BitConstants=3, b2), "
-	"UAV(u6),RootFlags(LOCAL_ROOT_SIGNATURE)"
+	"UAV(u6),RootFlags(LOCAL_ROOT_SIGNATURE)" 
 };
 
-LocalRootSignature so_LocalRootSignature2 =
+LocalRootSignature so_LocalRootSignature2 = 
 {
 	"RootConstants(num32BitConstants=3, b2), "
-	"UAV(u8, flags=DATA_STATIC), "
+	"UAV(u8, flags=DATA_STATIC), " 
 	"RootFlags(LOCAL_ROOT_SIGNATURE)"
 };
 
@@ -2378,13 +2557,13 @@ TriangleHitGroup MyHitGroup =
 SubobjectToExportsAssociation so_Association1 =
 {
 	"so_LocalRootSignature1", // subobject name
-	"MyRayGen"                // export association
+	"MyRayGen"                // export association 
 };
 
 SubobjectToExportsAssociation so_Association2 =
 {
 	"so_LocalRootSignature2", // subobject name
-	"MyAnyHit"                // export association
+	"MyAnyHit"                // export association 
 };
 
 struct MyPayload
@@ -2399,7 +2578,7 @@ void MyRayGen()
 
 [shader("closesthit")]
 void MyClosestHit(inout MyPayload payload, in BuiltInTriangleIntersectionAttributes attr)
-{
+{  
 }
 
 [shader("anyhit")]
@@ -2569,4 +2748,97 @@ void MyMiss(inout MyPayload payload)
 
   auto compiledLib = Compile(m_dllSupport, source, L"lib_6_6", {});
   RunDxilPIXDXRInvocationsLog(compiledLib);
+}
+
+TEST_F(PixTest, DebugInstrumentation_TextOutput) {
+
+  const char *source = R"x(
+float4 main() : SV_Target {
+    return float4(0,0,0,0);
+})x";
+
+  auto compiled = Compile(m_dllSupport, source, L"ps_6_0", {});
+  auto output = RunDebugPass(compiled, 8 /*ludicrously low UAV size limit*/);
+  bool foundStaticOverflow = false;
+  bool foundCounterOffset = false;
+  bool foundThreshold = false;
+  for (auto const &line : output.lines) {
+    if (line.find("StaticOverflow:12") != std::string::npos)
+      foundStaticOverflow = true;
+    if (line.find("InterestingCounterOffset:3") != std::string::npos)
+      foundCounterOffset = true;
+    if (line.find("OverflowThreshold:1") != std::string::npos)
+      foundThreshold = true;
+  }
+  VERIFY_IS_TRUE(foundStaticOverflow);
+}
+
+TEST_F(PixTest, DebugInstrumentation_BlockReport) {
+
+  const char *source = R"x(
+RWStructuredBuffer<int> UAV: register(u0);
+float4 main() : SV_Target {
+    // basic int variable
+    int v = UAV[0];
+    if(v == 0)
+        UAV[1] = v;
+    else
+        UAV[2] = v;
+    // float with indexed alloca
+    float f[2];
+    f[0] = UAV[4];
+    f[1] = UAV[5];
+    if(v == 2)
+        f[0] = v;
+    else
+        f[1] = v;
+    float farray2[2];
+    farray2[0] = UAV[4];
+    farray2[1] = UAV[5];
+    if(v == 4)
+        farray2[0] = v;
+    else
+        farray2[1] = v;
+    double d = UAV[8];
+    int64_t i64 = UAV[9];
+    return float4(d,i64,0,0);
+})x";
+
+  auto compiled = Compile(m_dllSupport, source, L"ps_6_0", {L"-Od"});
+  auto output = RunDebugPass(compiled);
+  bool foundBlock = false;
+  bool foundRet = false;
+  bool foundUnnumberedVoidProllyADXNothing = false;
+  bool found32BitAssignment = false;
+  bool foundFloatAssignment = false;
+  bool foundDoubleAssignment = false;
+  bool found64BitAssignment = false;
+  bool found32BitAllocaStore = false;
+  for (auto const &line : output.lines) {
+    if (line.find("Block#") != std::string::npos) {
+      if (line.find("r,0,r;") != std::string::npos)
+        foundRet = true;
+      if (line.find("v,0,v;") != std::string::npos)
+        foundUnnumberedVoidProllyADXNothing = true;
+      if (line.find("3,3,a;") != std::string::npos)
+        found32BitAssignment = true;
+      if (line.find("d,13,a;") != std::string::npos)
+        foundDoubleAssignment = true;
+      if (line.find("f,19,a;") != std::string::npos)
+        foundFloatAssignment = true;
+      if (line.find("6,16,a;") != std::string::npos)
+        found64BitAssignment = true;
+      if (line.find("3,3,s,2+0;") != std::string::npos)
+        found32BitAllocaStore = true;
+      foundBlock = true;
+    }
+  }
+  VERIFY_IS_TRUE(foundBlock);
+  VERIFY_IS_TRUE(foundRet);
+  VERIFY_IS_TRUE(foundUnnumberedVoidProllyADXNothing);
+  VERIFY_IS_TRUE(found32BitAssignment);
+  VERIFY_IS_TRUE(found64BitAssignment);
+  VERIFY_IS_TRUE(foundFloatAssignment);
+  VERIFY_IS_TRUE(foundDoubleAssignment);
+  VERIFY_IS_TRUE(found32BitAllocaStore);
 }
