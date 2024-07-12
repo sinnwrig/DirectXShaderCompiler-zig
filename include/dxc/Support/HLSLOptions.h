@@ -114,6 +114,13 @@ struct RewriterOpts {
   bool DeclGlobalCB = false;          // OPT_rw_decl_global_cb
 };
 
+enum class ValidatorSelection : int {
+  Auto,        // Try DXIL.dll; fallback to internal validator
+  Internal,    // Force internal validator (even if DXIL.dll is present)
+  External,    // Use DXIL.dll, failing compilation if not available
+  Invalid = -1 // Invalid
+};
+
 /// Use this class to capture all options.
 class DxcOpts {
 public:
@@ -149,6 +156,7 @@ public:
   llvm::StringRef DefaultLinkage;             // OPT_default_linkage
   llvm::StringRef ImportBindingTable;         // OPT_import_binding_table
   llvm::StringRef BindingTableDefine;         // OPT_binding_table_define
+  llvm::StringRef DiagnosticsFormat;          // OPT_fdiagnostics_format
   unsigned DefaultTextCodePage = DXC_CP_UTF8; // OPT_encoding
 
   bool AllResourcesBound = false;         // OPT_all_resources_bound
@@ -190,7 +198,6 @@ public:
   bool UseHexLiterals = false;            // OPT_Lx
   bool UseInstructionByteOffsets = false; // OPT_No
   bool UseInstructionNumbers = false;     // OPT_Ni
-  bool NotUseLegacyCBufLoad = false;      // OPT_no_legacy_cbuf_layout
   bool PackPrefixStable = false;          // OPT_pack_prefix_stable
   bool PackOptimized = false;             // OPT_pack_optimized
   bool DisplayIncludeProcess = false;     // OPT__vi
@@ -218,6 +225,8 @@ public:
   bool ResMayAlias = false;                  // OPT_res_may_alias
   unsigned long ValVerMajor = UINT_MAX,
                 ValVerMinor = UINT_MAX; // OPT_validator_version
+  ValidatorSelection SelectValidator =
+      ValidatorSelection::Auto;         // OPT_select_validator
   unsigned ScanLimit = 0;               // OPT_memdep_block_scan_limit
   bool ForceZeroStoreLifetimes = false; // OPT_force_zero_store_lifetimes
   bool EnableLifetimeMarkers = false;   // OPT_enable_lifetime_markers
@@ -225,6 +234,7 @@ public:
   bool NewInlining = false;             // OPT_fnew_inlining_behavior
   bool TimeReport = false;              // OPT_ftime_report
   std::string TimeTrace = "";           // OPT_ftime_trace[EQ]
+  unsigned TimeTraceGranularity = 500;  // OPT_ftime_trace_granularity_EQ
   bool VerifyDiagnostics = false;       // OPT_verify
 
   // Optimization pass enables, disables and selects

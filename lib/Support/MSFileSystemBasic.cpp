@@ -19,11 +19,8 @@
 // Mach change end
 #include "dxc/Support/WinIncludes.h"
 
-// Mach change start
-// #include <D3Dcommon.h>
-#include <d3dcommon.h>
-// Mach change end
 #include <assert.h>
+#include <d3dcommon.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <io.h>

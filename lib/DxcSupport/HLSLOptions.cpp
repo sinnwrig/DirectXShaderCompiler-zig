@@ -538,6 +538,8 @@ int ReadDxcOpts(const OptTable *optionTable, unsigned flagsToInclude,
   opts.OutputReflectionFile = Args.getLastArgValue(OPT_Fre);
   opts.OutputRootSigFile = Args.getLastArgValue(OPT_Frs);
   opts.OutputShaderHashFile = Args.getLastArgValue(OPT_Fsh);
+  opts.DiagnosticsFormat =
+      Args.getLastArgValue(OPT_fdiagnostics_format_EQ, "clang");
   opts.ShowOptionNames = Args.hasFlag(OPT_fdiagnostics_show_option,
                                       OPT_fno_diagnostics_show_option, true);
   opts.UseColor = Args.hasFlag(OPT_Cc, OPT_INVALID, false);
@@ -568,7 +570,7 @@ int ReadDxcOpts(const OptTable *optionTable, unsigned flagsToInclude,
               // Args.getLastArgValue(OPT_INPUT) get expect Input.
               InputArg->getValues()[0] = PrevInputArg->getValues()[0];
             }
-            errors << "Warning: -P " << opts.Preprocess
+            errors << "warning: -P " << opts.Preprocess
                    << " is deprecated, please use -P -Fi " << opts.Preprocess
                    << " instead.\n";
             break;
@@ -760,10 +762,14 @@ int ReadDxcOpts(const OptTable *optionTable, unsigned flagsToInclude,
   opts.DefaultColMajor = Args.hasFlag(OPT_Zpc, OPT_INVALID, false);
   opts.DumpBin = Args.hasFlag(OPT_dumpbin, OPT_INVALID, false);
   opts.Link = Args.hasFlag(OPT_link, OPT_INVALID, false);
-  opts.NotUseLegacyCBufLoad =
+  bool NotUseLegacyCBufLoad =
       Args.hasFlag(OPT_no_legacy_cbuf_layout, OPT_INVALID, false);
-  opts.NotUseLegacyCBufLoad = Args.hasFlag(
-      OPT_not_use_legacy_cbuf_load_, OPT_INVALID, opts.NotUseLegacyCBufLoad);
+  NotUseLegacyCBufLoad = Args.hasFlag(OPT_not_use_legacy_cbuf_load_,
+                                      OPT_INVALID, NotUseLegacyCBufLoad);
+  if (NotUseLegacyCBufLoad)
+    errors << "warning: -no-legacy-cbuf-layout"
+           << " is no longer supported and will be ignored."
+           << " Future releases will not recognize it.\n";
   opts.PackPrefixStable =
       Args.hasFlag(OPT_pack_prefix_stable, OPT_INVALID, false);
   opts.PackPrefixStable =
@@ -822,6 +828,16 @@ int ReadDxcOpts(const OptTable *optionTable, unsigned flagsToInclude,
   opts.VerifyDiagnostics = Args.hasFlag(OPT_verify, OPT_INVALID, false);
   if (Args.hasArg(OPT_ftime_trace_EQ))
     opts.TimeTrace = Args.getLastArgValue(OPT_ftime_trace_EQ);
+  if (Arg *A = Args.getLastArg(OPT_ftime_trace_granularity_EQ)) {
+    if (llvm::StringRef(A->getValue())
+            .getAsInteger(10, opts.TimeTraceGranularity)) {
+      opts.TimeTraceGranularity = 500;
+      errors << "Warning: Invalid value for -ftime-trace-granularity option "
+                "specified, defaulting to "
+             << opts.TimeTraceGranularity << " microseconds.";
+    }
+  }
+
   opts.EnablePayloadQualifiers =
       Args.hasFlag(OPT_enable_payload_qualifiers, OPT_INVALID,
                    DXIL::CompareVersions(Major, Minor, 6, 7) >= 0);
@@ -833,10 +849,9 @@ int ReadDxcOpts(const OptTable *optionTable, unsigned flagsToInclude,
     opts.PrintAfter.insert(value);
   }
 
-  if (DXIL::CompareVersions(Major, Minor, 6, 8) < 0) {
-    opts.EnablePayloadQualifiers &=
-        !Args.hasFlag(OPT_disable_payload_qualifiers, OPT_INVALID, false);
-  }
+  opts.EnablePayloadQualifiers &=
+      !Args.hasFlag(OPT_disable_payload_qualifiers, OPT_INVALID, false);
+
   if (opts.EnablePayloadQualifiers &&
       DXIL::CompareVersions(Major, Minor, 6, 6) < 0) {
     errors << "Invalid target for payload access qualifiers. Only lib_6_6 and "
@@ -973,6 +988,20 @@ int ReadDxcOpts(const OptTable *optionTable, unsigned flagsToInclude,
     opts.ValVerMinor = (unsigned long)minor64;
   }
 
+  llvm::StringRef valSelectStr = Args.getLastArgValue(OPT_select_validator);
+  if (!valSelectStr.empty()) {
+    opts.SelectValidator = llvm::StringSwitch<ValidatorSelection>(valSelectStr)
+                               .Case("auto", ValidatorSelection::Auto)
+                               .Case("internal", ValidatorSelection::Internal)
+                               .Case("external", ValidatorSelection::External)
+                               .Default(ValidatorSelection::Invalid);
+    if (opts.SelectValidator == ValidatorSelection::Invalid) {
+      errors << "Unsupported value '" << valSelectStr
+             << "for -select-validator option.";
+      return 1;
+    }
+  }
+
   if (opts.IsLibraryProfile() && Minor == 0xF) {
     if (opts.ValVerMajor != UINT_MAX && opts.ValVerMajor != 0) {
       errors << "Offline library profile cannot be used with non-zero "
@@ -1054,6 +1083,8 @@ int ReadDxcOpts(const OptTable *optionTable, unsigned flagsToInclude,
       Args.hasFlag(OPT_fspv_preserve_interface, OPT_INVALID, false);
   opts.SpirvOptions.allowRWStructuredBufferArrays =
       Args.hasFlag(OPT_fvk_allow_rwstructuredbuffer_arrays, OPT_INVALID, false);
+  opts.SpirvOptions.enableMaximalReconvergence =
+      Args.hasFlag(OPT_fspv_enable_maximal_reconvergence, OPT_INVALID, false);
 
   if (!handleVkShiftArgs(Args, OPT_fvk_b_shift, "b", &opts.SpirvOptions.bShift,
                          errors) ||
@@ -1148,6 +1179,15 @@ int ReadDxcOpts(const OptTable *optionTable, unsigned flagsToInclude,
   opts.SpirvOptions.targetEnv =
       Args.getLastArgValue(OPT_fspv_target_env_EQ, "vulkan1.0");
 
+  llvm::APInt maxId;
+
+  // 0X3FFFFF is the default value for -fspv-max-id because it is the largest
+  // value that is guaranteed to be allowed in all Vulkan implementations.
+  if (Args.getLastArgValue(OPT_fspv_max_id, "3FFFFF").getAsInteger(16, maxId)) {
+    errors << "-fspv-max-id must be an integer in hexadecimal format";
+  }
+  opts.SpirvOptions.maxId = maxId.getLimitedValue(0xFFFFFFFF);
+
   // Handle -Oconfig=<comma-separated-list> option.
   uint32_t numOconfigs = 0;
   for (const Arg *A : Args.filtered(OPT_Oconfig)) {
@@ -1172,6 +1212,8 @@ int ReadDxcOpts(const OptTable *optionTable, unsigned flagsToInclude,
   if (Args.hasFlag(OPT_spirv, OPT_INVALID, false) &&
       hasUnsupportedSpirvOption(Args, errors))
     return 1;
+
+  opts.SpirvOptions.floatDenormalMode = Args.getLastArgValue(OPT_denorm);
 
 #else
   if (Args.hasFlag(OPT_spirv, OPT_INVALID, false) ||

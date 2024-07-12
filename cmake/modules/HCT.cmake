@@ -101,7 +101,7 @@ function(add_hlsl_hctgen mode)
   endif()
 
   add_custom_command(OUTPUT ${temp_output}
-                     COMMAND ${PYTHON_EXECUTABLE}
+                     COMMAND ${Python3_EXECUTABLE}
                              ${hctgen} ${force_lf}
                              ${mode} --output ${temp_output} ${input_flag}
                      ${format_cmd}
@@ -117,6 +117,15 @@ function(add_hlsl_hctgen mode)
                       COMMENT "Updating ${ARG_OUTPUT}..."
                       )
   endif()
-  add_custom_target(${mode} ${verification} DEPENDS ${output})
+
+  add_custom_command(OUTPUT ${temp_output}.stamp
+                     COMMAND ${verification}
+                     COMMAND ${CMAKE_COMMAND} -E touch ${temp_output}.stamp
+                     DEPENDS ${output}
+                     COMMENT "Verifying clang-format results...")
+
+  add_custom_target(${mode}
+                    DEPENDS ${temp_output}.stamp)
+
   add_dependencies(HCTGen ${mode})
 endfunction()

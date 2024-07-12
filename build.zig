@@ -706,6 +706,7 @@ const tools_clang_lib_sema_sources = [_][]const u8{
     "tools/clang/lib/Sema/SemaExpr.cpp",
     "tools/clang/lib/Sema/JumpDiagnostics.cpp",
     "tools/clang/lib/Sema/SemaHLSL.cpp",
+    "tools/clang/lib/Sema/SemaHLSLDiagnoseTU.cpp",
     "tools/clang/lib/Sema/SemaObjCProperty.cpp",
     "tools/clang/lib/Sema/SemaConsumer.cpp",
     "tools/clang/lib/Sema/SemaDecl.cpp",
@@ -1454,6 +1455,8 @@ const lib_dxil_sources = [_][]const u8{
     "lib/DXIL/DxilSignature.cpp",
     "lib/DXIL/DxilResourceProperties.cpp",
     "lib/DXIL/DxilPDB.cpp",
+    "lib/DXIL/DxilNodeProps.cpp",
+    "lib/DXIL/DxilWaveMatrix.cpp",
     "lib/DXIL/DxilUtilDbgInfoAndMisc.cpp",
     "lib/DXIL/DxilSignatureElement.cpp",
     "lib/DXIL/DxilSemantic.cpp",
@@ -1472,7 +1475,7 @@ const lib_dxil_sources = [_][]const u8{
 
 // find lib/DxilContainer | grep '\.cpp$' | xargs -I {} -n1 echo '"{}",' | pbcopy
 const lib_dxilcontainer_sources = [_][]const u8{
-    "lib/DxilContainer/DxilRuntimeReflection.cpp",
+    "lib/DxilContainer/DxilRuntimeReflection.cpp", 
     "lib/DxilContainer/DxilRDATBuilder.cpp",
     "lib/DxilContainer/RDATDumper.cpp",
     "lib/DxilContainer/DxilContainerReader.cpp",
@@ -1553,4 +1556,5 @@ const tools_clang_lib_spirv = [_][]const u8{
     "tools/clang/lib/SPIRV/AstTypeProbe.cpp",
     "tools/clang/lib/SPIRV/DebugTypeVisitor.cpp",
     "tools/clang/lib/SPIRV/InitListHandler.cpp",
+    "tools/clang/lib/SPIRV/ConstEvaluator.cpp",
 };

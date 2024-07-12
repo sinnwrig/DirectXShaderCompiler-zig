@@ -17,6 +17,7 @@
 #include "dxcutil.h"
 #include "llvm/Support/raw_ostream.h"
 
+#include "dxc/Support/Path.h"
 #include "dxc/Support/Unicode.h"
 #include "dxc/Support/dxcfilesystem.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -150,48 +151,12 @@ const DxcArgsHandle OutputHandle(SpecialValue::Output);
 /// ERROR_OUT_OF_STRUCTURES will be returned by an attempt to open a file.
 static const size_t MaxIncludedFiles = 1000;
 
-bool IsAbsoluteOrCurDirRelativeW(LPCWSTR Path) {
-  if (!Path || !Path[0])
-    return FALSE;
-  // Current dir-relative path.
-  if (Path[0] == L'.') {
-    return Path[1] == L'\0' || Path[1] == L'/' || Path[1] == L'\\';
-  }
-  // Disk designator, then absolute path.
-  if (Path[1] == L':' && (Path[2] == L'\\' || Path[2] == L'/')) {
-    return TRUE;
-  }
-  // UNC name
-  if (Path[0] == L'\\') {
-    return Path[1] == L'\\';
-  }
-
-#ifndef _WIN32
-  // Absolute paths on unix systems start with '/'
-  if (Path[0] == L'/') {
-    return TRUE;
-  }
-#endif
-
-  //
-  // NOTE: there are a number of cases we don't handle, as they don't play well
-  // with the simple file system abstraction we use:
-  // - current directory on disk designator (eg, D:file.ext), requires per-disk
-  // current dir
-  // - parent paths relative to current directory (eg, ..\\file.ext)
-  //
-  // The current-directory support is available to help in-memory handlers.
-  // On-disk handlers will typically have absolute paths to begin with.
-  //
-  return FALSE;
-}
-
 } // namespace
 
 namespace dxcutil {
 
 void MakeAbsoluteOrCurDirRelativeW(LPCWSTR &Path, std::wstring &PathStorage) {
-  if (IsAbsoluteOrCurDirRelativeW(Path)) {
+  if (hlsl::IsAbsoluteOrCurDirRelativeW(Path)) {
     return;
   } else {
     PathStorage = L"./";
@@ -302,7 +267,10 @@ private:
       }
 
       CComPtr<::IDxcBlob> fileBlob;
-      HRESULT hr = m_includeLoader->LoadSource(lpFileName, &fileBlob);
+
+      std::wstring NormalizedFileName = hlsl::NormalizePathW(lpFileName);
+      HRESULT hr =
+          m_includeLoader->LoadSource(NormalizedFileName.c_str(), &fileBlob);
       if (FAILED(hr)) {
         return ERROR_UNHANDLED_EXCEPTION;
       }
@@ -791,10 +759,9 @@ public:
 
   virtual int Open(const char *lpFileName, int flags,
                    mode_t mode) throw() override {
-    HANDLE H =
-        CreateFileW(CA2W(lpFileName, CP_UTF8), GENERIC_READ | GENERIC_WRITE,
-                    FILE_SHARE_READ | FILE_SHARE_WRITE, OPEN_EXISTING,
-                    FILE_ATTRIBUTE_NORMAL);
+    HANDLE H = CreateFileW(CA2W(lpFileName), GENERIC_READ | GENERIC_WRITE,
+                           FILE_SHARE_READ | FILE_SHARE_WRITE, OPEN_EXISTING,
+                           FILE_ATTRIBUTE_NORMAL);
     if (H == INVALID_HANDLE_VALUE)
       return -1;
     int FD = open_osfhandle(intptr_t(H), 0);
@@ -806,7 +773,7 @@ public:
   // fake my way toward as linux-y a file_status as I can get
   virtual int Stat(const char *lpFileName,
                    struct stat *Status) throw() override {
-    CA2W fileName_wide(lpFileName, CP_UTF8);
+    CA2W fileName_wide(lpFileName);
 
     DWORD attr = GetFileAttributesW(fileName_wide);
     if (attr == INVALID_FILE_ATTRIBUTES)

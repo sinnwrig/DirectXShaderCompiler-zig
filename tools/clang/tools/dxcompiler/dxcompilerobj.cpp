@@ -35,6 +35,7 @@
 #include "dxc/DxilContainer/DxilContainerAssembler.h"
 #include "dxc/DxilRootSignature/DxilRootSignature.h"
 #include "dxc/HLSL/HLSLExtensionsCodegenHelper.h"
+#include "dxc/Support/Path.h"
 #include "dxc/Support/WinIncludes.h"
 #include "dxc/Support/dxcfilesystem.h"
 #include "dxc/dxcapi.internal.h"
@@ -443,8 +444,8 @@ static void CreateDefineStrings(const DxcDefine *pDefines, UINT defineCount,
                                 std::vector<std::string> &defines) {
   // Not very efficient but also not very important.
   for (UINT32 i = 0; i < defineCount; i++) {
-    CW2A utf8Name(pDefines[i].Name, CP_UTF8);
-    CW2A utf8Value(pDefines[i].Value, CP_UTF8);
+    CW2A utf8Name(pDefines[i].Name);
+    CW2A utf8Value(pDefines[i].Value);
     std::string val(utf8Name.m_psz);
     val += "=";
     val += (pDefines[i].Value) ? utf8Value.m_psz : "1";
@@ -594,15 +595,16 @@ public:
       // Formerly API values.
       const char *pUtf8SourceName =
           opts.InputFile.empty() ? "hlsl.hlsl" : opts.InputFile.data();
-      CA2W pWideSourceName(pUtf8SourceName, CP_UTF8);
+
+      CA2W pWideSourceName(pUtf8SourceName);
       const char *pUtf8EntryPoint =
           opts.EntryPoint.empty() ? "main" : opts.EntryPoint.data();
       const char *pUtf8OutputName = isPreprocessing ? opts.Preprocess.data()
                                     : opts.OutputObject.empty()
                                         ? ""
                                         : opts.OutputObject.data();
-      CA2W pWideOutputName(
-          isPreprocessing ? opts.Preprocess.data() : pUtf8OutputName, CP_UTF8);
+      CA2W pWideOutputName(isPreprocessing ? opts.Preprocess.data()
+                                           : pUtf8OutputName);
       LPCWSTR pObjectName = (!isPreprocessing && opts.OutputObject.empty())
                                 ? nullptr
                                 : pWideOutputName.m_psz;
@@ -615,13 +617,21 @@ public:
                               nullptr, &pSourceEncoding));
 
 #ifdef ENABLE_SPIRV_CODEGEN
-      // We want to embed the preprocessed source code in the final SPIR-V if
-      // debug information is enabled. Therefore, we invoke Preprocess() here
+      // We want to embed the original source code in the final SPIR-V if
+      // debug information is enabled. But the compiled source requires
+      // pre-seeding with #line directives. We invoke Preprocess() here
       // first for such case. Then we invoke the compilation process over the
-      // preprocessed source code, so that line numbers are consistent with the
-      // embedded source code.
+      // preprocessed source code.
       if (!isPreprocessing && opts.GenSPIRV && opts.DebugInfo &&
           !opts.SpirvOptions.debugInfoVulkan) {
+        // Convert source code encoding
+        CComPtr<IDxcBlobUtf8> pOrigUtf8Source;
+        IFC(hlsl::DxcGetBlobAsUtf8(pSourceEncoding, m_pMalloc,
+                                   &pOrigUtf8Source));
+        opts.SpirvOptions.origSource.assign(
+            static_cast<const char *>(pOrigUtf8Source->GetStringPointer()),
+            pOrigUtf8Source->GetStringLength());
+
         CComPtr<IDxcResult> pSrcCodeResult;
         std::vector<LPCWSTR> PreprocessArgs;
         PreprocessArgs.reserve(argCount + 1);
@@ -847,7 +857,8 @@ public:
           // Version from dxil.dll, or internal validator if unavailable
           dxcutil::GetValidatorVersion(
               &compiler.getCodeGenOpts().HLSLValidatorMajorVer,
-              &compiler.getCodeGenOpts().HLSLValidatorMinorVer);
+              &compiler.getCodeGenOpts().HLSLValidatorMinorVer,
+              opts.SelectValidator);
         }
 
         // Root signature-only container validation is only supported on 1.5 and
@@ -857,6 +868,8 @@ public:
                 compiler.getCodeGenOpts().HLSLValidatorMajorVer,
                 compiler.getCodeGenOpts().HLSLValidatorMinorVer, 1, 5) >= 0;
       }
+
+      compiler.getTarget().adjust(compiler.getLangOpts());
 
       if (opts.AstDump) {
         clang::ASTDumpAction dumpAction;
@@ -923,7 +936,7 @@ public:
             CComPtr<IDxcBlobEncoding> pValErrors;
             // Validation failure communicated through diagnostic error
             dxcutil::ValidateRootSignatureInContainer(
-                pOutputBlob, &compiler.getDiagnostics());
+                pOutputBlob, &compiler.getDiagnostics(), opts.SelectValidator);
           }
         }
       } else if (opts.VerifyDiagnostics) {
@@ -1040,7 +1053,8 @@ public:
               std::move(serializeModule), pOutputBlob, m_pMalloc,
               SerializeFlags, pOutputStream, opts.GetPDBName(),
               &compiler.getDiagnostics(), &ShaderHashContent, pReflectionStream,
-              pRootSigStream, pRootSignatureBlob, pPrivateBlob);
+              pRootSigStream, pRootSignatureBlob, pPrivateBlob,
+              opts.SelectValidator);
 
           inputs.pVersionInfo = static_cast<IDxcVersionInfo *>(this);
 
@@ -1102,7 +1116,8 @@ public:
                 CComPtr<IDxcBlobEncoding> pValErrors;
                 // Validation failure communicated through diagnostic error
                 dxcutil::ValidateRootSignatureInContainer(
-                    pRootSignature, &compiler.getDiagnostics());
+                    pRootSignature, &compiler.getDiagnostics(),
+                    opts.SelectValidator);
               }
               IFT(pResult->SetOutputObject(DXC_OUT_ROOT_SIGNATURE,
                                            pRootSignature));
@@ -1238,6 +1253,13 @@ public:
       CComPtr<IDxcResult> pResult;
       hr = e.hr;
       std::string msg("Internal Compiler error: ");
+      switch (hr) {
+      case DXC_E_VALIDATOR_MISSING:
+        msg = "Error: external validator selected, but DXIL.dll not found.";
+        break;
+      default:
+        break;
+      }
       msg += e.msg;
       if (SUCCEEDED(DxcResult::Create(
               e.hr, DXC_OUT_NONE,
@@ -1348,6 +1370,18 @@ public:
     compiler.createDiagnostics(diagPrinter, false);
     // don't output warning to stderr/file if "/no-warnings" is present.
     compiler.getDiagnostics().setIgnoreAllWarnings(!Opts.OutputWarnings);
+    if (Opts.DiagnosticsFormat.equals_lower("msvc") ||
+        Opts.DiagnosticsFormat.equals_lower("msvc-fallback"))
+      compiler.getDiagnosticOpts().setFormat(DiagnosticOptions::MSVC);
+    else if (Opts.DiagnosticsFormat.equals_lower("vi"))
+      compiler.getDiagnosticOpts().setFormat(DiagnosticOptions::Vi);
+    else if (!Opts.DiagnosticsFormat.equals_lower("clang")) {
+      auto const ID = compiler.getDiagnostics().getCustomDiagID(
+          clang::DiagnosticsEngine::Warning,
+          "invalid option %0 to -fdiagnostics-format: supported values are "
+          "clang, msvc, msvc-fallback, and vi");
+      compiler.getDiagnostics().Report(ID) << Opts.DiagnosticsFormat;
+    }
     compiler.createFileManager();
     compiler.createSourceManager(compiler.getFileManager());
     compiler.setTarget(
@@ -1484,8 +1518,6 @@ public:
     compiler.getCodeGenOpts().HLSLOverrideSemDefs = Opts.OverrideSemDefs;
     compiler.getCodeGenOpts().HLSLPreferControlFlow = Opts.PreferFlowControl;
     compiler.getCodeGenOpts().HLSLAvoidControlFlow = Opts.AvoidFlowControl;
-    compiler.getCodeGenOpts().HLSLNotUseLegacyCBufLoad =
-        Opts.NotUseLegacyCBufLoad;
     compiler.getCodeGenOpts().HLSLLegacyResourceReservation =
         Opts.LegacyResourceReservation;
     compiler.getCodeGenOpts().HLSLDefines = defines;
@@ -1565,6 +1597,7 @@ public:
 
     // only export shader functions for library
     compiler.getCodeGenOpts().ExportShadersOnly = Opts.ExportShadersOnly;
+    compiler.getLangOpts().ExportShadersOnly = Opts.ExportShadersOnly;
 
     if (Opts.DefaultLinkage.empty()) {
       compiler.getCodeGenOpts().DefaultLinkage = DXIL::DefaultLinkage::Default;
@@ -1573,6 +1606,8 @@ public:
     } else if (Opts.DefaultLinkage.equals_lower("external")) {
       compiler.getCodeGenOpts().DefaultLinkage = DXIL::DefaultLinkage::External;
     }
+    compiler.getLangOpts().DefaultLinkage =
+        compiler.getCodeGenOpts().DefaultLinkage;
   }
 
   // IDxcVersionInfo
@@ -1781,7 +1816,7 @@ HRESULT DxcCompilerAdapter::WrapCompile(
     dxcutil::ReadOptsAndValidate(mainArgs, opts, pOutputStream,
                                  &pOperationResult, finished);
     if (!opts.TimeTrace.empty())
-      llvm::timeTraceProfilerInitialize();
+      llvm::timeTraceProfilerInitialize(opts.TimeTraceGranularity);
     if (finished) {
       IFT(pOperationResult->QueryInterface(ppResult));
       return S_OK;

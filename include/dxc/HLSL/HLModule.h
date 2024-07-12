@@ -51,17 +51,16 @@ class OP;
 struct HLOptions {
   HLOptions()
       : bDefaultRowMajor(false), bIEEEStrict(false), bAllResourcesBound(false),
-        bDisableOptimizations(false), bLegacyCBufferLoad(false),
-        PackingStrategy(0), bUseMinPrecision(false), bDX9CompatMode(false),
-        bFXCCompatMode(false), bLegacyResourceReservation(false),
-        bForceZeroStoreLifetimes(false), unused(0) {}
+        bDisableOptimizations(false), PackingStrategy(0),
+        bUseMinPrecision(false), bDX9CompatMode(false), bFXCCompatMode(false),
+        bLegacyResourceReservation(false), bForceZeroStoreLifetimes(false),
+        unused(0) {}
   uint32_t GetHLOptionsRaw() const;
   void SetHLOptionsRaw(uint32_t data);
   unsigned bDefaultRowMajor : 1;
   unsigned bIEEEStrict : 1;
   unsigned bAllResourcesBound : 1;
   unsigned bDisableOptimizations : 1;
-  unsigned bLegacyCBufferLoad : 1;
   unsigned PackingStrategy : 2;
   static_assert((unsigned)DXIL::PackingStrategy::Invalid < 4,
                 "otherwise 2 bits is not enough to store PackingStrategy");
@@ -155,6 +154,7 @@ public:
   bool IsGraphicsShader(llvm::Function *F); // vs,hs,ds,gs,ps
   bool IsPatchConstantShader(llvm::Function *F);
   bool IsComputeShader(llvm::Function *F);
+  bool IsNodeShader(llvm::Function *F);
 
   // Is an entry function that uses input/output signature conventions?
   // Includes: vs/hs/ds/gs/ps/cs as well as the patch constant function.

@@ -285,9 +285,8 @@ public:
 
     for (auto *field : RD->fields()) {
       QualType Ty = field->getType();
-      if (hlsl::IsHLSLResourceType(Ty))
-        continue;
-      if (hlsl::IsHLSLVecMatType(Ty))
+      if (hlsl::IsHLSLResourceType(Ty) || hlsl::IsHLSLNodeType(Ty) ||
+          hlsl::IsHLSLVecMatType(Ty))
         continue;
 
       TraverseType(Ty);
@@ -626,8 +625,8 @@ void SetupCompilerForPreprocess(CompilerInstance &compiler,
   if (pDefines) {
     PreprocessorOptions &PPOpts = compiler.getPreprocessorOpts();
     for (size_t i = 0; i < defineCount; ++i) {
-      CW2A utf8Name(pDefines[i].Name, CP_UTF8);
-      CW2A utf8Value(pDefines[i].Value, CP_UTF8);
+      CW2A utf8Name(pDefines[i].Name);
+      CW2A utf8Value(pDefines[i].Value);
       std::string val(utf8Name.m_psz);
       val += "=";
       val += (pDefines[i].Value) ? utf8Value.m_psz : "1";
@@ -639,8 +638,8 @@ void SetupCompilerForPreprocess(CompilerInstance &compiler,
 std::string DefinesToString(DxcDefine *pDefines, UINT32 defineCount) {
   std::string defineStr;
   for (UINT32 i = 0; i < defineCount; i++) {
-    CW2A utf8Name(pDefines[i].Name, CP_UTF8);
-    CW2A utf8Value(pDefines[i].Value, CP_UTF8);
+    CW2A utf8Name(pDefines[i].Name);
+    CW2A utf8Value(pDefines[i].Value);
     defineStr += "#define ";
     defineStr += utf8Name;
     defineStr += " ";
@@ -1590,7 +1589,7 @@ public:
       std::unique_ptr<ASTUnit::RemappedFile> pRemap(
           new ASTUnit::RemappedFile(fakeName, pBuffer.release()));
 
-      CW2A utf8EntryPoint(pEntryPoint, CP_UTF8);
+      CW2A utf8EntryPoint(pEntryPoint);
 
       std::string errors;
       std::string rewrite;
@@ -1679,7 +1678,7 @@ public:
     CComPtr<IDxcBlobUtf8> utf8Source;
     IFR(hlsl::DxcGetBlobAsUtf8(pSource, m_pMalloc, &utf8Source));
 
-    CW2A utf8SourceName(pSourceName, CP_UTF8);
+    CW2A utf8SourceName(pSourceName);
     LPCSTR fName = utf8SourceName.m_psz;
 
     try {
@@ -1747,7 +1746,7 @@ public:
     CComPtr<IDxcBlobUtf8> utf8Source;
     IFR(hlsl::DxcGetBlobAsUtf8(pSource, m_pMalloc, &utf8Source));
 
-    CW2A utf8SourceName(pSourceName, CP_UTF8);
+    CW2A utf8SourceName(pSourceName);
     LPCSTR fName = utf8SourceName.m_psz;
 
     try {
@@ -1756,13 +1755,6 @@ public:
       std::unique_ptr<::llvm::sys::fs::MSFileSystem> msf(msfPtr);
       ::llvm::sys::fs::AutoPerThreadSystem pts(msf.get());
       IFTLLVM(pts.error_code());
-
-      StringRef Data(utf8Source->GetStringPointer(),
-                     utf8Source->GetStringLength());
-      std::unique_ptr<llvm::MemoryBuffer> pBuffer(
-          llvm::MemoryBuffer::getMemBufferCopy(Data, fName));
-      std::unique_ptr<ASTUnit::RemappedFile> pRemap(
-          new ASTUnit::RemappedFile(fName, pBuffer.release()));
 
       hlsl::options::MainArgs mainArgs(argCount, pArguments, 0);
 
@@ -1773,6 +1765,13 @@ public:
         // Looks odd, but this call succeeded enough to allocate a result
         return S_OK;
       }
+
+      StringRef Data(utf8Source->GetStringPointer(),
+                     utf8Source->GetStringLength());
+      std::unique_ptr<llvm::MemoryBuffer> pBuffer(
+          llvm::MemoryBuffer::getMemBufferCopy(Data, fName));
+      std::unique_ptr<ASTUnit::RemappedFile> pRemap(
+          new ASTUnit::RemappedFile(fName, pBuffer.release()));
 
       if (opts.RWOpt.DeclGlobalCB) {
         std::string errors;

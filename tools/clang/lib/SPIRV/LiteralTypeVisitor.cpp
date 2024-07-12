@@ -86,7 +86,7 @@ void LiteralTypeVisitor::tryToUpdateInstLitType(SpirvInstruction *inst,
   // Since LiteralTypeVisitor is run before lowering the types, we can simply
   // update the AST result-type of the instruction to the new type. In the case
   // of the instruction being a constant instruction, since we do not have
-  // unique constants at this point, chaing the QualType of the constant
+  // unique constants at this point, changing the QualType of the constant
   // instruction is safe.
   inst->setAstResultType(newType);
 }
@@ -164,7 +164,7 @@ bool LiteralTypeVisitor::visit(SpirvBinaryOp *inst) {
   case spv::Op::OpShiftLeftLogical: {
     // Base (arg1) should have the same type as result type
     tryToUpdateInstLitType(inst->getOperand1(), resultType);
-    // The shitf amount (arg2) cannot be a 64-bit type for a 32-bit base!
+    // The shift amount (arg2) cannot be a 64-bit type for a 32-bit base!
     tryToUpdateInstLitType(inst->getOperand2(), resultType);
     return true;
   }
@@ -227,6 +227,16 @@ bool LiteralTypeVisitor::visit(SpirvBinaryOp *inst) {
                            inst->getOperand1()->getAstResultType());
     return true;
   }
+
+  case spv::Op::OpVectorTimesScalar: {
+    QualType elemType;
+    if (isVectorType(operand1->getAstResultType(), &elemType) &&
+        elemType->isFloatingType()) {
+      tryToUpdateInstLitType(inst->getOperand2(), elemType);
+    }
+    return true;
+  }
+
   default:
     break;
   }
@@ -284,17 +294,9 @@ bool LiteralTypeVisitor::visit(SpirvVectorShuffle *inst) {
   return true;
 }
 
-bool LiteralTypeVisitor::visit(SpirvNonUniformUnaryOp *inst) {
-  // Went through each non-uniform binary operation and made sure the following
-  // does not result in a wrong type deduction.
-  tryToUpdateInstLitType(inst->getArg(), inst->getAstResultType());
-  return true;
-}
-
-bool LiteralTypeVisitor::visit(SpirvNonUniformBinaryOp *inst) {
-  // Went through each non-uniform unary operation and made sure the following
-  // does not result in a wrong type deduction.
-  tryToUpdateInstLitType(inst->getArg1(), inst->getAstResultType());
+bool LiteralTypeVisitor::visit(SpirvGroupNonUniformOp *inst) {
+  for (auto *operand : inst->getOperands())
+    tryToUpdateInstLitType(operand, inst->getAstResultType());
   return true;
 }
 
@@ -481,6 +483,17 @@ bool LiteralTypeVisitor::visit(SpirvImageOp *inst) {
     const auto sampledType =
         hlsl::GetHLSLResourceResultType(inst->getAstResultType());
     tryToUpdateInstLitType(inst->getTexelToWrite(), sampledType);
+  }
+  return true;
+}
+
+bool LiteralTypeVisitor::visit(SpirvSwitch *inst) {
+  if (auto *constInt = dyn_cast<SpirvConstantInteger>(inst->getSelector())) {
+    if (isLiteralLargerThan32Bits(constInt)) {
+      const bool isSigned = constInt->getAstResultType()->isSignedIntegerType();
+      constInt->setAstResultType(isSigned ? astContext.LongLongTy
+                                          : astContext.UnsignedLongLongTy);
+    }
   }
   return true;
 }

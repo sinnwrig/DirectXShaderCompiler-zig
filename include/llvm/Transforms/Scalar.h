@@ -153,6 +153,9 @@ void initializeDxilPreserveToSelectPass(PassRegistry&);
 Pass *createDxilRemoveDeadBlocksPass();
 void initializeDxilRemoveDeadBlocksPass(PassRegistry&);
 
+Pass *createDxilRemoveUnstructuredLoopExitsPass();
+void initializeDxilRemoveUnstructuredLoopExitsPass(PassRegistry &);
+
 void initializeDxilRewriteOutputArgDebugInfoPass(PassRegistry&);
 Pass *createDxilRewriteOutputArgDebugInfoPass();
 
@@ -181,6 +184,11 @@ void initializeMultiDimArrayToOneDimArrayPass(PassRegistry&);
 //
 ModulePass *createResourceToHandlePass();
 void initializeResourceToHandlePass(PassRegistry&);
+//===----------------------------------------------------------------------===//
+// Flatten resource into handle.
+//
+ModulePass *createLowerWaveMatTypePass();
+void initializeLowerWaveMatTypePass(PassRegistry &);
 
 //===----------------------------------------------------------------------===//
 // Hoist a local array initialized with constant values to a global array with
@@ -326,6 +334,8 @@ extern char &DemoteRegisterToMemoryHlslID;
 // For example:  4 + (x + 5)  ->  x + (4 + 5)
 //
 FunctionPass *createReassociatePass();
+FunctionPass *
+createReassociatePass(bool HLSLEnableAggressiveReassociation); // HLSL Change
 
 //===----------------------------------------------------------------------===//
 //

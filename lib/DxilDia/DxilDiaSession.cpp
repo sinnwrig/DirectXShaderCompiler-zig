@@ -20,6 +20,7 @@
 #include "llvm/IR/Metadata.h"
 #include "llvm/IR/Module.h"
 
+#include "../DxilPIXPasses/PixPassHelpers.h"
 #include "DxilDia.h"
 #include "DxilDiaEnumTables.h"
 #include "DxilDiaTable.h"
@@ -63,7 +64,9 @@ void dxil_dia::Session::Init(std::shared_ptr<llvm::LLVMContext> context,
 
   // Build up a linear list of instructions. The index will be used as the
   // RVA.
-  for (llvm::Function &fn : m_module->functions()) {
+  std::vector<llvm::Function *> allInstrumentableFunctions =
+      PIXPassHelpers::GetAllInstrumentableFunctions(*m_dxilModule.get());
+  for (auto fn : allInstrumentableFunctions) {
     for (llvm::inst_iterator it = inst_begin(fn), end = inst_end(fn); it != end;
          ++it) {
       llvm::Instruction &i = *it;
@@ -93,13 +96,18 @@ void dxil_dia::Session::Init(std::shared_ptr<llvm::LLVMContext> context,
     DXASSERT(m_rvaMap[It->second] == It->first,
              "instruction mapped to wrong rva");
   }
+}
 
-  // Initialize symbols
-  try {
-    m_symsMgr.Init(this);
-  } catch (const hlsl::Exception &) {
-    m_symsMgr = dxil_dia::SymbolManager();
+const dxil_dia::SymbolManager &dxil_dia::Session::SymMgr() {
+  if (!m_symsMgr) {
+    try {
+      m_symsMgr.reset(new dxil_dia::SymbolManager());
+      m_symsMgr->Init(this);
+    } catch (const hlsl::Exception &) {
+      m_symsMgr.reset(new dxil_dia::SymbolManager());
+    }
   }
+  return *m_symsMgr;
 }
 
 HRESULT dxil_dia::Session::getSourceFileIdByName(llvm::StringRef fileName,
@@ -135,7 +143,7 @@ STDMETHODIMP dxil_dia::Session::get_globalScope(
   *pRetVal = nullptr;
 
   Symbol *ret;
-  IFR(m_symsMgr.GetGlobalScope(&ret));
+  IFR(SymMgr().GetGlobalScope(&ret));
   *pRetVal = ret;
   return S_OK;
 }
@@ -343,7 +351,7 @@ STDMETHODIMP dxil_dia::Session::findInjectedSource(
     /* [in] */ LPCOLESTR srcFile,
     /* [out] */ IDiaEnumInjectedSources **ppResult) {
   if (Contents() != nullptr) {
-    CW2A pUtf8FileName(srcFile, CP_UTF8);
+    CW2A pUtf8FileName(srcFile);
     DxcThreadMalloc TM(m_pMalloc);
     IDiaTable *pTable;
     IFT(Table::Create(this, Table::Kind::InjectedSource, &pTable));
@@ -375,7 +383,7 @@ STDMETHODIMP dxil_dia::Session::findInlineFramesByAddr(
 
   HRESULT hr;
   SymbolChildrenEnumerator *ChildrenEnum;
-  IFR(hr = m_symsMgr.DbgScopeOf(It->second, &ChildrenEnum));
+  IFR(hr = SymMgr().DbgScopeOf(It->second, &ChildrenEnum));
 
   *ppResult = ChildrenEnum;
   return hr;

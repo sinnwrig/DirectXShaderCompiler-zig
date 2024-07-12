@@ -213,8 +213,10 @@ For example:
 
   [[vk::input_attachment_index(i)]] SubpassInput input;
 
-An ``vk::input_attachment_index`` of ``i`` selects the ith entry in the input
-pass list. (See Vulkan API spec for more information.)
+A ``vk::input_attachment_index`` of ``i`` selects the ith entry in the input
+pass list. A subpass input without a ``vk::input_attachment_index`` will be
+associated with the depth/stencil attachment. (See Vulkan API spec for more
+information.)
 
 Push constants
 ~~~~~~~~~~~~~~
@@ -671,21 +673,21 @@ Normal scalar types
 in HLSL are relatively easy to handle and can be mapped directly to SPIR-V
 type instructions:
 
-============================== ======================= ================== =========== =================================
-      HLSL                      Command Line Option           SPIR-V       Capability       Extension
-============================== ======================= ================== =========== =================================
+============================== ======================= ================== ===========
+      HLSL                      Command Line Option           SPIR-V       Capability
+============================== ======================= ================== ===========
 ``bool``                                               ``OpTypeBool``
 ``int``/``int32_t``                                    ``OpTypeInt 32 1``
 ``int16_t``                    ``-enable-16bit-types`` ``OpTypeInt 16 1`` ``Int16``
 ``uint``/``dword``/``uin32_t``                         ``OpTypeInt 32 0``
 ``uint16_t``                   ``-enable-16bit-types`` ``OpTypeInt 16 0`` ``Int16``
 ``half``                                               ``OpTypeFloat 32``
-``half``/``float16_t``         ``-enable-16bit-types`` ``OpTypeFloat 16``             ``SPV_AMD_gpu_shader_half_float``
+``half``/``float16_t``         ``-enable-16bit-types`` ``OpTypeFloat 16`` ``Float16``
 ``float``/``float32_t``                                ``OpTypeFloat 32``
 ``snorm float``                                        ``OpTypeFloat 32``
 ``unorm float``                                        ``OpTypeFloat 32``
 ``double``/``float64_t``                               ``OpTypeFloat 64`` ``Float64``
-============================== ======================= ================== =========== =================================
+============================== ======================= ================== ===========
 
 Please note that ``half`` is translated into 32-bit floating point numbers
 if without ``-enable-16bit-types`` because MSDN says that "this data type
@@ -705,20 +707,20 @@ We use the 16-bit variants if '-enable-16bit-types' command line option is prese
 For more information on these types, please refer to:
 https://github.com/Microsoft/DirectXShaderCompiler/wiki/16-Bit-Scalar-Types
 
-============== ======================= ================== ==================== ============ =================================
-    HLSL        Command Line Option          SPIR-V            Decoration       Capability        Extension
-============== ======================= ================== ==================== ============ =================================
+============== ======================= ================== ==================== ============
+    HLSL        Command Line Option          SPIR-V            Decoration       Capability 
+============== ======================= ================== ==================== ============
 ``min16float``                         ``OpTypeFloat 32`` ``RelaxedPrecision``
 ``min10float``                         ``OpTypeFloat 32`` ``RelaxedPrecision``
 ``min16int``                           ``OpTypeInt 32 1`` ``RelaxedPrecision``
 ``min12int``                           ``OpTypeInt 32 1`` ``RelaxedPrecision``
 ``min16uint``                          ``OpTypeInt 32 0`` ``RelaxedPrecision``
-``min16float`` ``-enable-16bit-types`` ``OpTypeFloat 16``                                   ``SPV_AMD_gpu_shader_half_float``
-``min10float`` ``-enable-16bit-types`` ``OpTypeFloat 16``                                   ``SPV_AMD_gpu_shader_half_float``
+``min16float`` ``-enable-16bit-types`` ``OpTypeFloat 16``                      ``Float16`` 
+``min10float`` ``-enable-16bit-types`` ``OpTypeFloat 16``                      ``Float16`` 
 ``min16int``   ``-enable-16bit-types`` ``OpTypeInt 16 1``                      ``Int16``
 ``min12int``   ``-enable-16bit-types`` ``OpTypeInt 16 1``                      ``Int16``
 ``min16uint``  ``-enable-16bit-types`` ``OpTypeInt 16 0``                      ``Int16``
-============== ======================= ================== ==================== ============ =================================
+============== ======================= ================== ==================== ============
 
 Vectors and matrices
 --------------------
@@ -1359,7 +1361,7 @@ placed in the ``Uniform`` or ``UniformConstant`` storage class.
   - Note that this modifier overrules ``static``; if both ``groupshared`` and
     ``static`` are applied to a variable, ``static`` will be ignored.
 
-- ``uinform``
+- ``uniform``
 
   - This does not affect codegen. Variables will be treated like normal global
     variables.
@@ -3824,8 +3826,8 @@ RayQuery Mapping to SPIR-V
 |``.WorldRayOrigin`                                 | ``OpRayQueryGetWorldRayOriginKHR``                                      |
 +---------------------------------------------------+-------------------------------------------------------------------------+
 
-Shader Model 6.0 Wave Intrinsics
-================================
+Shader Model 6.0+ Wave Intrinsics
+=================================
 
 
 Note that Wave intrinsics requires SPIR-V 1.3, which is supported by Vulkan 1.1.
@@ -3838,9 +3840,9 @@ loading from SPIR-V builtin variable ``SubgroupSize`` and
 ``SubgroupLocalInvocationId`` respectively, the rest are translated into SPIR-V
 group operations with ``Subgroup`` scope according to the following chart:
 
-============= ============================ =================================== ======================
+============= ============================ =================================== ==============================
 Wave Category       Wave Intrinsics               SPIR-V Opcode                SPIR-V Group Operation
-============= ============================ =================================== ======================
+============= ============================ =================================== ==============================
 Query         ``WaveIsFirstLane()``        ``OpGroupNonUniformElect``
 Vote          ``WaveActiveAnyTrue()``      ``OpGroupNonUniformAny``
 Vote          ``WaveActiveAllTrue()``      ``OpGroupNonUniformAll``
@@ -3863,7 +3865,13 @@ Quad          ``QuadReadAcrossX()``        ``OpGroupNonUniformQuadSwap``
 Quad          ``QuadReadAcrossY()``        ``OpGroupNonUniformQuadSwap``
 Quad          ``QuadReadAcrossDiagonal()`` ``OpGroupNonUniformQuadSwap``
 Quad          ``QuadReadLaneAt()``         ``OpGroupNonUniformQuadBroadcast``
-============= ============================ =================================== ======================
+N/A           ``WaveMatch()``              ``OpGroupNonUniformPartitionNV``
+Multiprefix   ``WaveMultiPrefixSum()``     ``OpGroupNonUniform*Add``           ``PartitionedExclusiveScanNV``
+Multiprefix   ``WaveMultiPrefixProduct()`` ``OpGroupNonUniform*Mul``           ``PartitionedExclusiveScanNV``
+Multiprefix   ``WaveMultiPrefixBitAnd()``  ``OpGroupNonUniformLogicalAnd``     ``PartitionedExclusiveScanNV``
+Multiprefix   ``WaveMultiPrefixBitOr()``   ``OpGroupNonUniformLogicalOr``      ``PartitionedExclusiveScanNV``
+Multiprefix   ``WaveMultiPrefixBitXor()``  ``OpGroupNonUniformLogicalXor``     ``PartitionedExclusiveScanNV``
+============= ============================ =================================== ==============================
 
 The Implicit ``vk`` Namespace
 =============================

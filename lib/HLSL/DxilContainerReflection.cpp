@@ -986,6 +986,23 @@ HRESULT CShaderReflectionType::InitializeEmpty() {
   return S_OK;
 }
 
+// Returns true if type is array and/or vec with matching number of elements.
+static bool MatchVectorOrMatrixType(llvm::Type *type, unsigned count,
+                                    int maxDepth) {
+  if (type->isArrayTy()) {
+    unsigned arraySize = (unsigned)type->getArrayNumElements();
+    if (maxDepth < 1 || count < arraySize || (count % arraySize) != 0)
+      return false;
+    return MatchVectorOrMatrixType(type->getArrayElementType(),
+                                   count / arraySize, maxDepth - 1);
+  } else if (type->isVectorTy()) {
+    if (maxDepth < 1)
+      return false;
+    return type->getVectorNumElements() == count;
+  }
+  return count == 1;
+}
+
 // Main logic for translating an LLVM type and associated
 // annotations into a D3D shader reflection type.
 HRESULT CShaderReflectionType::Initialize(
@@ -996,6 +1013,7 @@ HRESULT CShaderReflectionType::Initialize(
   DXASSERT_NOMSG(inType);
 
   // Set a bunch of fields to default values, to avoid duplication.
+  m_Desc.Class = D3D_SVC_SCALAR;
   m_Desc.Rows = 0;
   m_Desc.Columns = 0;
   m_Desc.Elements = 0;
@@ -1026,32 +1044,75 @@ HRESULT CShaderReflectionType::Initialize(
   // at the element type.
   llvm::Type *type = inType;
 
-  while (type->isArrayTy()) {
-    llvm::Type *elementType = type->getArrayElementType();
+  // Arrays can be a bit difficult, since some types are translated to arrays.
+  // Additionally, matrices have multiple potential forms, so we must pay
+  // attention to the field annotation to determine when we have reached the
+  // element type that may be a matrix or a vector.
 
-    // Note: At this point an HLSL matrix type may appear as an ordinary
-    // array (not wrapped in a `struct`), so `dxilutil::IsHLSLMatrixType()`
-    // is not sufficient. Instead we need to check the field annotation.
-    //
-    // We might have an array of matrices, though, so we only exit if
-    // the field annotation says we have a matrix, and we've bottomed
-    // out at one array level, since matrix will be in the format:
-    // [rows x <cols x float>]
-    //
-    // This is in storage orientation, so rows/cols are swapped
-    // when the matrix is column_major.
-    //
-    // However, when the matrix has a row size of 1 in storage orientation,
-    // this array dimension appears to be missing.
-    // To properly count the array dimensions for this case,
-    // we must not break out of the loop one array early when rows == 1.
-    if (typeAnnotation.HasMatrixAnnotation() && !elementType->isArrayTy() &&
-        !HLMatrixType::isa(elementType)) {
-      const DxilMatrixAnnotation &mat = typeAnnotation.GetMatrixAnnotation();
-      unsigned rows =
-          mat.Orientation == MatrixOrientation::RowMajor ? mat.Rows : mat.Cols;
-      // when rows == 1, in storage orientation, the row array is missing.
-      if (rows > 1)
+  // There are several possible matrix encodings:
+  //  High level: struct { [rows x <cols x float>] }
+  //  High level struct stripped: [rows x <cols x float>]
+  //  High level struct stripped, one row: <cols x float>
+  //  Vector as array: [rows x [cols x float]]
+  //  Vector as array, one row: [cols x float]
+  //  Flattened vector: <(rows*cols) x float>
+  //  Flattened vector as array: [(rows*cols) x float]
+  // And vector may use llvm vector, or be translated to array:
+  //  <cols x float>  <->  [cols x float]
+  // Use type annotation to determine if we have a vector or matrix first,
+  // so we can stop multiplying in array dims at the right time.
+
+  if (typeAnnotation.HasMatrixAnnotation()) {
+    // We can extract the details from the annotation.
+    DxilMatrixAnnotation const &matrixAnnotation =
+        typeAnnotation.GetMatrixAnnotation();
+
+    switch (matrixAnnotation.Orientation) {
+    default:
+#ifndef NDEBUG
+      OutputDebugStringA(
+          "DxilContainerReflection.cpp: error: unknown matrix orientation\n");
+#endif
+      // Note: column-major layout is the default
+      LLVM_FALLTHROUGH; // HLSL Change
+    case hlsl::MatrixOrientation::Undefined:
+    case hlsl::MatrixOrientation::ColumnMajor:
+      m_Desc.Class = D3D_SVC_MATRIX_COLUMNS;
+      break;
+
+    case hlsl::MatrixOrientation::RowMajor:
+      m_Desc.Class = D3D_SVC_MATRIX_ROWS;
+      break;
+    }
+
+    m_Desc.Rows = matrixAnnotation.Rows;
+    m_Desc.Columns = matrixAnnotation.Cols;
+
+    cbRows = m_Desc.Rows;
+    cbCols = m_Desc.Columns;
+    if (m_Desc.Class == D3D_SVC_MATRIX_COLUMNS) {
+      std::swap(cbRows, cbCols);
+    }
+  } else if (unsigned cols = typeAnnotation.GetVectorSize()) {
+    // Older format lacks this size, but the type will be a vector,
+    // so that will be handled later by original code path.
+    m_Desc.Class = D3D_SVC_VECTOR;
+    m_Desc.Rows = 1;
+    m_Desc.Columns = cols;
+
+    cbRows = m_Desc.Rows;
+    cbCols = m_Desc.Columns;
+  }
+
+  while (type->isArrayTy()) {
+    // Already determined that this is a vector or matrix, so break if the
+    // number of remaining array and/or vector elements matches.
+    if (m_Desc.Class != D3D_SVC_SCALAR) {
+      // max depth is 1 for vector, and 2 for matrix, unless rows in storage
+      // orientation is 1.
+      if (MatchVectorOrMatrixType(
+              type, cbRows * cbCols,
+              (m_Desc.Class == D3D_SVC_VECTOR || cbRows == 1) ? 1 : 2))
         break;
     }
 
@@ -1065,11 +1126,8 @@ HRESULT CShaderReflectionType::Initialize(
     // but for now we do the expedient thing of multiplying out all their
     // dimensions.
     m_Desc.Elements *= type->getArrayNumElements();
-    type = elementType;
+    type = type->getArrayElementType();
   }
-
-  // Default to a scalar type, just to avoid some duplication later.
-  m_Desc.Class = D3D_SVC_SCALAR;
 
   // Look at the annotation to try to determine the basic type of value.
   //
@@ -1165,40 +1223,13 @@ HRESULT CShaderReflectionType::Initialize(
   }
   m_Desc.Type = componentType;
 
-  // A matrix type is encoded as a vector type, plus annotations, so we
-  // need to check for this case before other vector cases.
-  if (typeAnnotation.HasMatrixAnnotation()) {
-    // We can extract the details from the annotation.
-    DxilMatrixAnnotation const &matrixAnnotation =
-        typeAnnotation.GetMatrixAnnotation();
-
-    switch (matrixAnnotation.Orientation) {
-    default:
-#ifndef NDEBUG
-      OutputDebugStringA(
-          "DxilContainerReflection.cpp: error: unknown matrix orientation\n");
-#endif
-      // Note: column-major layout is the default
-      LLVM_FALLTHROUGH; // HLSL Change
-    case hlsl::MatrixOrientation::Undefined:
-    case hlsl::MatrixOrientation::ColumnMajor:
-      m_Desc.Class = D3D_SVC_MATRIX_COLUMNS;
-      break;
-
-    case hlsl::MatrixOrientation::RowMajor:
-      m_Desc.Class = D3D_SVC_MATRIX_ROWS;
-      break;
-    }
-
-    m_Desc.Rows = matrixAnnotation.Rows;
-    m_Desc.Columns = matrixAnnotation.Cols;
-    m_Name += std::to_string(matrixAnnotation.Rows) + "x" +
-              std::to_string(matrixAnnotation.Cols);
-
-    cbRows = m_Desc.Rows;
-    cbCols = m_Desc.Columns;
-    if (m_Desc.Class == D3D_SVC_MATRIX_COLUMNS) {
-      std::swap(cbRows, cbCols);
+  if (m_Desc.Class != D3D_SVC_SCALAR) {
+    // matrix or explicit vector already handled, except for name.
+    if (m_Desc.Class == D3D_SVC_VECTOR) {
+      m_Name += std::to_string(m_Desc.Columns);
+    } else {
+      m_Name +=
+          std::to_string(m_Desc.Rows) + "x" + std::to_string(m_Desc.Columns);
     }
   } else if (FixedVectorType *VT = dyn_cast<FixedVectorType>(type)) {
     // We assume that LLVM vectors either represent matrices (handled above)
@@ -2485,29 +2516,36 @@ void DxilShaderReflection::InitDesc() {
   DxilCounters counters = {};
   m_pDxilModule->LoadDxilCounters(counters);
 
-  // UINT InstructionCount;               // Num llvm instructions in all
-  // functions UINT TempArrayCount;                 // Number of bytes used in
-  // arrays (alloca + static global) UINT DynamicFlowControlCount;        //
-  // Number of branches with more than one successor for now UINT
-  // ArrayInstructionCount;          // number of load/store on arrays for now
+  // UINT InstructionCount; // Num llvm instructions in all functions
+  // UINT TempArrayCount; // Number of bytes used in arrays (alloca + static
+  //                         global)
+  // UINT DynamicFlowControlCount; // Number of branches with more than one
+  //                                  successor for now
+  // UINT ArrayInstructionCount; // number of load/store on arrays for now
   pDesc->InstructionCount = counters.insts;
   pDesc->TempArrayCount = counters.AllArrayBytes();
   pDesc->DynamicFlowControlCount = counters.branches;
   pDesc->ArrayInstructionCount = counters.AllArrayAccesses();
 
-  // UINT FloatInstructionCount;          // Number of floating point arithmetic
-  // instructions used UINT IntInstructionCount;            // Number of signed
-  // integer arithmetic instructions used UINT UintInstructionCount; // Number
-  // of unsigned integer arithmetic instructions used
+  // UINT FloatInstructionCount; // Number of floating point arithmetic
+  // instructions used
+  // UINT IntInstructionCount; // Number of signed integer arithmetic
+  // instructions used
+  // UINT UintInstructionCount; // Number of unsigned integer arithmetic
+  // instructions used
   pDesc->FloatInstructionCount = counters.floats;
   pDesc->IntInstructionCount = counters.ints;
   pDesc->UintInstructionCount = counters.uints;
 
   // UINT TextureNormalInstructions;      // Number of non-categorized texture
-  // instructions UINT TextureLoadInstructions;        // Number of texture load
-  // instructions UINT TextureCompInstructions;        // Number of texture
-  // comparison instructions UINT TextureBiasInstructions;        // Number of
-  // texture bias instructions UINT TextureGradientInstructions;    // Number of
+  // instructions
+  // UINT TextureLoadInstructions;        // Number of texture load
+  // instructions
+  // UINT TextureCompInstructions;        // Number of texture
+  // comparison instructions
+  // UINT TextureBiasInstructions;        // Number of
+  // texture bias instructions
+  // UINT TextureGradientInstructions;    // Number of
   // texture gradient instructions
   pDesc->TextureNormalInstructions = counters.tex_norm;
   pDesc->TextureLoadInstructions = counters.tex_load;
@@ -2521,22 +2559,25 @@ void DxilShaderReflection::InitDesc() {
   pDesc->EmitInstructionCount = counters.gs_emit;
 
   // UINT cBarrierInstructions;           // Number of barrier instructions in a
-  // compute shader UINT cInterlockedInstructions;       // Number of
-  // interlocked instructions UINT cTextureStoreInstructions;      // Number of
+  // compute shader
+  // UINT cInterlockedInstructions;       // Number of
+  // interlocked instructions
+  // UINT cTextureStoreInstructions;      // Number of
   // texture writes
   pDesc->cBarrierInstructions = counters.barrier;
   pDesc->cInterlockedInstructions = counters.atomic;
   pDesc->cTextureStoreInstructions = counters.tex_store;
 
-  // Unset:  UINT TempRegisterCount;      // Don't know how to map this for SSA
-  // (not going to do reg allocation here) Unset:  UINT DefCount; // Not sure
-  // what to map this to Unset:  UINT DclCount;               // Number of
-  // declarations (input + output)
-  // TODO: map to used input + output signature rows?
-  // Unset:  UINT StaticFlowControlCount; // Number of static flow control
-  // instructions used This used to map to flow control using special int/bool
-  // constant registers in DX9. Unset:  UINT MacroInstructionCount;  // Number
-  // of macro instructions used Macro instructions are a <= DX9 concept.
+  // Unset: UINT TempRegisterCount; // Don't know how to map this for SSA (not
+  //                                   going to do reg allocation here)
+  // Unset: UINT DefCount; // Not sure what to map this to
+  // Unset: UINT DclCount; // Number of declarations (input + output)
+  //    TODO: map to used input + output signature rows?
+  // Unset: UINT StaticFlowControlCount; // Number of static flow control
+  //    instructions used This used to map to flow control using special
+  //    int/bool constant registers in DX9.
+  // Unset: UINT MacroInstructionCount;  // Number of macro instructions used
+  //    Macro instructions are a <= DX9 concept.
 }
 
 ID3D12ShaderReflectionConstantBuffer *
@@ -2808,45 +2849,53 @@ HRESULT CFunctionReflection::GetDesc(D3D12_FUNCTION_DESC *pDesc) {
   }
   pDesc->Version = EncodeVersion(kind, pSM->GetMajor(), pSM->GetMinor());
 
-  // Unset:  LPCSTR                  Creator;                     // Creator
-  // string Unset:  UINT                    Flags;                       //
-  // Shader compilation/parse flags
+  // Unset: LPCSTR Creator;  // Creator string
+  // Unset: UINT   Flags;    // Shader compilation/parse flags
 
   pDesc->ConstantBuffers = (UINT)m_UsedCBs.size();
   pDesc->BoundResources = (UINT)m_UsedResources.size();
 
-  // Unset:  UINT                    InstructionCount;            // Number of
-  // emitted instructions Unset:  UINT                    TempRegisterCount; //
-  // Number of temporary registers used Unset:  UINT TempArrayCount; // Number
-  // of temporary arrays used Unset:  UINT                    DefCount; //
-  // Number of constant defines Unset:  UINT                    DclCount; //
-  // Number of declarations (input + output) Unset:  UINT
+  // Unset: UINT InstructionCount;  // Number of emitted instructions
+  // Unset: UINT TempRegisterCount; // Number of temporary registers used
+  // Unset: UINT TempArrayCount;  // Number of temporary arrays used
+  // Unset: UINT DefCount;        // Number of constant defines
+  // Unset: UINT DclCount;        // Number of declarations (input + output)
+  // Unset: UINT
   // TextureNormalInstructions;   // Number of non-categorized texture
-  // instructions Unset:  UINT                    TextureLoadInstructions; //
-  // Number of texture load instructions Unset:  UINT TextureCompInstructions;
-  // // Number of texture comparison instructions Unset:  UINT
-  // TextureBiasInstructions;     // Number of texture bias instructions Unset:
-  // UINT                    TextureGradientInstructions; // Number of texture
-  // gradient instructions Unset:  UINT FloatInstructionCount;       // Number
-  // of floating point arithmetic instructions used Unset:  UINT
-  // IntInstructionCount;         // Number of signed integer arithmetic
-  // instructions used Unset:  UINT                    UintInstructionCount; //
-  // Number of unsigned integer arithmetic instructions used Unset:  UINT
-  // StaticFlowControlCount;      // Number of static flow control instructions
-  // used Unset:  UINT                    DynamicFlowControlCount;     // Number
-  // of dynamic flow control instructions used Unset:  UINT
-  // MacroInstructionCount;       // Number of macro instructions used Unset:
-  // UINT                    ArrayInstructionCount;       // Number of array
-  // instructions used Unset:  UINT                    MovInstructionCount; //
-  // Number of mov instructions used Unset:  UINT MovcInstructionCount; //
-  // Number of movc instructions used Unset:  UINT ConversionInstructionCount;
-  // // Number of type conversion instructions used Unset:  UINT
-  // BitwiseInstructionCount;     // Number of bitwise arithmetic instructions
-  // used Unset:  D3D_FEATURE_LEVEL       MinFeatureLevel;             // Min
-  // target of the function byte code
+  //                                 instructions
+  // Unset: UINT TextureLoadInstructions; // Number of texture load
+  //                                         instructions
+  // Unset: UINT TextureCompInstructions; // Number of texture comparison
+  //                                         instructions
+
+  // Unset: UINT TextureBiasInstructions;// Number of texture bias instructions
+  // Unset: UINT TextureGradientInstructions; // Number of texture gradient
+  //                                             instructions
+  // Unset: UINT FloatInstructionCount; // Number of floating point arithmetic
+  //                                       instructions used
+  // Unset: UINT IntInstructionCount;   // Number of signed integer arithmetic
+  //                                       instructions used
+  // Unset: UINT UintInstructionCount; // Number of unsigned integer
+  //                                      arithmetic instructions used
+  // Unset: UINT StaticFlowControlCount;  // Number of static flow control
+  //                                         instructions used
+  // Unset: UINT DynamicFlowControlCount; // Number of dynamic flow control
+  //                                         instructions used
+  // Unset: UINT MacroInstructionCount; // Number of macro instructions used
+  // Unset: UINT ArrayInstructionCount; // Number of array instructions used
+  // Unset: UINT MovInstructionCount; // Number of mov instructions used
+  // Unset: UINT MovcInstructionCount; // Number of movc instructions used
+  // Unset: UINT ConversionInstructionCount; // Number of type conversion
+  //                                            instructions used
+  // Unset: UINT BitwiseInstructionCount; // Number of bitwise arithmetic
+  //                                         instructions used
+  // Unset: D3D_FEATURE_LEVEL MinFeatureLevel; // Min target of the function
+  //                                              byte code
 
   pDesc->RequiredFeatureFlags =
       m_FeatureFlags & ~(UINT64)D3D_SHADER_REQUIRES_EARLY_DEPTH_STENCIL;
+  // Also Mask off function-level derivatives flag.
+  pDesc->RequiredFeatureFlags &= ~DXIL::OptFeatureInfo_UsesDerivatives;
   if (kind == DXIL::ShaderKind::Pixel && m_pProps &&
       m_pProps->ShaderProps.PS.EarlyDepthStencil) {
     pDesc->RequiredFeatureFlags |= D3D_SHADER_REQUIRES_EARLY_DEPTH_STENCIL;
@@ -2854,13 +2903,12 @@ HRESULT CFunctionReflection::GetDesc(D3D12_FUNCTION_DESC *pDesc) {
 
   pDesc->Name = m_Name.c_str();
 
-  // Unset:  INT                     FunctionParameterCount;      // Number of
-  // logical parameters in the function signature (not including return) Unset:
-  // BOOL                    HasReturn;                   // TRUE, if function
-  // returns a value, false - it is a subroutine Unset:  BOOL
-  // Has10Level9VertexShader;     // TRUE, if there is a 10L9 VS blob Unset:
-  // BOOL                    Has10Level9PixelShader;      // TRUE, if there is a
-  // 10L9 PS blob
+  // Unset: INT FunctionParameterCount; // Number of logical parameters in the
+  //                                  function signature (not including return)
+  // Unset: BOOL HasReturn; // TRUE, if function returns a value, false - it is
+  //                           a subroutine
+  // Unset: BOOL Has10Level9VertexShader; // TRUE, if there is a 10L9 VS blob
+  // Unset: BOOL Has10Level9PixelShader; // TRUE, if there is a 10L9 PS blob
   return S_OK;
 }
 
