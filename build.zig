@@ -31,6 +31,7 @@ pub fn build(b: *Build) !void {
     // Microsoft does some shit.
     dxcompiler.root_module.sanitize_c = false;
     dxcompiler.root_module.sanitize_thread = false; // sometimes in parallel, too.
+    dxcompiler.pie = true;
 
     var cflags = std.ArrayList([]const u8).init(b.allocator);
     var cppflags = std.ArrayList([]const u8).init(b.allocator);
