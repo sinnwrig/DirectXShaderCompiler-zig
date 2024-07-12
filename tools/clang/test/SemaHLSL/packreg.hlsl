@@ -1,4 +1,5 @@
 // RUN: %dxc -Tlib_6_3   -verify %s
+// RUN: %dxc -Tps_6_0   -verify %s
 // :FXC_VERIFY_ARGUMENTS: /E main /T ps_5_1
 
 // fxc error X3115: Conflicting register semantics: 's0' and 's1'
@@ -574,7 +575,7 @@ cbuffer MyBuffer2
 Texture2D<float4> Texture : register(t0);
 Texture2D<float4> Texture_ : register(t0);
 sampler Sampler : register(s0);
-
+// expected-warning@+1{{cannot mix packoffset elements with nonpackoffset elements in a cbuffer}}
 cbuffer Parameters : register(b0)
 {
   float4   DiffuseColor   : packoffset(c0) : register(c0);
@@ -633,6 +634,7 @@ float2 f2() {
   return 0;
 }
 
+[shader("pixel")]
 float4 main(float4 param4 : TEXCOORD0) : SV_Target0 {
   float f = OuterItem0 + OuterItem1 + InnerItem0;
   return g_txDiffuse.Sample(myVar_s, float2(1, f));
