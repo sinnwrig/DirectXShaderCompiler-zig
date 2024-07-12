@@ -15,7 +15,7 @@ pub fn build(b: *Build) !void {
     const build_spirv = b.option(bool, "spirv", "Build spir-v compilation support") orelse false;
     const skip_executables = b.option(bool, "skip_executables", "Skip building executables") orelse false;
     const skip_tests = b.option(bool, "skip_tests", "Skip building tests") orelse false;
-    const build_headers = b.option(bool, "build_headers", "Rebuild DXC headers and tables (requires python3 installation)") orelse false;
+    const regenerate_headers = b.option(bool, "regenerate_headers", "Regenerate DXC headers and tables (requires python3 installation)") orelse false;
 
     const dxcompiler = b.addStaticLibrary(.{
         .name = "dxcompiler",
@@ -23,7 +23,7 @@ pub fn build(b: *Build) !void {
         .target = target,
     });
 
-    if (build_headers)
+    if (regenerate_headers)
     {
         dxcompiler.step.dependOn(headers.buildDXCHeaders(b, optimize));
     }

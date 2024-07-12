@@ -161,7 +161,7 @@ pub fn addConfigHeader(b: *Build, target: std.Target, which: anytype) *std.Build
 
         .HAVE_DECL_ARC4RANDOM = 0,
         .HAVE_BACKTRACE = 0,
-        .HAVE_DIA_SDK = 0, // Disable DIA SDK
+        .HAVE_DIA_SDK = 0,
         .HAVE_DLERROR = 0,
         .HAVE_EXECINFO_H = 0,
         .HAVE_FFI_CALL = 0,
