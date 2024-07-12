@@ -99,6 +99,8 @@ const char *CPToLocale(uint32_t CodePage) {
     return iso88591;
   }
   return nullptr;
+}
+
 //===--------------------------- BSTR Length ------------------------------===//
 unsigned int SysStringLen(const BSTR bstrString) {
   if (!bstrString)
