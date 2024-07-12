@@ -387,6 +387,15 @@ fn addConfigHeaders(b: *Build, step: *std.Build.Step.Compile) void {
         },
     ));
 
+    // /include/llvm/Config/abi-breaking.h.cmake
+    step.addConfigHeader(b.addConfigHeader(
+        .{
+            .style = .{ .cmake = b.path("include/llvm/Config/abi-breaking.h.cmake") },
+            .include_path = "llvm/Config/abi-breaking.h",
+        },
+        .{},
+    ));
+
     // /include/llvm/Config/AsmParsers.def.in
     step.addConfigHeader(b.addConfigHeader(
         .{
@@ -415,8 +424,8 @@ fn addConfigHeaders(b: *Build, step: *std.Build.Step.Compile) void {
 }
 
 fn addIncludes(b: *Build, step: *std.Build.Step.Compile) void {
-    // DIA SDK not used - don't add it to include path.
-    // step.addIncludePath(b.path("external/DIA/include"));
+    // TODO: Find out how to remove dependency on DIA SDK.
+    step.addIncludePath(b.path("external/DIA/include"));
     
     // Will use pregenerated values unless -Dbuild_headers flag is passed
     step.addIncludePath(b.path("generated-include/"));

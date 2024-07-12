@@ -119,6 +119,25 @@ fn configureLLVMTablegenExecutable(b: *Build, name: []const u8, files: []const [
     return tablegen_exe;
 }
 
+fn ensureFile(b: *Build, file: Build.LazyPath) void
+{
+    b.build_root.handle.makePath(file.dirname().getPath(b))
+    catch |err| 
+    {
+        log.err("Failed to create output path for file: {s}", .{ @errorName(err) });
+        std.process.exit(1);
+    };
+
+    const file_handle = b.build_root.handle.createFile(file.getPath(b), .{})
+    catch |err|
+    {
+        log.err("Failed to create file: {s}", .{ @errorName(err) });
+        std.process.exit(1);
+    };
+
+    file_handle.close();
+}
+
 const clang_path = "tools/clang/include/clang/";
 const clang_out = "clang/";
 
@@ -135,21 +154,7 @@ fn tablegen(b: *Build, tablegen_exe: *Build.Step.Compile, tablegen_file: Build.L
 
     tablegen_cmd.setCwd(b.path("."));
 
-    b.build_root.handle.makePath(output_file.dirname().getPath(b))
-    catch |err| 
-    {
-        log.err("Failed to create tablegen output path: {s}", .{ @errorName(err) });
-        std.process.exit(1);
-    };
-
-    const out_file_handle = b.build_root.handle.createFile(output_file.getPath(b), .{})
-    catch |err|
-    {
-        log.err("Failed to create tablegen output file: {s}", .{ @errorName(err) });
-        std.process.exit(1);
-    };
-
-    out_file_handle.close();
+    ensureFile(b, output_file);
     
     tablegen_cmd.addArgs(additional_args);
     tablegen_cmd.addArgs(&include_paths);
@@ -205,6 +210,10 @@ pub fn buildDXCHeaders(b: *Build, optimize: std.builtin.OptimizeMode) *std.Build
     headers_step.dependOn(&b.addInstallArtifact(clang_tablegen, .{}).step);
 
     const out_path = b.path(header_output_path);
+
+    // dxcetw.h must be empty since we can't guarantee that the host device has the Message Compiler (mc) installed.
+    // Regardless, it doesn't matter since the instrumentation manifest is only important for perf/debug analyzing.
+    ensureFile(b, out_path.path(b, "dxcetw.h"));
 
 // -------------
 // LLVM tablegen
