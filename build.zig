@@ -25,7 +25,7 @@ pub fn build(b: *Build) !void {
 
     if (build_headers)
     {
-        dxcompiler.step.dependOn(headers.buildDXCHeaders(b, optimize, target));
+        dxcompiler.step.dependOn(headers.buildDXCHeaders(b, optimize));
     }
             
     // Microsoft does some shit.

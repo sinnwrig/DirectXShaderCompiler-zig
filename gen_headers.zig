@@ -67,7 +67,10 @@ fn generateVersionFile(b: *Build, comptime output_file: []const u8, comptime gen
     return python_cmd;
 }
 
-fn configureLLVMTablegenExecutable(b: *Build, name: []const u8, files: []const []const u8, optimize: std.builtin.OptimizeMode, target: Build.ResolvedTarget) *Build.Step.Compile {
+fn configureLLVMTablegenExecutable(b: *Build, name: []const u8, files: []const []const u8, optimize: std.builtin.OptimizeMode) *Build.Step.Compile {
+    // TableGen will always only run on the host machine on build, so the target will always be the host.
+    const target = b.resolveTargetQuery(.{});
+
     const tablegen_exe = b.addExecutable(.{
         .name = name,
         .optimize = optimize,
@@ -167,7 +170,7 @@ fn diagTablegen(b: *Build, tablegen_exe: *Build.Step.Compile, diagnostic_path: B
         &.{ "-gen-clang-diags-defs", "-clang-component=" ++ component_name });
 }
 
-pub fn buildDXCHeaders(b: *Build, optimize: std.builtin.OptimizeMode, target: Build.ResolvedTarget) *std.Build.Step 
+pub fn buildDXCHeaders(b: *Build, optimize: std.builtin.OptimizeMode) *std.Build.Step 
 {    
 // ------------------
 // hctgen.py tablegen
@@ -193,10 +196,10 @@ pub fn buildDXCHeaders(b: *Build, optimize: std.builtin.OptimizeMode, target: Bu
     headers_step.dependOn(&generateVersionFile(b, "dxcversion.inc", "--official").step); // Dynamically generate the version file
 
     // llvm-tblgen executable
-    const llvm_tablegen = configureLLVMTablegenExecutable(b, "llvm-tblgen", &(llvm_utils_tablegen ++ lib_tablegen), optimize, target);
+    const llvm_tablegen = configureLLVMTablegenExecutable(b, "llvm-tblgen", &(llvm_utils_tablegen ++ lib_tablegen), optimize);
 
     // clang-tblgen executable
-    const clang_tablegen = configureLLVMTablegenExecutable(b, "clang-tblgen", &(clang_tools_clang_utils_tablegen ++ lib_tablegen), optimize, target);
+    const clang_tablegen = configureLLVMTablegenExecutable(b, "clang-tblgen", &(clang_tools_clang_utils_tablegen ++ lib_tablegen), optimize);
 
     headers_step.dependOn(&b.addInstallArtifact(llvm_tablegen, .{}).step);
     headers_step.dependOn(&b.addInstallArtifact(clang_tablegen, .{}).step);
