@@ -238,11 +238,8 @@ void CodeEmitterGen::run(raw_ostream &o) {
 
   // Emit instruction base values
   o << "  static const uint64_t InstBits[] = {\n";
-  for (std::vector<const CodeGenInstruction*>::const_iterator
-          IN = NumberedInstructions.begin(),
-          EN = NumberedInstructions.end();
-       IN != EN; ++IN) {
-    const CodeGenInstruction *CGI = *IN;
+
+  for (const auto* CGI : NumberedInstructions) {
     Record *R = CGI->TheDef;
 
     if (R->getValueAsString("Namespace") == "TargetOpcode" ||
@@ -259,8 +256,10 @@ void CodeEmitterGen::run(raw_ostream &o) {
       if (BitInit *B = dyn_cast<BitInit>(BI->getBit(e-i-1)))
         Value |= (uint64_t)B->getValue() << (e-i-1);
     }
+
     o << "    UINT64_C(" << Value << ")," << '\t' << "// " << R->getName() << "\n";
   }
+
   o << "    UINT64_C(0)\n  };\n";
 
   // Map to accumulate all the cases.
