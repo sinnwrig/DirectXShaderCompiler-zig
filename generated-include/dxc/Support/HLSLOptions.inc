@@ -133,6 +133,8 @@ OPTION(prefix_1, "Fc", Fc, JoinedOrSeparate, hlslcomp_Group, INVALID, 0, DriverO
        "Output assembly code listing file", "<file>")
 OPTION(prefix_3, "fdiagnostics-color=", fdiagnostics_color_EQ, Joined, hlslcomp_Group, INVALID, 0, 0, 0, 0, 0)
 OPTION(prefix_3, "fdiagnostics-color", fdiagnostics_color, Flag, hlslcomp_Group, INVALID, 0, CoreOption | DriverOption, 0, 0, 0)
+OPTION(prefix_3, "fdiagnostics-format=", fdiagnostics_format_EQ, Joined, hlslcomp_Group, INVALID, 0, CoreOption, 0,
+       "Select diagnostic message format. Supported values: clang, msvc, mdvc-fallback, vi", 0)
 OPTION(prefix_3, "fdiagnostics-show-category=", fdiagnostics_show_category_EQ, Joined, hlslcomp_Group, INVALID, 0, 0, 0, 0, 0)
 OPTION(prefix_3, "fdiagnostics-show-option", fdiagnostics_show_option, Flag, hlslcomp_Group, INVALID, 0, CoreOption, 0,
        "Print option name with mappable diagnostics", 0)
@@ -184,6 +186,8 @@ OPTION(prefix_1, "Fsh", Fsh, Separate, hlslcomp_Group, INVALID, 0, CoreOption | 
 OPTION(prefix_3, "fsigned-zeros", fsigned_zeros, Flag, hlsloptz_Group, INVALID, 0, 0, 0, 0, 0)
 OPTION(prefix_3, "fspv-debug=", fspv_debug_EQ, Joined, spirv_Group, INVALID, 0, CoreOption | DriverOption, 0,
        "Specify whitelist of debug info category (file -> source -> line, tool, vulkan-with-source)", 0)
+OPTION(prefix_3, "fspv-enable-maximal-reconvergence", fspv_enable_maximal_reconvergence, Flag, spirv_Group, INVALID, 0, CoreOption | DriverOption, 0,
+       "Enables the MaximallyReconvergesKHR execution mode for this module.", 0)
 OPTION(prefix_3, "fspv-entrypoint-name=", fspv_entrypoint_name_EQ, Joined, spirv_Group, INVALID, 0, CoreOption | DriverOption, 0,
        "Specify the SPIR-V entry point name. Defaults to the HLSL entry point name.", 0)
 OPTION(prefix_3, "fspv-extension=", fspv_extension_EQ, Joined, spirv_Group, INVALID, 0, CoreOption | DriverOption, 0,
@@ -192,6 +196,8 @@ OPTION(prefix_3, "fspv-fix-func-call-arguments", fspv_fix_func_call_arguments, F
        "Fix function call arguments which are not memory objects", 0)
 OPTION(prefix_3, "fspv-flatten-resource-arrays", fspv_flatten_resource_arrays, Flag, spirv_Group, INVALID, 0, CoreOption | DriverOption, 0,
        "Flatten arrays of resources so each array element takes one binding number", 0)
+OPTION(prefix_3, "fspv-max-id", fspv_max_id, MultiArg, spirv_Group, INVALID, 0, CoreOption | DriverOption, 1,
+       "Set the maximum value for an id in the SPIR-V binary. Default is 0x3FFFFF, which is the largest value all drivers must support.", "<shift> <space>")
 OPTION(prefix_3, "fspv-preserve-bindings", fspv_preserve_bindings, Flag, spirv_Group, INVALID, 0, CoreOption | DriverOption, 0,
        "Preserves all bindings declared within the module, even when those bindings are unused", 0)
 OPTION(prefix_3, "fspv-preserve-interface", fspv_preserve_interface, Flag, spirv_Group, INVALID, 0, CoreOption | DriverOption, 0,
@@ -208,6 +214,8 @@ OPTION(prefix_3, "fspv-use-legacy-buffer-matrix-order", fspv_use_legacy_buffer_m
        "Assume the legacy matrix order (row major) when accessing raw buffers (e.g., ByteAdddressBuffer)", 0)
 OPTION(prefix_3, "ftime-report", ftime_report, Flag, hlslcomp_Group, INVALID, 0, CoreOption, 0,
        "Print time report", 0)
+OPTION(prefix_3, "ftime-trace-granularity=", ftime_trace_granularity_EQ, Joined, hlslcomp_Group, INVALID, 0, CoreOption, 0,
+       "Minimum time granularity (in microseconds) traced by time profiler", 0)
 OPTION(prefix_3, "ftime-trace=", ftime_trace_EQ, Joined, hlslcomp_Group, INVALID, 0, CoreOption, 0,
        "Print hierchial time tracing to file", 0)
 OPTION(prefix_3, "ftime-trace", ftime_trace, Flag, hlslcomp_Group, INVALID, 0, CoreOption, 0,
@@ -292,7 +300,7 @@ OPTION(prefix_1, "M", dump_dependencies, Flag, INVALID, INVALID, 0, CoreOption |
        "Dumps the list of the compilation target dependencies.", 0)
 OPTION(prefix_1, "Ni", Ni, Flag, hlslcomp_Group, INVALID, 0, DriverOption, 0,
        "Output instruction numbers in assembly listings", 0)
-OPTION(prefix_1, "no-legacy-cbuf-layout", no_legacy_cbuf_layout, Flag, hlslcomp_Group, INVALID, 0, CoreOption, 0,
+OPTION(prefix_1, "no-legacy-cbuf-layout", no_legacy_cbuf_layout, Flag, hlslcomp_Group, INVALID, 0, CoreOption | HelpHidden, 0,
        "Do not use legacy cbuffer load", 0)
 OPTION(prefix_1, "no-warnings", no_warnings, Flag, hlslcomp_Group, INVALID, 0, CoreOption | RewriteOption, 0,
        "Suppress warnings", 0)
@@ -352,8 +360,8 @@ OPTION(prefix_1, "Qkeep_reflect_in_dxil", Qkeep_reflect_in_dxil, Flag, hlslutil_
        "Keep reflection data in shader bytecode", 0)
 OPTION(prefix_1, "Qpdb_in_private", Qpdb_in_private, Flag, hlslutil_Group, INVALID, 0, CoreOption | HelpHidden, 0,
        "Store PDB in private user data.", 0)
-OPTION(prefix_1, "Qsource_in_debug_module", Qsource_in_debug_module, Flag, hlslutil_Group, INVALID, 0, CoreOption | HelpHidden, 0,
-       "Generate old PDB format.", 0)
+OPTION(prefix_1, "Qsource_in_debug_module", Qsource_in_debug_module, Flag, hlslutil_Group, INVALID, 0, CoreOption, 0,
+       "Embed source code in PDB", 0)
 OPTION(prefix_1, "Qstrip_debug", Qstrip_debug, Flag, hlslutil_Group, INVALID, 0, CoreOption | DriverOption, 0,
        "Strip debug information from 4_0+ shader bytecode  (must be used with /Fo <file>)", 0)
 OPTION(prefix_1, "Qstrip_priv", Qstrip_priv, Flag, hlslutil_Group, INVALID, 0, CoreOption | DriverOption, 0,
@@ -378,6 +386,8 @@ OPTION(prefix_1, "res_may_alias", res_may_alias_, Flag, hlslcomp_Group, INVALID,
        "Assume that UAVs/SRVs may alias", 0)
 OPTION(prefix_1, "rootsig-define", rootsig_define, Separate, hlslcomp_Group, INVALID, 0, CoreOption, 0,
        "Read root signature from a #define", 0)
+OPTION(prefix_1, "select-validator", select_validator, Separate, hlslcomp_Group, INVALID, 0, CoreOption | HelpHidden, 0,
+       "Select validator: auto: (default) use DXIL.dll if found, otherwise use internal;  internal: internal non-signing validator;  external: use DXIL.dll if found, otherwise fail compilation.", 0)
 OPTION(prefix_1, "setprivate", setprivate, JoinedOrSeparate, hlslutil_Group, INVALID, 0, CoreOption | DriverOption, 0,
        "Private data to add to compiled shader blob", "<file>")
 OPTION(prefix_1, "setrootsignature", setrootsignature, JoinedOrSeparate, hlslutil_Group, INVALID, 0, CoreOption | DriverOption, 0,
@@ -391,7 +401,7 @@ OPTION(prefix_1, "skip-static", rw_skip_static, Flag, hlslrewrite_Group, INVALID
 OPTION(prefix_3, "spirv", spirv, Flag, spirv_Group, INVALID, 0, CoreOption | DriverOption, 0,
        "Generate SPIR-V code", 0)
 OPTION(prefix_1, "T", target_profile, JoinedOrSeparate, hlslcomp_Group, INVALID, 0, CoreOption, 0,
-       "Set target profile. \n\t<profile>: ps_6_0, ps_6_1, ps_6_2, ps_6_3, ps_6_4, ps_6_5, ps_6_6, ps_6_7, \n\t\t vs_6_0, vs_6_1, vs_6_2, vs_6_3, vs_6_4, vs_6_5, vs_6_6, vs_6_7, \n\t\t gs_6_0, gs_6_1, gs_6_2, gs_6_3, gs_6_4, gs_6_5, gs_6_6, gs_6_7, \n\t\t hs_6_0, hs_6_1, hs_6_2, hs_6_3, hs_6_4, hs_6_5, hs_6_6, hs_6_7, \n\t\t ds_6_0, ds_6_1, ds_6_2, ds_6_3, ds_6_4, ds_6_5, ds_6_6, ds_6_7, \n\t\t cs_6_0, cs_6_1, cs_6_2, cs_6_3, cs_6_4, cs_6_5, cs_6_6, cs_6_7, \n\t\t lib_6_1, lib_6_2, lib_6_3, lib_6_4, lib_6_5, lib_6_6, lib_6_7, \n\t\t ms_6_5, ms_6_6, ms_6_7, \n\t\t as_6_5, as_6_6, as_6_7, \n\t\t ", "<profile>")
+       "Set target profile. \n\t<profile>: ps_6_0, ps_6_1, ps_6_2, ps_6_3, ps_6_4, ps_6_5, ps_6_6, ps_6_7, ps_6_8, \n\t\t vs_6_0, vs_6_1, vs_6_2, vs_6_3, vs_6_4, vs_6_5, vs_6_6, vs_6_7, vs_6_8, \n\t\t gs_6_0, gs_6_1, gs_6_2, gs_6_3, gs_6_4, gs_6_5, gs_6_6, gs_6_7, gs_6_8, \n\t\t hs_6_0, hs_6_1, hs_6_2, hs_6_3, hs_6_4, hs_6_5, hs_6_6, hs_6_7, hs_6_8, \n\t\t ds_6_0, ds_6_1, ds_6_2, ds_6_3, ds_6_4, ds_6_5, ds_6_6, ds_6_7, ds_6_8, \n\t\t cs_6_0, cs_6_1, cs_6_2, cs_6_3, cs_6_4, cs_6_5, cs_6_6, cs_6_7, cs_6_8, \n\t\t lib_6_1, lib_6_2, lib_6_3, lib_6_4, lib_6_5, lib_6_6, lib_6_7, lib_6_8, \n\t\t ms_6_5, ms_6_6, ms_6_7, ms_6_8, \n\t\t as_6_5, as_6_6, as_6_7, as_6_8, \n\t\t ", "<profile>")
 OPTION(prefix_1, "unchanged", rw_unchanged, Flag, hlslrewrite_Group, INVALID, 0, RewriteOption, 0,
        "Rewrite HLSL, without changes.", 0)
 OPTION(prefix_1, "validator-version", validator_version, Separate, hlslcomp_Group, INVALID, 0, CoreOption | HelpHidden, 0,

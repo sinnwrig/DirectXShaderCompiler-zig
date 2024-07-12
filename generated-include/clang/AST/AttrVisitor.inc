@@ -268,6 +268,10 @@
   bool VisitGuardedVarAttr(GuardedVarAttr *A) {
     return true; 
   };
+  bool TraverseHLSLAllowSparseNodesAttr(HLSLAllowSparseNodesAttr *A);
+  bool VisitHLSLAllowSparseNodesAttr(HLSLAllowSparseNodesAttr *A) {
+    return true; 
+  };
   bool TraverseHLSLAllowUAVConditionAttr(HLSLAllowUAVConditionAttr *A);
   bool VisitHLSLAllowUAVConditionAttr(HLSLAllowUAVConditionAttr *A) {
     return true; 
@@ -368,6 +372,14 @@
   bool VisitHLSLLoopAttr(HLSLLoopAttr *A) {
     return true; 
   };
+  bool TraverseHLSLMaxRecordsAttr(HLSLMaxRecordsAttr *A);
+  bool VisitHLSLMaxRecordsAttr(HLSLMaxRecordsAttr *A) {
+    return true; 
+  };
+  bool TraverseHLSLMaxRecordsSharedWithAttr(HLSLMaxRecordsSharedWithAttr *A);
+  bool VisitHLSLMaxRecordsSharedWithAttr(HLSLMaxRecordsSharedWithAttr *A) {
+    return true; 
+  };
   bool TraverseHLSLMaxTessFactorAttr(HLSLMaxTessFactorAttr *A);
   bool VisitHLSLMaxTessFactorAttr(HLSLMaxTessFactorAttr *A) {
     return true; 
@@ -386,6 +398,50 @@
   };
   bool TraverseHLSLNoPerspectiveAttr(HLSLNoPerspectiveAttr *A);
   bool VisitHLSLNoPerspectiveAttr(HLSLNoPerspectiveAttr *A) {
+    return true; 
+  };
+  bool TraverseHLSLNodeArraySizeAttr(HLSLNodeArraySizeAttr *A);
+  bool VisitHLSLNodeArraySizeAttr(HLSLNodeArraySizeAttr *A) {
+    return true; 
+  };
+  bool TraverseHLSLNodeDispatchGridAttr(HLSLNodeDispatchGridAttr *A);
+  bool VisitHLSLNodeDispatchGridAttr(HLSLNodeDispatchGridAttr *A) {
+    return true; 
+  };
+  bool TraverseHLSLNodeIdAttr(HLSLNodeIdAttr *A);
+  bool VisitHLSLNodeIdAttr(HLSLNodeIdAttr *A) {
+    return true; 
+  };
+  bool TraverseHLSLNodeIsProgramEntryAttr(HLSLNodeIsProgramEntryAttr *A);
+  bool VisitHLSLNodeIsProgramEntryAttr(HLSLNodeIsProgramEntryAttr *A) {
+    return true; 
+  };
+  bool TraverseHLSLNodeLaunchAttr(HLSLNodeLaunchAttr *A);
+  bool VisitHLSLNodeLaunchAttr(HLSLNodeLaunchAttr *A) {
+    return true; 
+  };
+  bool TraverseHLSLNodeLocalRootArgumentsTableIndexAttr(HLSLNodeLocalRootArgumentsTableIndexAttr *A);
+  bool VisitHLSLNodeLocalRootArgumentsTableIndexAttr(HLSLNodeLocalRootArgumentsTableIndexAttr *A) {
+    return true; 
+  };
+  bool TraverseHLSLNodeMaxDispatchGridAttr(HLSLNodeMaxDispatchGridAttr *A);
+  bool VisitHLSLNodeMaxDispatchGridAttr(HLSLNodeMaxDispatchGridAttr *A) {
+    return true; 
+  };
+  bool TraverseHLSLNodeMaxRecursionDepthAttr(HLSLNodeMaxRecursionDepthAttr *A);
+  bool VisitHLSLNodeMaxRecursionDepthAttr(HLSLNodeMaxRecursionDepthAttr *A) {
+    return true; 
+  };
+  bool TraverseHLSLNodeObjectAttr(HLSLNodeObjectAttr *A);
+  bool VisitHLSLNodeObjectAttr(HLSLNodeObjectAttr *A) {
+    return true; 
+  };
+  bool TraverseHLSLNodeShareInputOfAttr(HLSLNodeShareInputOfAttr *A);
+  bool VisitHLSLNodeShareInputOfAttr(HLSLNodeShareInputOfAttr *A) {
+    return true; 
+  };
+  bool TraverseHLSLNodeTrackRWInputSharingAttr(HLSLNodeTrackRWInputSharingAttr *A);
+  bool VisitHLSLNodeTrackRWInputSharingAttr(HLSLNodeTrackRWInputSharingAttr *A) {
     return true; 
   };
   bool TraverseHLSLNumThreadsAttr(HLSLNumThreadsAttr *A);
@@ -462,6 +518,10 @@
   };
   bool TraverseHLSLTriangleAdjAttr(HLSLTriangleAdjAttr *A);
   bool VisitHLSLTriangleAdjAttr(HLSLTriangleAdjAttr *A) {
+    return true; 
+  };
+  bool TraverseHLSLUnboundedSparseNodesAttr(HLSLUnboundedSparseNodesAttr *A);
+  bool VisitHLSLUnboundedSparseNodesAttr(HLSLUnboundedSparseNodesAttr *A) {
     return true; 
   };
   bool TraverseHLSLUniformAttr(HLSLUniformAttr *A);
@@ -922,6 +982,14 @@
   };
   bool TraverseVKEarlyAndLateTestsAttr(VKEarlyAndLateTestsAttr *A);
   bool VisitVKEarlyAndLateTestsAttr(VKEarlyAndLateTestsAttr *A) {
+    return true; 
+  };
+  bool TraverseVKExtBuiltinInputAttr(VKExtBuiltinInputAttr *A);
+  bool VisitVKExtBuiltinInputAttr(VKExtBuiltinInputAttr *A) {
+    return true; 
+  };
+  bool TraverseVKExtBuiltinOutputAttr(VKExtBuiltinOutputAttr *A);
+  bool VisitVKExtBuiltinOutputAttr(VKExtBuiltinOutputAttr *A) {
     return true; 
   };
   bool TraverseVKExtensionExtAttr(VKExtensionExtAttr *A);
@@ -1711,6 +1779,15 @@ bool VISITORCLASS<Derived>::TraverseGuardedVarAttr(GuardedVarAttr *A) {
 }
 
 template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseHLSLAllowSparseNodesAttr(HLSLAllowSparseNodesAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitHLSLAllowSparseNodesAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
 bool VISITORCLASS<Derived>::TraverseHLSLAllowUAVConditionAttr(HLSLAllowUAVConditionAttr *A) {
   if (!getDerived().VisitAttr(A))
     return false;
@@ -1948,6 +2025,24 @@ bool VISITORCLASS<Derived>::TraverseHLSLLoopAttr(HLSLLoopAttr *A) {
 }
 
 template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseHLSLMaxRecordsAttr(HLSLMaxRecordsAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitHLSLMaxRecordsAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseHLSLMaxRecordsSharedWithAttr(HLSLMaxRecordsSharedWithAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitHLSLMaxRecordsSharedWithAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
 bool VISITORCLASS<Derived>::TraverseHLSLMaxTessFactorAttr(HLSLMaxTessFactorAttr *A) {
   if (!getDerived().VisitAttr(A))
     return false;
@@ -1988,6 +2083,105 @@ bool VISITORCLASS<Derived>::TraverseHLSLNoPerspectiveAttr(HLSLNoPerspectiveAttr 
   if (!getDerived().VisitAttr(A))
     return false;
   if (!getDerived().VisitHLSLNoPerspectiveAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseHLSLNodeArraySizeAttr(HLSLNodeArraySizeAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitHLSLNodeArraySizeAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseHLSLNodeDispatchGridAttr(HLSLNodeDispatchGridAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitHLSLNodeDispatchGridAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseHLSLNodeIdAttr(HLSLNodeIdAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitHLSLNodeIdAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseHLSLNodeIsProgramEntryAttr(HLSLNodeIsProgramEntryAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitHLSLNodeIsProgramEntryAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseHLSLNodeLaunchAttr(HLSLNodeLaunchAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitHLSLNodeLaunchAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseHLSLNodeLocalRootArgumentsTableIndexAttr(HLSLNodeLocalRootArgumentsTableIndexAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitHLSLNodeLocalRootArgumentsTableIndexAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseHLSLNodeMaxDispatchGridAttr(HLSLNodeMaxDispatchGridAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitHLSLNodeMaxDispatchGridAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseHLSLNodeMaxRecursionDepthAttr(HLSLNodeMaxRecursionDepthAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitHLSLNodeMaxRecursionDepthAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseHLSLNodeObjectAttr(HLSLNodeObjectAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitHLSLNodeObjectAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseHLSLNodeShareInputOfAttr(HLSLNodeShareInputOfAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitHLSLNodeShareInputOfAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseHLSLNodeTrackRWInputSharingAttr(HLSLNodeTrackRWInputSharingAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitHLSLNodeTrackRWInputSharingAttr(A))
     return false;
   return true;
 }
@@ -2159,6 +2353,15 @@ bool VISITORCLASS<Derived>::TraverseHLSLTriangleAdjAttr(HLSLTriangleAdjAttr *A) 
   if (!getDerived().VisitAttr(A))
     return false;
   if (!getDerived().VisitHLSLTriangleAdjAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseHLSLUnboundedSparseNodesAttr(HLSLUnboundedSparseNodesAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitHLSLUnboundedSparseNodesAttr(A))
     return false;
   return true;
 }
@@ -3257,6 +3460,24 @@ bool VISITORCLASS<Derived>::TraverseVKEarlyAndLateTestsAttr(VKEarlyAndLateTestsA
 }
 
 template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseVKExtBuiltinInputAttr(VKExtBuiltinInputAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitVKExtBuiltinInputAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
+bool VISITORCLASS<Derived>::TraverseVKExtBuiltinOutputAttr(VKExtBuiltinOutputAttr *A) {
+  if (!getDerived().VisitAttr(A))
+    return false;
+  if (!getDerived().VisitVKExtBuiltinOutputAttr(A))
+    return false;
+  return true;
+}
+
+template <typename Derived>
 bool VISITORCLASS<Derived>::TraverseVKExtensionExtAttr(VKExtensionExtAttr *A) {
   if (!getDerived().VisitAttr(A))
     return false;
@@ -3691,6 +3912,8 @@ bool VISITORCLASS<Derived>::TraverseAttr(Attr *A) {
       return getDerived().TraverseGuardedByAttr(cast<GuardedByAttr>(A));
     case attr::GuardedVar:
       return getDerived().TraverseGuardedVarAttr(cast<GuardedVarAttr>(A));
+    case attr::HLSLAllowSparseNodes:
+      return getDerived().TraverseHLSLAllowSparseNodesAttr(cast<HLSLAllowSparseNodesAttr>(A));
     case attr::HLSLAllowUAVCondition:
       return getDerived().TraverseHLSLAllowUAVConditionAttr(cast<HLSLAllowUAVConditionAttr>(A));
     case attr::HLSLBranch:
@@ -3741,6 +3964,10 @@ bool VISITORCLASS<Derived>::TraverseAttr(Attr *A) {
       return getDerived().TraverseHLSLLinearAttr(cast<HLSLLinearAttr>(A));
     case attr::HLSLLoop:
       return getDerived().TraverseHLSLLoopAttr(cast<HLSLLoopAttr>(A));
+    case attr::HLSLMaxRecords:
+      return getDerived().TraverseHLSLMaxRecordsAttr(cast<HLSLMaxRecordsAttr>(A));
+    case attr::HLSLMaxRecordsSharedWith:
+      return getDerived().TraverseHLSLMaxRecordsSharedWithAttr(cast<HLSLMaxRecordsSharedWithAttr>(A));
     case attr::HLSLMaxTessFactor:
       return getDerived().TraverseHLSLMaxTessFactorAttr(cast<HLSLMaxTessFactorAttr>(A));
     case attr::HLSLMaxVertexCount:
@@ -3751,6 +3978,28 @@ bool VISITORCLASS<Derived>::TraverseAttr(Attr *A) {
       return getDerived().TraverseHLSLNoInterpolationAttr(cast<HLSLNoInterpolationAttr>(A));
     case attr::HLSLNoPerspective:
       return getDerived().TraverseHLSLNoPerspectiveAttr(cast<HLSLNoPerspectiveAttr>(A));
+    case attr::HLSLNodeArraySize:
+      return getDerived().TraverseHLSLNodeArraySizeAttr(cast<HLSLNodeArraySizeAttr>(A));
+    case attr::HLSLNodeDispatchGrid:
+      return getDerived().TraverseHLSLNodeDispatchGridAttr(cast<HLSLNodeDispatchGridAttr>(A));
+    case attr::HLSLNodeId:
+      return getDerived().TraverseHLSLNodeIdAttr(cast<HLSLNodeIdAttr>(A));
+    case attr::HLSLNodeIsProgramEntry:
+      return getDerived().TraverseHLSLNodeIsProgramEntryAttr(cast<HLSLNodeIsProgramEntryAttr>(A));
+    case attr::HLSLNodeLaunch:
+      return getDerived().TraverseHLSLNodeLaunchAttr(cast<HLSLNodeLaunchAttr>(A));
+    case attr::HLSLNodeLocalRootArgumentsTableIndex:
+      return getDerived().TraverseHLSLNodeLocalRootArgumentsTableIndexAttr(cast<HLSLNodeLocalRootArgumentsTableIndexAttr>(A));
+    case attr::HLSLNodeMaxDispatchGrid:
+      return getDerived().TraverseHLSLNodeMaxDispatchGridAttr(cast<HLSLNodeMaxDispatchGridAttr>(A));
+    case attr::HLSLNodeMaxRecursionDepth:
+      return getDerived().TraverseHLSLNodeMaxRecursionDepthAttr(cast<HLSLNodeMaxRecursionDepthAttr>(A));
+    case attr::HLSLNodeObject:
+      return getDerived().TraverseHLSLNodeObjectAttr(cast<HLSLNodeObjectAttr>(A));
+    case attr::HLSLNodeShareInputOf:
+      return getDerived().TraverseHLSLNodeShareInputOfAttr(cast<HLSLNodeShareInputOfAttr>(A));
+    case attr::HLSLNodeTrackRWInputSharing:
+      return getDerived().TraverseHLSLNodeTrackRWInputSharingAttr(cast<HLSLNodeTrackRWInputSharingAttr>(A));
     case attr::HLSLNumThreads:
       return getDerived().TraverseHLSLNumThreadsAttr(cast<HLSLNumThreadsAttr>(A));
     case attr::HLSLOut:
@@ -3789,6 +4038,8 @@ bool VISITORCLASS<Derived>::TraverseAttr(Attr *A) {
       return getDerived().TraverseHLSLTriangleAttr(cast<HLSLTriangleAttr>(A));
     case attr::HLSLTriangleAdj:
       return getDerived().TraverseHLSLTriangleAdjAttr(cast<HLSLTriangleAdjAttr>(A));
+    case attr::HLSLUnboundedSparseNodes:
+      return getDerived().TraverseHLSLUnboundedSparseNodesAttr(cast<HLSLUnboundedSparseNodesAttr>(A));
     case attr::HLSLUniform:
       return getDerived().TraverseHLSLUniformAttr(cast<HLSLUniformAttr>(A));
     case attr::HLSLUnorm:
@@ -4019,6 +4270,10 @@ bool VISITORCLASS<Derived>::TraverseAttr(Attr *A) {
       return getDerived().TraverseVKDepthUnchangedAttr(cast<VKDepthUnchangedAttr>(A));
     case attr::VKEarlyAndLateTests:
       return getDerived().TraverseVKEarlyAndLateTestsAttr(cast<VKEarlyAndLateTestsAttr>(A));
+    case attr::VKExtBuiltinInput:
+      return getDerived().TraverseVKExtBuiltinInputAttr(cast<VKExtBuiltinInputAttr>(A));
+    case attr::VKExtBuiltinOutput:
+      return getDerived().TraverseVKExtBuiltinOutputAttr(cast<VKExtBuiltinOutputAttr>(A));
     case attr::VKExtensionExt:
       return getDerived().TraverseVKExtensionExtAttr(cast<VKExtensionExtAttr>(A));
     case attr::VKImageFormat:

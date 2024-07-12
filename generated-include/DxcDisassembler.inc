@@ -228,6 +228,38 @@ static const char *OpCodeSignatures[] = {
   "(cond,op)",  // QuadVote
   "(srv,sampler,coord0,coord1,coord2,coord3,offset0,offset1)",  // TextureGatherRaw
   "(srv,sampler,coord0,coord1,coord2,coord3,offset0,offset1,offset2,compareValue,lod)",  // SampleCmpLevel
-  "(srv,coord0,coord1,coord2,value0,value1,value2,value3,mask,sampleIdx)"  // TextureStoreSample
+  "(srv,coord0,coord1,coord2,value0,value1,value2,value3,mask,sampleIdx)",  // TextureStoreSample
+  "(waveMatrixPtr,waveMatProps)",  // WaveMatrix_Annotate
+  "(waveMatProps)",  // WaveMatrix_Depth
+  "(waveMatrixPtr,value)",  // WaveMatrix_Fill
+  "(waveMatrixPtr,rawBuf,offsetInBytes,strideInBytes,alignmentInBytes,colMajor)",  // WaveMatrix_LoadRawBuf
+  "(waveMatrixPtr,groupsharedPtr,startArrayIndex,strideInElements,colMajor)",  // WaveMatrix_LoadGroupShared
+  "(waveMatrixPtr,rawBuf,offsetInBytes,strideInBytes,alignmentInBytes,colMajor)",  // WaveMatrix_StoreRawBuf
+  "(waveMatrixPtr,groupsharedPtr,startArrayIndex,strideInElements,colMajor)",  // WaveMatrix_StoreGroupShared
+  "(waveMatrixAccumulator,waveMatrixLeft,waveMatrixRight)",  // WaveMatrix_Multiply
+  "(waveMatrixAccumulator,waveMatrixLeft,waveMatrixRight)",  // WaveMatrix_MultiplyAccumulate
+  "(waveMatrixPtr,op,value)",  // WaveMatrix_ScalarOp
+  "(waveMatrixFragment,waveMatrixInput)",  // WaveMatrix_SumAccumulate
+  "(waveMatrixAccumulator,waveMatrixAccumulatorOrFragment)",  // WaveMatrix_Add
+  "(output,numRecords,perThread)",  // AllocateNodeOutputRecords
+  "(recordhandle,arrayIndex)",  // GetNodeRecordPtr
+  "(output,count,perThread)",  // IncrementOutputCount
+  "(output)",  // OutputComplete
+  "(input)",  // GetInputRecordCount
+  "(input)",  // FinishedCrossGroupSharing
+  "(MemoryTypeFlags,SemanticFlags)",  // BarrierByMemoryType
+  "(object,SemanticFlags)",  // BarrierByMemoryHandle
+  "(object,SemanticFlags)",  // BarrierByNodeRecordHandle
+  "(MetadataIdx)",  // CreateNodeOutputHandle
+  "(NodeOutputHandle,ArrayIndex)",  // IndexNodeHandle
+  "(node,props)",  // AnnotateNodeHandle
+  "(MetadataIdx)",  // CreateNodeInputRecordHandle
+  "(noderecord,props)",  // AnnotateNodeRecordHandle
+  "(output)",  // NodeOutputIsValid
+  "()",  // GetRemainingRecursionLevels
+  "(srv,sampler,coord0,coord1,coord2,coord3,offset0,offset1,offset2,compareValue,ddx0,ddx1,ddx2,ddy0,ddy1,ddy2,clamp)",  // SampleCmpGrad
+  "(srv,sampler,coord0,coord1,coord2,coord3,offset0,offset1,offset2,compareValue,bias,clamp)",  // SampleCmpBias
+  "()",  // StartVertexLocation
+  "()"  // StartInstanceLocation
 };
 

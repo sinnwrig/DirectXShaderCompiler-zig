@@ -666,6 +666,15 @@
     New->setImplicit(isImplicit);
     break;
   }
+  case attr::HLSLAllowSparseNodes: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    New = new (Context) HLSLAllowSparseNodesAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
   case attr::HLSLAllowUAVCondition: {
     bool isImplicit = Record[Idx++];
     unsigned Spelling = Record[Idx++];
@@ -890,6 +899,26 @@
     New->setImplicit(isImplicit);
     break;
   }
+  case attr::HLSLMaxRecords: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    int maxCount = Record[Idx++];
+    New = new (Context) HLSLMaxRecordsAttr(Range, Context, maxCount, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::HLSLMaxRecordsSharedWith: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    IdentifierInfo * name = GetIdentifierInfo(F, Record, Idx);
+    New = new (Context) HLSLMaxRecordsSharedWithAttr(Range, Context, name, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
   case attr::HLSLMaxTessFactor: {
     bool isInherited = Record[Idx++];
     bool isImplicit = Record[Idx++];
@@ -933,6 +962,120 @@
     bool isImplicit = Record[Idx++];
     unsigned Spelling = Record[Idx++];
     New = new (Context) HLSLNoPerspectiveAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::HLSLNodeArraySize: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    int count = Record[Idx++];
+    New = new (Context) HLSLNodeArraySizeAttr(Range, Context, count, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::HLSLNodeDispatchGrid: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    unsigned x = Record[Idx++];
+    unsigned y = Record[Idx++];
+    unsigned z = Record[Idx++];
+    New = new (Context) HLSLNodeDispatchGridAttr(Range, Context, x, y, z, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::HLSLNodeId: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    std::string name= ReadString(Record, Idx);
+    int arrayIndex = Record[Idx++];
+    New = new (Context) HLSLNodeIdAttr(Range, Context, name, arrayIndex, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::HLSLNodeIsProgramEntry: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    New = new (Context) HLSLNodeIsProgramEntryAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::HLSLNodeLaunch: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    std::string launchType= ReadString(Record, Idx);
+    New = new (Context) HLSLNodeLaunchAttr(Range, Context, launchType, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::HLSLNodeLocalRootArgumentsTableIndex: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    unsigned index = Record[Idx++];
+    New = new (Context) HLSLNodeLocalRootArgumentsTableIndexAttr(Range, Context, index, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::HLSLNodeMaxDispatchGrid: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    unsigned x = Record[Idx++];
+    unsigned y = Record[Idx++];
+    unsigned z = Record[Idx++];
+    New = new (Context) HLSLNodeMaxDispatchGridAttr(Range, Context, x, y, z, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::HLSLNodeMaxRecursionDepth: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    unsigned count = Record[Idx++];
+    New = new (Context) HLSLNodeMaxRecursionDepthAttr(Range, Context, count, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::HLSLNodeObject: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    HLSLNodeObjectAttr::RecordType type(static_cast<HLSLNodeObjectAttr::RecordType>(Record[Idx++]));
+    New = new (Context) HLSLNodeObjectAttr(Range, Context, type, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::HLSLNodeShareInputOf: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    std::string name= ReadString(Record, Idx);
+    unsigned arrayIndex = Record[Idx++];
+    New = new (Context) HLSLNodeShareInputOfAttr(Range, Context, name, arrayIndex, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::HLSLNodeTrackRWInputSharing: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    New = new (Context) HLSLNodeTrackRWInputSharingAttr(Range, Context, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
     break;
@@ -1118,6 +1261,15 @@
     New->setImplicit(isImplicit);
     break;
   }
+  case attr::HLSLUnboundedSparseNodes: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    New = new (Context) HLSLUnboundedSparseNodesAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
   case attr::HLSLUniform: {
     bool isInherited = Record[Idx++];
     bool isImplicit = Record[Idx++];
@@ -1175,8 +1327,10 @@
     bool isInherited = Record[Idx++];
     bool isImplicit = Record[Idx++];
     unsigned Spelling = Record[Idx++];
-    int size = Record[Idx++];
-    New = new (Context) HLSLWaveSizeAttr(Range, Context, size, Spelling);
+    int min = Record[Idx++];
+    int max = Record[Idx++];
+    int preferred = Record[Idx++];
+    New = new (Context) HLSLWaveSizeAttr(Range, Context, min, max, preferred, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
     break;
@@ -2238,6 +2392,26 @@
     bool isImplicit = Record[Idx++];
     unsigned Spelling = Record[Idx++];
     New = new (Context) VKEarlyAndLateTestsAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::VKExtBuiltinInput: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    int builtInID = Record[Idx++];
+    New = new (Context) VKExtBuiltinInputAttr(Range, Context, builtInID, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::VKExtBuiltinOutput: {
+    bool isInherited = Record[Idx++];
+    bool isImplicit = Record[Idx++];
+    unsigned Spelling = Record[Idx++];
+    int builtInID = Record[Idx++];
+    New = new (Context) VKExtBuiltinOutputAttr(Range, Context, builtInID, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
     break;

@@ -410,6 +410,11 @@
         return 0;
     break;
   }
+  case AT_HLSLAllowSparseNodes: {
+    if (Name == "allowsparsenodes" && SyntaxUsed == 1 && Scope == "")
+        return 0;
+    break;
+  }
   case AT_HLSLAllowUAVCondition: {
     if (Name == "allow_uav_condition" && SyntaxUsed == 1 && Scope == "")
         return 0;
@@ -538,6 +543,16 @@
         return 0;
     break;
   }
+  case AT_HLSLMaxRecords: {
+    if (Name == "MaxRecords" && SyntaxUsed == 1 && Scope == "")
+        return 0;
+    break;
+  }
+  case AT_HLSLMaxRecordsSharedWith: {
+    if (Name == "maxrecordssharedwith" && SyntaxUsed == 1 && Scope == "")
+        return 0;
+    break;
+  }
   case AT_HLSLMaxTessFactor: {
     if (Name == "maxtessfactor" && SyntaxUsed == 1 && Scope == "")
         return 0;
@@ -560,6 +575,59 @@
   }
   case AT_HLSLNoPerspective: {
     if (Name == "noperspective" && SyntaxUsed == 1 && Scope == "")
+        return 0;
+    break;
+  }
+  case AT_HLSLNodeArraySize: {
+    if (Name == "NodeArraySize" && SyntaxUsed == 1 && Scope == "")
+        return 0;
+    break;
+  }
+  case AT_HLSLNodeDispatchGrid: {
+    if (Name == "nodedispatchgrid" && SyntaxUsed == 1 && Scope == "")
+        return 0;
+    break;
+  }
+  case AT_HLSLNodeId: {
+    if (Name == "nodeid" && SyntaxUsed == 1 && Scope == "")
+        return 0;
+    break;
+  }
+  case AT_HLSLNodeIsProgramEntry: {
+    if (Name == "nodeisprogramentry" && SyntaxUsed == 1 && Scope == "")
+        return 0;
+    break;
+  }
+  case AT_HLSLNodeLaunch: {
+    if (Name == "nodelaunch" && SyntaxUsed == 1 && Scope == "")
+        return 0;
+    break;
+  }
+  case AT_HLSLNodeLocalRootArgumentsTableIndex: {
+    if (Name == "nodelocalrootargumentstableindex" && SyntaxUsed == 1 && Scope == "")
+        return 0;
+    break;
+  }
+  case AT_HLSLNodeMaxDispatchGrid: {
+    if (Name == "nodemaxdispatchgrid" && SyntaxUsed == 1 && Scope == "")
+        return 0;
+    break;
+  }
+  case AT_HLSLNodeMaxRecursionDepth: {
+    if (Name == "nodemaxrecursiondepth" && SyntaxUsed == 1 && Scope == "")
+        return 0;
+    break;
+  }
+  case AT_HLSLNodeObject: {
+    break;
+  }
+  case AT_HLSLNodeShareInputOf: {
+    if (Name == "nodeshareinputof" && SyntaxUsed == 1 && Scope == "")
+        return 0;
+    break;
+  }
+  case AT_HLSLNodeTrackRWInputSharing: {
+    if (Name == "nodetrackrwinputsharing" && SyntaxUsed == 1 && Scope == "")
         return 0;
     break;
   }
@@ -658,6 +726,11 @@
   }
   case AT_HLSLTriangleAdj: {
     if (Name == "triangleadj" && SyntaxUsed == 1 && Scope == "")
+        return 0;
+    break;
+  }
+  case AT_HLSLUnboundedSparseNodes: {
+    if (Name == "unboundedsparsenodes" && SyntaxUsed == 1 && Scope == "")
         return 0;
     break;
   }
@@ -1479,6 +1552,16 @@
   }
   case AT_VKEarlyAndLateTests: {
     if (Name == "early_and_late_tests" && SyntaxUsed == 1 && Scope == "vk")
+        return 0;
+    break;
+  }
+  case AT_VKExtBuiltinInput: {
+    if (Name == "ext_builtin_input" && SyntaxUsed == 1 && Scope == "vk")
+        return 0;
+    break;
+  }
+  case AT_VKExtBuiltinOutput: {
+    if (Name == "ext_builtin_output" && SyntaxUsed == 1 && Scope == "vk")
         return 0;
     break;
   }

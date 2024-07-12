@@ -343,6 +343,9 @@
   case attr::GuardedVar: {
     break;
   }
+  case attr::HLSLAllowSparseNodes: {
+    break;
+  }
   case attr::HLSLAllowUAVCondition: {
     break;
   }
@@ -436,6 +439,16 @@
   case attr::HLSLLoop: {
     break;
   }
+  case attr::HLSLMaxRecords: {
+    const HLSLMaxRecordsAttr *SA = cast<HLSLMaxRecordsAttr>(A);
+    OS << " " << SA->getMaxCount();
+    break;
+  }
+  case attr::HLSLMaxRecordsSharedWith: {
+    const HLSLMaxRecordsSharedWithAttr *SA = cast<HLSLMaxRecordsSharedWithAttr>(A);
+    OS << " " << SA->getName()->getName();
+    break;
+  }
   case attr::HLSLMaxTessFactor: {
     const HLSLMaxTessFactorAttr *SA = cast<HLSLMaxTessFactorAttr>(A);
     OS << " " << SA->getFactor();
@@ -453,6 +466,103 @@
     break;
   }
   case attr::HLSLNoPerspective: {
+    break;
+  }
+  case attr::HLSLNodeArraySize: {
+    const HLSLNodeArraySizeAttr *SA = cast<HLSLNodeArraySizeAttr>(A);
+    OS << " " << SA->getCount();
+    break;
+  }
+  case attr::HLSLNodeDispatchGrid: {
+    const HLSLNodeDispatchGridAttr *SA = cast<HLSLNodeDispatchGridAttr>(A);
+    OS << " " << SA->getX();
+    OS << " " << SA->getY();
+    OS << " " << SA->getZ();
+    break;
+  }
+  case attr::HLSLNodeId: {
+    const HLSLNodeIdAttr *SA = cast<HLSLNodeIdAttr>(A);
+    OS << " \"" << SA->getName() << "\"";
+    OS << " " << SA->getArrayIndex();
+    break;
+  }
+  case attr::HLSLNodeIsProgramEntry: {
+    break;
+  }
+  case attr::HLSLNodeLaunch: {
+    const HLSLNodeLaunchAttr *SA = cast<HLSLNodeLaunchAttr>(A);
+    OS << " \"" << SA->getLaunchType() << "\"";
+    break;
+  }
+  case attr::HLSLNodeLocalRootArgumentsTableIndex: {
+    const HLSLNodeLocalRootArgumentsTableIndexAttr *SA = cast<HLSLNodeLocalRootArgumentsTableIndexAttr>(A);
+    OS << " " << SA->getIndex();
+    break;
+  }
+  case attr::HLSLNodeMaxDispatchGrid: {
+    const HLSLNodeMaxDispatchGridAttr *SA = cast<HLSLNodeMaxDispatchGridAttr>(A);
+    OS << " " << SA->getX();
+    OS << " " << SA->getY();
+    OS << " " << SA->getZ();
+    break;
+  }
+  case attr::HLSLNodeMaxRecursionDepth: {
+    const HLSLNodeMaxRecursionDepthAttr *SA = cast<HLSLNodeMaxRecursionDepthAttr>(A);
+    OS << " " << SA->getCount();
+    break;
+  }
+  case attr::HLSLNodeObject: {
+    const HLSLNodeObjectAttr *SA = cast<HLSLNodeObjectAttr>(A);
+    switch(SA->getType()) {
+    case HLSLNodeObjectAttr::DispatchNodeInputRecord:
+      OS << " DispatchNodeInputRecord";
+      break;
+    case HLSLNodeObjectAttr::RWDispatchNodeInputRecord:
+      OS << " RWDispatchNodeInputRecord";
+      break;
+    case HLSLNodeObjectAttr::GroupNodeInputRecords:
+      OS << " GroupNodeInputRecords";
+      break;
+    case HLSLNodeObjectAttr::RWGroupNodeInputRecords:
+      OS << " RWGroupNodeInputRecords";
+      break;
+    case HLSLNodeObjectAttr::ThreadNodeInputRecord:
+      OS << " ThreadNodeInputRecord";
+      break;
+    case HLSLNodeObjectAttr::RWThreadNodeInputRecord:
+      OS << " RWThreadNodeInputRecord";
+      break;
+    case HLSLNodeObjectAttr::EmptyNodeInput:
+      OS << " EmptyNodeInput";
+      break;
+    case HLSLNodeObjectAttr::NodeOutput:
+      OS << " NodeOutput";
+      break;
+    case HLSLNodeObjectAttr::EmptyNodeOutput:
+      OS << " EmptyNodeOutput";
+      break;
+    case HLSLNodeObjectAttr::NodeOutputArray:
+      OS << " NodeOutputArray";
+      break;
+    case HLSLNodeObjectAttr::EmptyNodeOutputArray:
+      OS << " EmptyNodeOutputArray";
+      break;
+    case HLSLNodeObjectAttr::GroupNodeOutputRecords:
+      OS << " GroupNodeOutputRecords";
+      break;
+    case HLSLNodeObjectAttr::ThreadNodeOutputRecords:
+      OS << " ThreadNodeOutputRecords";
+      break;
+    }
+    break;
+  }
+  case attr::HLSLNodeShareInputOf: {
+    const HLSLNodeShareInputOfAttr *SA = cast<HLSLNodeShareInputOfAttr>(A);
+    OS << " \"" << SA->getName() << "\"";
+    OS << " " << SA->getArrayIndex();
+    break;
+  }
+  case attr::HLSLNodeTrackRWInputSharing: {
     break;
   }
   case attr::HLSLNumThreads: {
@@ -530,6 +640,9 @@
   case attr::HLSLTriangleAdj: {
     break;
   }
+  case attr::HLSLUnboundedSparseNodes: {
+    break;
+  }
   case attr::HLSLUniform: {
     break;
   }
@@ -552,7 +665,9 @@
   }
   case attr::HLSLWaveSize: {
     const HLSLWaveSizeAttr *SA = cast<HLSLWaveSizeAttr>(A);
-    OS << " " << SA->getSize();
+    OS << " " << SA->getMin();
+    OS << " " << SA->getMax();
+    OS << " " << SA->getPreferred();
     break;
   }
   case attr::Hot: {
@@ -1111,6 +1226,16 @@
     break;
   }
   case attr::VKEarlyAndLateTests: {
+    break;
+  }
+  case attr::VKExtBuiltinInput: {
+    const VKExtBuiltinInputAttr *SA = cast<VKExtBuiltinInputAttr>(A);
+    OS << " " << SA->getBuiltInID();
+    break;
+  }
+  case attr::VKExtBuiltinOutput: {
+    const VKExtBuiltinOutputAttr *SA = cast<VKExtBuiltinOutputAttr>(A);
+    OS << " " << SA->getBuiltInID();
     break;
   }
   case attr::VKExtensionExt: {

@@ -11,6 +11,7 @@ switch(value) {
   case hlsl::ValidationRule::ContainerPartInvalid: return "Unknown part '%0' found in DXIL container.";
   case hlsl::ValidationRule::ContainerRootSignatureIncompatible: return "Root Signature in DXIL container is not compatible with shader.";
   case hlsl::ValidationRule::MetaRequired: return "Required metadata missing.";
+  case hlsl::ValidationRule::MetaComputeWithNode: return "Compute entry '%0' has unexpected node shader metadata";
   case hlsl::ValidationRule::MetaKnown: return "Named metadata '%0' is unknown.";
   case hlsl::ValidationRule::MetaUsed: return "All metadata must be used by dxil.";
   case hlsl::ValidationRule::MetaTarget: return "Unknown target triple '%0'.";
@@ -73,6 +74,8 @@ switch(value) {
   case hlsl::ValidationRule::InstrInBoundsAccess: return "Access to out-of-bounds memory is disallowed.";
   case hlsl::ValidationRule::InstrOpConstRange: return "Constant values must be in-range for operation.";
   case hlsl::ValidationRule::InstrImmBiasForSampleB: return "bias amount for sample_b must be in the range [%0,%1], but %2 was specified as an immediate.";
+  case hlsl::ValidationRule::InstrIllegalDXILOpCode: return "DXILOpCode must be [0..%0].  %1 specified.";
+  case hlsl::ValidationRule::InstrIllegalDXILOpFunction: return "'%0' is not a DXILOpFuncition for DXILOpcode '%1'.";
   case hlsl::ValidationRule::InstrNoIndefiniteLog: return "No indefinite logarithm.";
   case hlsl::ValidationRule::InstrNoIndefiniteAsin: return "No indefinite arcsine.";
   case hlsl::ValidationRule::InstrNoIndefiniteAcos: return "No indefinite arccosine.";
@@ -95,7 +98,10 @@ switch(value) {
   case hlsl::ValidationRule::InstrSampleCompType: return "sample_* instructions require resource to be declared to return UNORM, SNORM or FLOAT.";
   case hlsl::ValidationRule::InstrBarrierModeUselessUGroup: return "sync can't specify both _ugroup and _uglobal. If both are needed, just specify _uglobal.";
   case hlsl::ValidationRule::InstrBarrierModeNoMemory: return "sync must include some form of memory barrier - _u (UAV) and/or _g (Thread Group Shared Memory).  Only _t (thread group sync) is optional.";
-  case hlsl::ValidationRule::InstrBarrierModeForNonCS: return "sync in a non-Compute/Amplification/Mesh Shader must only sync UAV (sync_uglobal).";
+  case hlsl::ValidationRule::InstrBarrierModeForNonCS: return "sync in a non-Compute/Amplification/Mesh/Node Shader must only sync UAV (sync_uglobal).";
+  case hlsl::ValidationRule::InstrBarrierFlagInvalid: return "Invalid %0 flags on DXIL operation '%1'";
+  case hlsl::ValidationRule::InstrBarrierNonConstantFlagArgument: return "Memory type, access, or sync flag is not constant";
+  case hlsl::ValidationRule::InstrBarrierRequiresNode: return "sync in a non-Node Shader must not sync node record memory.";
   case hlsl::ValidationRule::InstrWriteMaskForTypedUAVStore: return "store on typed uav must write to all four components of the UAV.";
   case hlsl::ValidationRule::InstrWriteMaskGapForUAV: return "UAV write mask must be contiguous, starting at x: .x, .xy, .xyz, or .xyzw.";
   case hlsl::ValidationRule::InstrResourceKindForCalcLOD: return "lod requires resource declared as texture1D/2D/3D/Cube/CubeArray/1DArray/2DArray.";
@@ -139,9 +145,11 @@ switch(value) {
   case hlsl::ValidationRule::InstrMultipleGetMeshPayload: return "GetMeshPayload cannot be called multiple times.";
   case hlsl::ValidationRule::InstrNotOnceDispatchMesh: return "DispatchMesh must be called exactly once in an Amplification shader.";
   case hlsl::ValidationRule::InstrNonDominatingDispatchMesh: return "Non-Dominating DispatchMesh call.";
-  case hlsl::ValidationRule::InstrAtomicOpNonGroupshared: return "Non-groupshared destination to atomic operation.";
+  case hlsl::ValidationRule::InstrAtomicOpNonGroupsharedOrRecord: return "Non-groupshared or node record destination to atomic operation.";
   case hlsl::ValidationRule::InstrAtomicIntrinNonUAV: return "Non-UAV destination to atomic intrinsic.";
+  case hlsl::ValidationRule::InstrSVConflictingLaunchMode: return "Call to DXIL intrinsic %0 (%1) is not allowed in node shader launch type %2";
   case hlsl::ValidationRule::InstrAtomicConst: return "Constant destination to atomic.";
+  case hlsl::ValidationRule::InstrNodeRecordHandleUseAfterComplete: return "Invalid use of completed record handle.";
   case hlsl::ValidationRule::TypesNoVector: return "Vector type '%0' is not allowed.";
   case hlsl::ValidationRule::TypesDefined: return "Type '%0' is not defined on DXIL primitives.";
   case hlsl::ValidationRule::TypesIntWidth: return "Int type '%0' has an invalid width.";
@@ -161,8 +169,18 @@ switch(value) {
   case hlsl::ValidationRule::SmMaxTheadGroup: return "Declared Thread Group Count %0 (X*Y*Z) is beyond the valid maximum of %1.";
   case hlsl::ValidationRule::SmMaxTGSMSize: return "Total Thread Group Shared Memory storage is %0, exceeded %1.";
   case hlsl::ValidationRule::SmTGSMUnsupported: return "Thread Group Shared Memory not supported %0.";
-  case hlsl::ValidationRule::SmWaveSizeValue: return "Declared WaveSize %0 outside valid range [%1..%2], or not a power of 2.";
-  case hlsl::ValidationRule::SmWaveSizeNeedsDxil16Plus: return "WaveSize is valid only for DXIL version 1.6 and higher.";
+  case hlsl::ValidationRule::SmWaveSizeValue: return "WaveSize %0 (%1) outside valid range [%2..%3], or not a power of 2.";
+  case hlsl::ValidationRule::SmWaveSizeAllZeroWhenUndefined: return "WaveSize Max (%0) and Preferred (%1) must be 0 when Min is 0";
+  case hlsl::ValidationRule::SmWaveSizeMaxAndPreferredZeroWhenNoRange: return "WaveSize Max (%0) and Preferred (%1) must be 0 to encode min==max";
+  case hlsl::ValidationRule::SmWaveSizeMaxGreaterThanMin: return "WaveSize Max (%0) is less than Min (%1)";
+  case hlsl::ValidationRule::SmWaveSizePreferredInRange: return "WaveSize Preferred (%0) outside Min..Max range [%1..%2]";
+  case hlsl::ValidationRule::SmWaveSizeOnComputeOrNode: return "WaveSize only allowed on compute or node shaders";
+  case hlsl::ValidationRule::SmWaveSizeNeedsSM66or67: return "WaveSize is valid only for Shader Model 6.6 and 6.7.";
+  case hlsl::ValidationRule::SmWaveSizeRangeNeedsSM68Plus: return "WaveSize Range is valid only for Shader Model 6.8 and higher.";
+  case hlsl::ValidationRule::SmWaveSizeRangeExpectsThreeParams: return "WaveSize Range tag expects exactly 3 parameters.";
+  case hlsl::ValidationRule::SmWaveSizeExpectsOneParam: return "WaveSize tag expects exactly 1 parameter.";
+  case hlsl::ValidationRule::SmWaveSizeTagDuplicate: return "WaveSize or WaveSizeRange tag may only appear once per entry point.";
+  case hlsl::ValidationRule::SmWaveSizeNeedsConstantOperands: return "WaveSize metadata operands must be constant values.";
   case hlsl::ValidationRule::SmROVOnlyInPS: return "RasterizerOrdered objects are only allowed in 5.0+ pixel shaders.";
   case hlsl::ValidationRule::SmTessFactorForDomain: return "Required TessFactor for domain not found declared anywhere in Patch Constant data.";
   case hlsl::ValidationRule::SmTessFactorSizeMatchDomain: return "TessFactor rows, columns (%0, %1) invalid for domain %2.  Expected %3 rows and 1 column.";
@@ -185,7 +203,7 @@ switch(value) {
   case hlsl::ValidationRule::SmDSInputControlPointCountRange: return "DS input control point count must be [0..%0].  %1 specified.";
   case hlsl::ValidationRule::SmHSInputControlPointCountRange: return "HS input control point count must be [0..%0].  %1 specified.";
   case hlsl::ValidationRule::SmZeroHSInputControlPointWithInput: return "When HS input control point count is 0, no input signature should exist.";
-  case hlsl::ValidationRule::SmOutputControlPointCountRange: return "output control point count must be [0..%0].  %1 specified.";
+  case hlsl::ValidationRule::SmOutputControlPointCountRange: return "output control point count must be [%0..%1].  %2 specified.";
   case hlsl::ValidationRule::SmGSValidInputPrimitive: return "GS input primitive unrecognized.";
   case hlsl::ValidationRule::SmGSValidOutputPrimitiveTopology: return "GS output primitive topology unrecognized.";
   case hlsl::ValidationRule::SmAppendAndConsumeOnSameUAV: return "BufferUpdateCounter inc and dec on a given UAV (%d) cannot both be in the same shader for shader model less than 5.1.";
@@ -224,7 +242,7 @@ switch(value) {
   case hlsl::ValidationRule::SmAmplificationShaderPayloadSize: return "For amplification shader with entry '%0', payload size %1 is greater than maximum size of %2 bytes.";
   case hlsl::ValidationRule::SmAmplificationShaderPayloadSizeDeclared: return "For amplification shader with entry '%0', payload size %1 is greater than declared size of %2 bytes.";
   case hlsl::ValidationRule::FlowReducible: return "Execution flow must be reducible.";
-  case hlsl::ValidationRule::FlowNoRecusion: return "Recursion is not permitted.";
+  case hlsl::ValidationRule::FlowNoRecursion: return "Recursion is not permitted.";
   case hlsl::ValidationRule::FlowDeadLoop: return "Loop must have break.";
   case hlsl::ValidationRule::FlowFunctionCall: return "Function %0 with parameter is not permitted, it should be inlined.";
   case hlsl::ValidationRule::DeclDxilNsReserved: return "Declaration '%0' uses a reserved prefix.";
@@ -236,12 +254,23 @@ switch(value) {
   case hlsl::ValidationRule::DeclFnFlattenParam: return "Type '%0' is a struct type but is used as a parameter in function '%1'.";
   case hlsl::ValidationRule::DeclFnAttribute: return "Function '%0' contains invalid attribute '%1' with value '%2'.";
   case hlsl::ValidationRule::DeclResourceInFnSig: return "Function '%0' uses resource in function signature.";
+  case hlsl::ValidationRule::DeclRayQueryInFnSig: return "Function '%0' uses rayquery object in function signature.";
   case hlsl::ValidationRule::DeclPayloadStruct: return "Argument '%0' must be a struct type for payload in shader function '%1'.";
   case hlsl::ValidationRule::DeclAttrStruct: return "Argument '%0' must be a struct type for attributes in shader function '%1'.";
   case hlsl::ValidationRule::DeclParamStruct: return "Argument '%0' must be a struct type for callable shader function '%1'.";
   case hlsl::ValidationRule::DeclExtraArgs: return "Extra argument '%0' not allowed for shader function '%1'.";
   case hlsl::ValidationRule::DeclShaderReturnVoid: return "Shader function '%0' must have void return type.";
   case hlsl::ValidationRule::DeclShaderMissingArg: return "%0 shader '%1' missing required %2 parameter.";
+  case hlsl::ValidationRule::DeclMultipleNodeInputs: return "node shader '%0' may not have more than one input record (%1 are declared)";
+  case hlsl::ValidationRule::DeclNodeLaunchInputType: return "%0 node shader '%1' has incompatible input record type (should be %2)";
+  case hlsl::ValidationRule::SmIncompatibleCallInEntry: return "Entry function calls one or more functions using incompatible features.  See other errors for details.";
+  case hlsl::ValidationRule::SmIncompatibleOperation: return "Entry function performs some operation that is incompatible with the shader stage or other entry properties.  See other errors for details.";
+  case hlsl::ValidationRule::SmIncompatibleStage: return "Function uses features incompatible with the shader stage (%0) of the entry function.";
+  case hlsl::ValidationRule::SmIncompatibleShaderModel: return "Function uses features incompatible with the shader model.";
+  case hlsl::ValidationRule::SmIncompatibleThreadGroupDim: return "Function uses derivatives in compute-model shader with NumThreads (%0, %1, %2); derivatives require NumThreads to be 1D and a multiple of 4, or 2D/3D with X and Y both being a multiple of 2.";
+  case hlsl::ValidationRule::SmIncompatibleDerivInComputeShaderModel: return "Function uses derivatives in compute-model shader, which is only supported in shader model 6.6 and above.";
+  case hlsl::ValidationRule::SmIncompatibleRequiresGroup: return "Function requires a visible group, but is called from a shader without one.";
+  case hlsl::ValidationRule::SmIncompatibleDerivLaunch: return "Function called from %0 launch node shader uses derivatives; only broadcasting launch supports derivatives.";
 }
   llvm_unreachable("invalid value");
   return "<unknown>";
@@ -255,7 +284,7 @@ static bool ValidateOpcodeInProfile(DXIL::OpCode opcode,
   unsigned op = (unsigned)opcode;// Instructions: ThreadId=93, GroupId=94, ThreadIdInGroup=95,
 // FlattenedThreadIdInGroup=96
 if ((93 <= op && op <= 96))
-  return (SK == DXIL::ShaderKind::Compute || SK == DXIL::ShaderKind::Mesh || SK == DXIL::ShaderKind::Amplification);
+  return (SK == DXIL::ShaderKind::Compute || SK == DXIL::ShaderKind::Mesh || SK == DXIL::ShaderKind::Amplification || SK == DXIL::ShaderKind::Node);
 // Instructions: DomainLocation=105
 if (op == 105)
   return (SK == DXIL::ShaderKind::Domain);
@@ -274,18 +303,18 @@ if ((106 <= op && op <= 107))
   return (SK == DXIL::ShaderKind::Hull);
 // Instructions: QuadReadLaneAt=122, QuadOp=123
 if ((122 <= op && op <= 123))
-  return (SK == DXIL::ShaderKind::Library || SK == DXIL::ShaderKind::Compute || SK == DXIL::ShaderKind::Amplification || SK == DXIL::ShaderKind::Mesh || SK == DXIL::ShaderKind::Pixel);
+  return (SK == DXIL::ShaderKind::Library || SK == DXIL::ShaderKind::Compute || SK == DXIL::ShaderKind::Amplification || SK == DXIL::ShaderKind::Mesh || SK == DXIL::ShaderKind::Pixel || SK == DXIL::ShaderKind::Node);
 // Instructions: WaveIsFirstLane=110, WaveGetLaneIndex=111,
 // WaveGetLaneCount=112, WaveAnyTrue=113, WaveAllTrue=114,
 // WaveActiveAllEqual=115, WaveActiveBallot=116, WaveReadLaneAt=117,
 // WaveReadLaneFirst=118, WaveActiveOp=119, WaveActiveBit=120,
 // WavePrefixOp=121, WaveAllBitCount=135, WavePrefixBitCount=136
 if ((110 <= op && op <= 121) || (135 <= op && op <= 136))
-  return (SK == DXIL::ShaderKind::Library || SK == DXIL::ShaderKind::Compute || SK == DXIL::ShaderKind::Amplification || SK == DXIL::ShaderKind::Mesh || SK == DXIL::ShaderKind::Pixel || SK == DXIL::ShaderKind::Vertex || SK == DXIL::ShaderKind::Hull || SK == DXIL::ShaderKind::Domain || SK == DXIL::ShaderKind::Geometry || SK == DXIL::ShaderKind::RayGeneration || SK == DXIL::ShaderKind::Intersection || SK == DXIL::ShaderKind::AnyHit || SK == DXIL::ShaderKind::ClosestHit || SK == DXIL::ShaderKind::Miss || SK == DXIL::ShaderKind::Callable);
+  return (SK == DXIL::ShaderKind::Library || SK == DXIL::ShaderKind::Compute || SK == DXIL::ShaderKind::Amplification || SK == DXIL::ShaderKind::Mesh || SK == DXIL::ShaderKind::Pixel || SK == DXIL::ShaderKind::Vertex || SK == DXIL::ShaderKind::Hull || SK == DXIL::ShaderKind::Domain || SK == DXIL::ShaderKind::Geometry || SK == DXIL::ShaderKind::RayGeneration || SK == DXIL::ShaderKind::Intersection || SK == DXIL::ShaderKind::AnyHit || SK == DXIL::ShaderKind::ClosestHit || SK == DXIL::ShaderKind::Miss || SK == DXIL::ShaderKind::Callable || SK == DXIL::ShaderKind::Node);
 // Instructions: Sample=60, SampleBias=61, SampleCmp=64, CalculateLOD=81,
 // DerivCoarseX=83, DerivCoarseY=84, DerivFineX=85, DerivFineY=86
 if ((60 <= op && op <= 61) || op == 64 || op == 81 || (83 <= op && op <= 86))
-  return (SK == DXIL::ShaderKind::Library || SK == DXIL::ShaderKind::Pixel || SK == DXIL::ShaderKind::Compute || SK == DXIL::ShaderKind::Amplification || SK == DXIL::ShaderKind::Mesh);
+  return (SK == DXIL::ShaderKind::Library || SK == DXIL::ShaderKind::Pixel || SK == DXIL::ShaderKind::Compute || SK == DXIL::ShaderKind::Amplification || SK == DXIL::ShaderKind::Mesh || SK == DXIL::ShaderKind::Node);
 // Instructions: RenderTargetGetSamplePosition=76,
 // RenderTargetGetSampleCount=77, Discard=82, EvalSnapped=87,
 // EvalSampleIndex=88, EvalCentroid=89, SampleIndex=90, Coverage=91,
@@ -375,7 +404,7 @@ if (op == 173)
 // WaveMultiPrefixBitCount=167
 if ((165 <= op && op <= 167))
   return (major > 6 || (major == 6 && minor >= 5))
-      && (SK == DXIL::ShaderKind::Library || SK == DXIL::ShaderKind::Compute || SK == DXIL::ShaderKind::Amplification || SK == DXIL::ShaderKind::Mesh || SK == DXIL::ShaderKind::Pixel || SK == DXIL::ShaderKind::Vertex || SK == DXIL::ShaderKind::Hull || SK == DXIL::ShaderKind::Domain || SK == DXIL::ShaderKind::Geometry || SK == DXIL::ShaderKind::RayGeneration || SK == DXIL::ShaderKind::Intersection || SK == DXIL::ShaderKind::AnyHit || SK == DXIL::ShaderKind::ClosestHit || SK == DXIL::ShaderKind::Miss || SK == DXIL::ShaderKind::Callable);
+      && (SK == DXIL::ShaderKind::Library || SK == DXIL::ShaderKind::Compute || SK == DXIL::ShaderKind::Amplification || SK == DXIL::ShaderKind::Mesh || SK == DXIL::ShaderKind::Pixel || SK == DXIL::ShaderKind::Vertex || SK == DXIL::ShaderKind::Hull || SK == DXIL::ShaderKind::Domain || SK == DXIL::ShaderKind::Geometry || SK == DXIL::ShaderKind::RayGeneration || SK == DXIL::ShaderKind::Intersection || SK == DXIL::ShaderKind::AnyHit || SK == DXIL::ShaderKind::ClosestHit || SK == DXIL::ShaderKind::Miss || SK == DXIL::ShaderKind::Callable || SK == DXIL::ShaderKind::Node);
 // Instructions: GeometryIndex=213
 if (op == 213)
   return (major > 6 || (major == 6 && minor >= 5))
@@ -400,7 +429,37 @@ if ((223 <= op && op <= 225))
 // Instructions: QuadVote=222
 if (op == 222)
   return (major > 6 || (major == 6 && minor >= 7))
-      && (SK == DXIL::ShaderKind::Library || SK == DXIL::ShaderKind::Compute || SK == DXIL::ShaderKind::Amplification || SK == DXIL::ShaderKind::Mesh || SK == DXIL::ShaderKind::Pixel);
+      && (SK == DXIL::ShaderKind::Library || SK == DXIL::ShaderKind::Compute || SK == DXIL::ShaderKind::Amplification || SK == DXIL::ShaderKind::Mesh || SK == DXIL::ShaderKind::Pixel || SK == DXIL::ShaderKind::Node);
+// Instructions: BarrierByMemoryType=244, BarrierByMemoryHandle=245,
+// SampleCmpGrad=254
+if ((244 <= op && op <= 245) || op == 254)
+  return (major > 6 || (major == 6 && minor >= 8));
+// Instructions: SampleCmpBias=255
+if (op == 255)
+  return (major > 6 || (major == 6 && minor >= 8))
+      && (SK == DXIL::ShaderKind::Library || SK == DXIL::ShaderKind::Pixel || SK == DXIL::ShaderKind::Compute || SK == DXIL::ShaderKind::Amplification || SK == DXIL::ShaderKind::Mesh || SK == DXIL::ShaderKind::Node);
+// Instructions: AllocateNodeOutputRecords=238, GetNodeRecordPtr=239,
+// IncrementOutputCount=240, OutputComplete=241, GetInputRecordCount=242,
+// FinishedCrossGroupSharing=243, BarrierByNodeRecordHandle=246,
+// CreateNodeOutputHandle=247, IndexNodeHandle=248, AnnotateNodeHandle=249,
+// CreateNodeInputRecordHandle=250, AnnotateNodeRecordHandle=251,
+// NodeOutputIsValid=252, GetRemainingRecursionLevels=253
+if ((238 <= op && op <= 243) || (246 <= op && op <= 253))
+  return (major > 6 || (major == 6 && minor >= 8))
+      && (SK == DXIL::ShaderKind::Node);
+// Instructions: StartVertexLocation=256, StartInstanceLocation=257
+if ((256 <= op && op <= 257))
+  return (major > 6 || (major == 6 && minor >= 8))
+      && (SK == DXIL::ShaderKind::Vertex);
+// Instructions: WaveMatrix_Annotate=226, WaveMatrix_Depth=227,
+// WaveMatrix_Fill=228, WaveMatrix_LoadRawBuf=229,
+// WaveMatrix_LoadGroupShared=230, WaveMatrix_StoreRawBuf=231,
+// WaveMatrix_StoreGroupShared=232, WaveMatrix_Multiply=233,
+// WaveMatrix_MultiplyAccumulate=234, WaveMatrix_ScalarOp=235,
+// WaveMatrix_SumAccumulate=236, WaveMatrix_Add=237
+if ((226 <= op && op <= 237))
+  return (major > 6 || (major == 6 && minor >= 9))
+      && (SK == DXIL::ShaderKind::Library || SK == DXIL::ShaderKind::Compute);
 return true;
 }
 
@@ -433,6 +492,6 @@ void GetValidationVersion(unsigned *pMajor, unsigned *pMinor) {// 1.0 is the fir
 // - Mesh and Amplification shaders
 // - DXR 1.1 & RayQuery support
 *pMajor = 1;
-*pMinor = 7;
+*pMinor = 8;
 }
 }

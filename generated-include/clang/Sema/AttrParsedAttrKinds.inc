@@ -1231,10 +1231,10 @@ static AttributeList::Kind getAttrKind(StringRef Name, AttributeList::Syntax Syn
       return AttributeList::AT_HLSLUnorm;	 // "::unorm"
     }
     break;
-  case 8:	 // 11 strings to match.
+  case 8:	 // 12 strings to match.
     switch (Name[0]) {
     default: break;
-    case ':':	 // 9 strings to match.
+    case ':':	 // 10 strings to match.
       if (Name[1] != ':')
         break;
       switch (Name[2]) {
@@ -1259,6 +1259,10 @@ static AttributeList::Kind getAttrKind(StringRef Name, AttributeList::Syntax Syn
         if (memcmp(Name.data()+3, "inear", 5))
           break;
         return AttributeList::AT_HLSLLinear;	 // "::linear"
+      case 'n':	 // 1 string to match.
+        if (memcmp(Name.data()+3, "odeid", 5))
+          break;
+        return AttributeList::AT_HLSLNodeId;	 // "::nodeid"
       case 's':	 // 3 strings to match.
         switch (Name[3]) {
         default: break;
@@ -1549,14 +1553,18 @@ static AttributeList::Kind getAttrKind(StringRef Name, AttributeList::Syntax Syn
       break;
     }
     break;
-  case 12:	 // 17 strings to match.
+  case 12:	 // 19 strings to match.
     switch (Name[0]) {
     default: break;
-    case ':':	 // 5 strings to match.
+    case ':':	 // 7 strings to match.
       if (Name[1] != ':')
         break;
       switch (Name[2]) {
       default: break;
+      case 'M':	 // 1 string to match.
+        if (memcmp(Name.data()+3, "axRecords", 9))
+          break;
+        return AttributeList::AT_HLSLMaxRecords;	 // "::MaxRecords"
       case 'c':	 // 1 string to match.
         if (memcmp(Name.data()+3, "lipplanes", 9))
           break;
@@ -1565,10 +1573,19 @@ static AttributeList::Kind getAttrKind(StringRef Name, AttributeList::Syntax Syn
         if (memcmp(Name.data()+3, "eprecated", 9))
           break;
         return AttributeList::AT_Deprecated;	 // "::deprecated"
-      case 'n':	 // 1 string to match.
-        if (memcmp(Name.data()+3, "umthreads", 9))
-          break;
-        return AttributeList::AT_HLSLNumThreads;	 // "::numthreads"
+      case 'n':	 // 2 strings to match.
+        switch (Name[3]) {
+        default: break;
+        case 'o':	 // 1 string to match.
+          if (memcmp(Name.data()+4, "delaunch", 8))
+            break;
+          return AttributeList::AT_HLSLNodeLaunch;	 // "::nodelaunch"
+        case 'u':	 // 1 string to match.
+          if (memcmp(Name.data()+4, "mthreads", 8))
+            break;
+          return AttributeList::AT_HLSLNumThreads;	 // "::numthreads"
+        }
+        break;
       case 'p':	 // 1 string to match.
         if (memcmp(Name.data()+3, "rimitives", 9))
           break;
@@ -1790,14 +1807,18 @@ static AttributeList::Kind getAttrKind(StringRef Name, AttributeList::Syntax Syn
       break;
     }
     break;
-  case 15:	 // 11 strings to match.
+  case 15:	 // 12 strings to match.
     switch (Name[0]) {
     default: break;
-    case ':':	 // 4 strings to match.
+    case ':':	 // 5 strings to match.
       if (Name[1] != ':')
         break;
       switch (Name[2]) {
       default: break;
+      case 'N':	 // 1 string to match.
+        if (memcmp(Name.data()+3, "odeArraySize", 12))
+          break;
+        return AttributeList::AT_HLSLNodeArraySize;	 // "::NodeArraySize"
       case 'R':	 // 1 string to match.
         if (memcmp(Name.data()+3, "ootSignature", 12))
           break;
@@ -1967,13 +1988,39 @@ static AttributeList::Kind getAttrKind(StringRef Name, AttributeList::Syntax Syn
       break;
     }
     break;
-  case 18:	 // 7 strings to match.
+  case 18:	 // 10 strings to match.
     switch (Name[0]) {
     default: break;
-    case ':':	 // 1 string to match.
-      if (memcmp(Name.data()+1, ":globallycoherent", 17))
+    case ':':	 // 4 strings to match.
+      if (Name[1] != ':')
         break;
-      return AttributeList::AT_HLSLGloballyCoherent;	 // "::globallycoherent"
+      switch (Name[2]) {
+      default: break;
+      case 'a':	 // 1 string to match.
+        if (memcmp(Name.data()+3, "llowsparsenodes", 15))
+          break;
+        return AttributeList::AT_HLSLAllowSparseNodes;	 // "::allowsparsenodes"
+      case 'g':	 // 1 string to match.
+        if (memcmp(Name.data()+3, "loballycoherent", 15))
+          break;
+        return AttributeList::AT_HLSLGloballyCoherent;	 // "::globallycoherent"
+      case 'n':	 // 2 strings to match.
+        if (memcmp(Name.data()+3, "ode", 3))
+          break;
+        switch (Name[6]) {
+        default: break;
+        case 'd':	 // 1 string to match.
+          if (memcmp(Name.data()+7, "ispatchgrid", 11))
+            break;
+          return AttributeList::AT_HLSLNodeDispatchGrid;	 // "::nodedispatchgrid"
+        case 's':	 // 1 string to match.
+          if (memcmp(Name.data()+7, "hareinputof", 11))
+            break;
+          return AttributeList::AT_HLSLNodeShareInputOf;	 // "::nodeshareinputof"
+        }
+        break;
+      }
+      break;
     case 'c':	 // 3 strings to match.
       if (memcmp(Name.data()+1, "lang::", 6))
         break;
@@ -2086,13 +2133,24 @@ static AttributeList::Kind getAttrKind(StringRef Name, AttributeList::Syntax Syn
       break;
     }
     break;
-  case 20:	 // 4 strings to match.
+  case 20:	 // 5 strings to match.
     switch (Name[0]) {
     default: break;
-    case ':':	 // 1 string to match.
-      if (memcmp(Name.data()+1, ":carries_dependency", 19))
+    case ':':	 // 2 strings to match.
+      if (Name[1] != ':')
         break;
-      return AttributeList::AT_CarriesDependency;	 // "::carries_dependency"
+      switch (Name[2]) {
+      default: break;
+      case 'c':	 // 1 string to match.
+        if (memcmp(Name.data()+3, "arries_dependency", 17))
+          break;
+        return AttributeList::AT_CarriesDependency;	 // "::carries_dependency"
+      case 'n':	 // 1 string to match.
+        if (memcmp(Name.data()+3, "odeisprogramentry", 17))
+          break;
+        return AttributeList::AT_HLSLNodeIsProgramEntry;	 // "::nodeisprogramentry"
+      }
+      break;
     case 'g':	 // 1 string to match.
       if (memcmp(Name.data()+1, "nu::returns_nonnull", 19))
         break;
@@ -2114,10 +2172,10 @@ static AttributeList::Kind getAttrKind(StringRef Name, AttributeList::Syntax Syn
       break;
     }
     break;
-  case 21:	 // 4 strings to match.
+  case 21:	 // 6 strings to match.
     switch (Name[0]) {
     default: break;
-    case ':':	 // 2 strings to match.
+    case ':':	 // 3 strings to match.
       if (Name[1] != ':')
         break;
       switch (Name[2]) {
@@ -2126,21 +2184,36 @@ static AttributeList::Kind getAttrKind(StringRef Name, AttributeList::Syntax Syn
         if (memcmp(Name.data()+3, "llow_uav_condition", 18))
           break;
         return AttributeList::AT_HLSLAllowUAVCondition;	 // "::allow_uav_condition"
+      case 'n':	 // 1 string to match.
+        if (memcmp(Name.data()+3, "odemaxdispatchgrid", 18))
+          break;
+        return AttributeList::AT_HLSLNodeMaxDispatchGrid;	 // "::nodemaxdispatchgrid"
       case 'o':	 // 1 string to match.
         if (memcmp(Name.data()+3, "utputcontrolpoints", 18))
           break;
         return AttributeList::AT_HLSLOutputControlPoints;	 // "::outputcontrolpoints"
       }
       break;
-    case 'v':	 // 2 strings to match.
+    case 'v':	 // 3 strings to match.
       if (memcmp(Name.data()+1, "k::", 3))
         break;
       switch (Name[4]) {
       default: break;
-      case 'e':	 // 1 string to match.
-        if (memcmp(Name.data()+5, "xt_storage_class", 16))
+      case 'e':	 // 2 strings to match.
+        if (memcmp(Name.data()+5, "xt_", 3))
           break;
-        return AttributeList::AT_VKStorageClassExt;	 // "vk::ext_storage_class"
+        switch (Name[8]) {
+        default: break;
+        case 'b':	 // 1 string to match.
+          if (memcmp(Name.data()+9, "uiltin_input", 12))
+            break;
+          return AttributeList::AT_VKExtBuiltinInput;	 // "vk::ext_builtin_input"
+        case 's':	 // 1 string to match.
+          if (memcmp(Name.data()+9, "torage_class", 12))
+            break;
+          return AttributeList::AT_VKStorageClassExt;	 // "vk::ext_storage_class"
+        }
+        break;
       case 's':	 // 1 string to match.
         if (memcmp(Name.data()+5, "hader_record_ext", 16))
           break;
@@ -2149,9 +2222,24 @@ static AttributeList::Kind getAttrKind(StringRef Name, AttributeList::Syntax Syn
       break;
     }
     break;
-  case 22:	 // 2 strings to match.
+  case 22:	 // 5 strings to match.
     switch (Name[0]) {
     default: break;
+    case ':':	 // 2 strings to match.
+      if (Name[1] != ':')
+        break;
+      switch (Name[2]) {
+      default: break;
+      case 'm':	 // 1 string to match.
+        if (memcmp(Name.data()+3, "axrecordssharedwith", 19))
+          break;
+        return AttributeList::AT_HLSLMaxRecordsSharedWith;	 // "::maxrecordssharedwith"
+      case 'u':	 // 1 string to match.
+        if (memcmp(Name.data()+3, "nboundedsparsenodes", 19))
+          break;
+        return AttributeList::AT_HLSLUnboundedSparseNodes;	 // "::unboundedsparsenodes"
+      }
+      break;
     case 'c':	 // 1 string to match.
       if (memcmp(Name.data()+1, "lang::type_visibility", 21))
         break;
@@ -2160,11 +2248,19 @@ static AttributeList::Kind getAttrKind(StringRef Name, AttributeList::Syntax Syn
       if (memcmp(Name.data()+1, "nu::transparent_union", 21))
         break;
       return AttributeList::AT_TransparentUnion;	 // "gnu::transparent_union"
+    case 'v':	 // 1 string to match.
+      if (memcmp(Name.data()+1, "k::ext_builtin_output", 21))
+        break;
+      return AttributeList::AT_VKExtBuiltinOutput;	 // "vk::ext_builtin_output"
     }
     break;
-  case 23:	 // 4 strings to match.
+  case 23:	 // 5 strings to match.
     switch (Name[0]) {
     default: break;
+    case ':':	 // 1 string to match.
+      if (memcmp(Name.data()+1, ":nodemaxrecursiondepth", 22))
+        break;
+      return AttributeList::AT_HLSLNodeMaxRecursionDepth;	 // "::nodemaxrecursiondepth"
     case 'g':	 // 2 strings to match.
       if (memcmp(Name.data()+1, "nu::", 4))
         break;
@@ -2236,23 +2332,32 @@ static AttributeList::Kind getAttrKind(StringRef Name, AttributeList::Syntax Syn
       break;
     }
     break;
-  case 25:	 // 3 strings to match.
-    if (memcmp(Name.data()+0, "clang::", 7))
-      break;
-    switch (Name[7]) {
+  case 25:	 // 4 strings to match.
+    switch (Name[0]) {
     default: break;
-    case 'a':	 // 1 string to match.
-      if (memcmp(Name.data()+8, "cquire_capability", 17))
+    case ':':	 // 1 string to match.
+      if (memcmp(Name.data()+1, ":nodetrackrwinputsharing", 24))
         break;
-      return AttributeList::AT_AcquireCapability;	 // "clang::acquire_capability"
-    case 'r':	 // 1 string to match.
-      if (memcmp(Name.data()+8, "elease_capability", 17))
+      return AttributeList::AT_HLSLNodeTrackRWInputSharing;	 // "::nodetrackrwinputsharing"
+    case 'c':	 // 3 strings to match.
+      if (memcmp(Name.data()+1, "lang::", 6))
         break;
-      return AttributeList::AT_ReleaseCapability;	 // "clang::release_capability"
-    case 'w':	 // 1 string to match.
-      if (memcmp(Name.data()+8, "arn_unused_result", 17))
-        break;
-      return AttributeList::AT_WarnUnusedResult;	 // "clang::warn_unused_result"
+      switch (Name[7]) {
+      default: break;
+      case 'a':	 // 1 string to match.
+        if (memcmp(Name.data()+8, "cquire_capability", 17))
+          break;
+        return AttributeList::AT_AcquireCapability;	 // "clang::acquire_capability"
+      case 'r':	 // 1 string to match.
+        if (memcmp(Name.data()+8, "elease_capability", 17))
+          break;
+        return AttributeList::AT_ReleaseCapability;	 // "clang::release_capability"
+      case 'w':	 // 1 string to match.
+        if (memcmp(Name.data()+8, "arn_unused_result", 17))
+          break;
+        return AttributeList::AT_WarnUnusedResult;	 // "clang::warn_unused_result"
+      }
+      break;
     }
     break;
   case 26:	 // 2 strings to match.
@@ -2356,10 +2461,19 @@ static AttributeList::Kind getAttrKind(StringRef Name, AttributeList::Syntax Syn
       return AttributeList::AT_RequiresCapability;	 // "clang::requires_shared_capability"
     }
     break;
-  case 34:	 // 1 string to match.
-    if (memcmp(Name.data()+0, "vk::stencil_ref_greater_equal_back", 34))
-      break;
-    return AttributeList::AT_VKStencilRefGreaterEqualBack;	 // "vk::stencil_ref_greater_equal_back"
+  case 34:	 // 2 strings to match.
+    switch (Name[0]) {
+    default: break;
+    case ':':	 // 1 string to match.
+      if (memcmp(Name.data()+1, ":nodelocalrootargumentstableindex", 33))
+        break;
+      return AttributeList::AT_HLSLNodeLocalRootArgumentsTableIndex;	 // "::nodelocalrootargumentstableindex"
+    case 'v':	 // 1 string to match.
+      if (memcmp(Name.data()+1, "k::stencil_ref_greater_equal_back", 33))
+        break;
+      return AttributeList::AT_VKStencilRefGreaterEqualBack;	 // "vk::stencil_ref_greater_equal_back"
+    }
+    break;
   case 35:	 // 1 string to match.
     if (memcmp(Name.data()+0, "vk::stencil_ref_greater_equal_front", 35))
       break;

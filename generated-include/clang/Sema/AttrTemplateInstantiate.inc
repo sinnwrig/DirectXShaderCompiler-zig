@@ -364,6 +364,10 @@ Attr *instantiateTemplateAttribute(const Attr *At, ASTContext &C, Sema &S,
       const GuardedVarAttr *A = cast<GuardedVarAttr>(At);
       return A->clone(C);
     }
+    case attr::HLSLAllowSparseNodes: {
+      const HLSLAllowSparseNodesAttr *A = cast<HLSLAllowSparseNodesAttr>(At);
+      return A->clone(C);
+    }
     case attr::HLSLAllowUAVCondition: {
       const HLSLAllowUAVConditionAttr *A = cast<HLSLAllowUAVConditionAttr>(At);
       return A->clone(C);
@@ -464,6 +468,14 @@ Attr *instantiateTemplateAttribute(const Attr *At, ASTContext &C, Sema &S,
       const HLSLLoopAttr *A = cast<HLSLLoopAttr>(At);
       return A->clone(C);
     }
+    case attr::HLSLMaxRecords: {
+      const HLSLMaxRecordsAttr *A = cast<HLSLMaxRecordsAttr>(At);
+      return A->clone(C);
+    }
+    case attr::HLSLMaxRecordsSharedWith: {
+      const HLSLMaxRecordsSharedWithAttr *A = cast<HLSLMaxRecordsSharedWithAttr>(At);
+      return A->clone(C);
+    }
     case attr::HLSLMaxTessFactor: {
       const HLSLMaxTessFactorAttr *A = cast<HLSLMaxTessFactorAttr>(At);
       return A->clone(C);
@@ -482,6 +494,50 @@ Attr *instantiateTemplateAttribute(const Attr *At, ASTContext &C, Sema &S,
     }
     case attr::HLSLNoPerspective: {
       const HLSLNoPerspectiveAttr *A = cast<HLSLNoPerspectiveAttr>(At);
+      return A->clone(C);
+    }
+    case attr::HLSLNodeArraySize: {
+      const HLSLNodeArraySizeAttr *A = cast<HLSLNodeArraySizeAttr>(At);
+      return A->clone(C);
+    }
+    case attr::HLSLNodeDispatchGrid: {
+      const HLSLNodeDispatchGridAttr *A = cast<HLSLNodeDispatchGridAttr>(At);
+      return A->clone(C);
+    }
+    case attr::HLSLNodeId: {
+      const HLSLNodeIdAttr *A = cast<HLSLNodeIdAttr>(At);
+      return A->clone(C);
+    }
+    case attr::HLSLNodeIsProgramEntry: {
+      const HLSLNodeIsProgramEntryAttr *A = cast<HLSLNodeIsProgramEntryAttr>(At);
+      return A->clone(C);
+    }
+    case attr::HLSLNodeLaunch: {
+      const HLSLNodeLaunchAttr *A = cast<HLSLNodeLaunchAttr>(At);
+      return A->clone(C);
+    }
+    case attr::HLSLNodeLocalRootArgumentsTableIndex: {
+      const HLSLNodeLocalRootArgumentsTableIndexAttr *A = cast<HLSLNodeLocalRootArgumentsTableIndexAttr>(At);
+      return A->clone(C);
+    }
+    case attr::HLSLNodeMaxDispatchGrid: {
+      const HLSLNodeMaxDispatchGridAttr *A = cast<HLSLNodeMaxDispatchGridAttr>(At);
+      return A->clone(C);
+    }
+    case attr::HLSLNodeMaxRecursionDepth: {
+      const HLSLNodeMaxRecursionDepthAttr *A = cast<HLSLNodeMaxRecursionDepthAttr>(At);
+      return A->clone(C);
+    }
+    case attr::HLSLNodeObject: {
+      const HLSLNodeObjectAttr *A = cast<HLSLNodeObjectAttr>(At);
+      return A->clone(C);
+    }
+    case attr::HLSLNodeShareInputOf: {
+      const HLSLNodeShareInputOfAttr *A = cast<HLSLNodeShareInputOfAttr>(At);
+      return A->clone(C);
+    }
+    case attr::HLSLNodeTrackRWInputSharing: {
+      const HLSLNodeTrackRWInputSharingAttr *A = cast<HLSLNodeTrackRWInputSharingAttr>(At);
       return A->clone(C);
     }
     case attr::HLSLNumThreads: {
@@ -558,6 +614,10 @@ Attr *instantiateTemplateAttribute(const Attr *At, ASTContext &C, Sema &S,
     }
     case attr::HLSLTriangleAdj: {
       const HLSLTriangleAdjAttr *A = cast<HLSLTriangleAdjAttr>(At);
+      return A->clone(C);
+    }
+    case attr::HLSLUnboundedSparseNodes: {
+      const HLSLUnboundedSparseNodesAttr *A = cast<HLSLUnboundedSparseNodesAttr>(At);
       return A->clone(C);
     }
     case attr::HLSLUniform: {
@@ -1096,6 +1156,14 @@ Attr *instantiateTemplateAttribute(const Attr *At, ASTContext &C, Sema &S,
     }
     case attr::VKEarlyAndLateTests: {
       const VKEarlyAndLateTestsAttr *A = cast<VKEarlyAndLateTestsAttr>(At);
+      return A->clone(C);
+    }
+    case attr::VKExtBuiltinInput: {
+      const VKExtBuiltinInputAttr *A = cast<VKExtBuiltinInputAttr>(At);
+      return A->clone(C);
+    }
+    case attr::VKExtBuiltinOutput: {
+      const VKExtBuiltinOutputAttr *A = cast<VKExtBuiltinOutputAttr>(At);
       return A->clone(C);
     }
     case attr::VKExtensionExt: {

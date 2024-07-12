@@ -22,9 +22,12 @@ enum class ValidationRule : unsigned {
   DeclFnAttribute, // Functions should only contain known function attributes
   DeclFnFlattenParam, // Function parameters must not use struct types
   DeclFnIsCalled, // Functions can only be used by call instructions
+  DeclMultipleNodeInputs, // A node shader may not have more than one input record
+  DeclNodeLaunchInputType, // Invalid input record type for node launch type
   DeclNotUsedExternal, // External declaration should not be used
   DeclParamStruct, // Callable function parameter must be struct type
   DeclPayloadStruct, // Payload parameter must be struct type
+  DeclRayQueryInFnSig, // Rayquery objects not allowed in function signatures
   DeclResourceInFnSig, // Resources not allowed in function signatures
   DeclShaderMissingArg, // payload/params/attributes parameter is required for certain shader types
   DeclShaderReturnVoid, // Shader functions must return void
@@ -35,11 +38,14 @@ enum class ValidationRule : unsigned {
   InstrAllowed, // Instructions must be of an allowed type.
   InstrAtomicConst, // Constant destination to atomic.
   InstrAtomicIntrinNonUAV, // Non-UAV destination to atomic intrinsic.
-  InstrAtomicOpNonGroupshared, // Non-groupshared destination to atomic operation.
+  InstrAtomicOpNonGroupsharedOrRecord, // Non-groupshared or node record destination to atomic operation.
   InstrAttributeAtVertexNoInterpolation, // Attribute %0 must have nointerpolation mode in order to use GetAttributeAtVertex function.
-  InstrBarrierModeForNonCS, // sync in a non-Compute/Amplification/Mesh Shader must only sync UAV (sync_uglobal).
+  InstrBarrierFlagInvalid, // Invalid %0 flags on DXIL operation '%1'
+  InstrBarrierModeForNonCS, // sync in a non-Compute/Amplification/Mesh/Node Shader must only sync UAV (sync_uglobal).
   InstrBarrierModeNoMemory, // sync must include some form of memory barrier - _u (UAV) and/or _g (Thread Group Shared Memory).  Only _t (thread group sync) is optional.
   InstrBarrierModeUselessUGroup, // sync can't specify both _ugroup and _uglobal. If both are needed, just specify _uglobal.
+  InstrBarrierNonConstantFlagArgument, // Memory type, access, or sync flag is not constant
+  InstrBarrierRequiresNode, // sync in a non-Node Shader must not sync node record memory.
   InstrBufferUpdateCounterOnResHasCounter, // BufferUpdateCounter valid only when HasCounter is true.
   InstrBufferUpdateCounterOnUAV, // BufferUpdateCounter valid only on UAV.
   InstrCBufferClassForCBufferHandle, // Expect Cbuffer for CBufferLoad handle.
@@ -56,6 +62,8 @@ enum class ValidationRule : unsigned {
   InstrExtractValue, // ExtractValue should only be used on dxil struct types and cmpxchg.
   InstrFailToResloveTGSMPointer, // TGSM pointers must originate from an unambiguous TGSM global variable.
   InstrHandleNotFromCreateHandle, // Resource handle should returned by createHandle.
+  InstrIllegalDXILOpCode, // DXILOpCode must be [0..%0].  %1 specified.
+  InstrIllegalDXILOpFunction, // '%0' is not a DXILOpFuncition for DXILOpcode '%1'.
   InstrImmBiasForSampleB, // bias amount for sample_b must be in the range [%0,%1], but %2 was specified as an immediate.
   InstrInBoundsAccess, // Access to out-of-bounds memory is disallowed.
   InstrMinPrecisionNotPrecise, // Instructions marked precise may not refer to minprecision values.
@@ -73,6 +81,7 @@ enum class ValidationRule : unsigned {
   InstrNoIndefiniteLog, // No indefinite logarithm.
   InstrNoReadingUninitialized, // Instructions should not read uninitialized value.
   InstrNoUDivByZero, // No unsigned integer division by zero.
+  InstrNodeRecordHandleUseAfterComplete, // Invalid use of completed record handle.
   InstrNonDominatingDispatchMesh, // Non-Dominating DispatchMesh call.
   InstrNonDominatingSetMeshOutputCounts, // Non-Dominating SetMeshOutputCounts call.
   InstrNotOnceDispatchMesh, // DispatchMesh must be called exactly once in an Amplification shader.
@@ -102,6 +111,7 @@ enum class ValidationRule : unsigned {
   InstrResourceOffsetMiss, // offset uninitialized.
   InstrResourceOffsetTooMany, // out of bound offset must be undef.
   InstrResourceUser, // Resource should only be used by Load/GEP/Call.
+  InstrSVConflictingLaunchMode, // Input system values are compatible with node shader launch mode.
   InstrSampleCompType, // sample_* instructions require resource to be declared to return UNORM, SNORM or FLOAT.
   InstrSampleIndexForLoad2DMS, // load on Texture2DMS/2DMSArray require sampleIndex.
   InstrSamplerModeForLOD, // lod instruction requires sampler declared in default mode.
@@ -125,6 +135,7 @@ enum class ValidationRule : unsigned {
   MetaBranchFlatten, // Can't use branch and flatten attributes together.
   MetaClipCullMaxComponents, // Combined elements of SV_ClipDistance and SV_CullDistance must fit in 8 components
   MetaClipCullMaxRows, // Combined elements of SV_ClipDistance and SV_CullDistance must fit in two rows.
+  MetaComputeWithNode, // Compute entry must not have node metadata
   MetaControlFlowHintNotOnControlFlow, // Control flow hint only works on control flow inst.
   MetaDenseResIDs, // Resource identifiers must be zero-based and dense.
   MetaDuplicateSysValue, // System value may only appear once in signature
@@ -170,7 +181,7 @@ enum class ValidationRule : unsigned {
   // Program flow
   FlowDeadLoop, // Loop must have break.
   FlowFunctionCall, // Function with parameter is not permitted
-  FlowNoRecusion, // Recursion is not permitted.
+  FlowNoRecursion, // Recursion is not permitted.
   FlowReducible, // Execution flow must be reducible.
 
   // Shader model
@@ -197,6 +208,14 @@ enum class ValidationRule : unsigned {
   SmGSValidOutputPrimitiveTopology, // GS output primitive topology unrecognized.
   SmHSInputControlPointCountRange, // HS input control point count must be [0..%0].  %1 specified.
   SmHullPassThruControlPointCountMatch, // For pass thru hull shader, input control point count must match output control point count
+  SmIncompatibleCallInEntry, // Features used in internal function calls must be compatible with entry
+  SmIncompatibleDerivInComputeShaderModel, // Derivatives in compute-model shaders require shader model 6.6 and above
+  SmIncompatibleDerivLaunch, // Node shaders only support derivatives in broadcasting launch mode
+  SmIncompatibleOperation, // Operations used in entry function must be compatible with shader stage and other properties
+  SmIncompatibleRequiresGroup, // Functions requiring groupshared memory must be called from shaders with a visible group
+  SmIncompatibleShaderModel, // Functions may only use features available in the current shader model
+  SmIncompatibleStage, // Functions may only use features available in the entry function's stage
+  SmIncompatibleThreadGroupDim, // When derivatives are used in compute-model shaders, the thread group dimensions must be compatible
   SmInsideTessFactorSizeMatchDomain, // InsideTessFactor rows, columns (%0, %1) invalid for domain %2.  Expected %3 rows and 1 column.
   SmInvalidResourceCompType, // Invalid resource return type.
   SmInvalidResourceKind, // Invalid resources kind.
@@ -222,7 +241,7 @@ enum class ValidationRule : unsigned {
   SmOpcode, // Opcode must be defined in target shader model
   SmOpcodeInInvalidFunction, // Invalid DXIL opcode usage like StorePatchConstant in patch constant function
   SmOperand, // Operand must be defined in target shader model.
-  SmOutputControlPointCountRange, // output control point count must be [0..%0].  %1 specified.
+  SmOutputControlPointCountRange, // output control point count must be [%0..%1].  %2 specified.
   SmOutputControlPointsTotalScalars, // Total number of scalars across all HS output control points must not exceed .
   SmPSConsistentInterp, // Interpolation mode for PS input position must be linear_noperspective_centroid or linear_noperspective_sample when outputting oDepthGE or oDepthLE and not running at sample frequency (which is forced by inputting SV_SampleIndex or declaring an input linear_sample or linear_noperspective_sample).
   SmPSCoverageAndInnerCoverage, // InnerCoverage and Coverage are mutually exclusive.
@@ -246,8 +265,18 @@ enum class ValidationRule : unsigned {
   SmUndefinedOutput, // Not all elements of output %0 were written.
   SmValidDomain, // Invalid Tessellator Domain specified. Must be isoline, tri or quad.
   SmViewIDNeedsSlot, // ViewID requires compatible space in pixel shader input signature
-  SmWaveSizeNeedsDxil16Plus, // WaveSize is valid only for DXIL version 1.6 and higher.
-  SmWaveSizeValue, // Declared WaveSize %0 outside valid range [%1..%2], or not a power of 2.
+  SmWaveSizeAllZeroWhenUndefined, // WaveSize Max and Preferred must be 0 when Min is 0
+  SmWaveSizeExpectsOneParam, // WaveSize tag expects exactly 1 parameter.
+  SmWaveSizeMaxAndPreferredZeroWhenNoRange, // WaveSize Max and Preferred must be 0 to encode min==max
+  SmWaveSizeMaxGreaterThanMin, // WaveSize Max must greater than Min
+  SmWaveSizeNeedsConstantOperands, // WaveSize metadata operands must be constant values.
+  SmWaveSizeNeedsSM66or67, // WaveSize is valid only for Shader Model 6.6 and 6.7.
+  SmWaveSizeOnComputeOrNode, // WaveSize only allowed on compute or node shaders
+  SmWaveSizePreferredInRange, // WaveSize Preferred must be within Min..Max range
+  SmWaveSizeRangeExpectsThreeParams, // WaveSize Range tag expects exactly 3 parameters.
+  SmWaveSizeRangeNeedsSM68Plus, // WaveSize Range is valid only for Shader Model 6.8 and higher.
+  SmWaveSizeTagDuplicate, // WaveSize or WaveSizeRange tag may only appear once per entry point.
+  SmWaveSizeValue, // WaveSize value must be a power of 2 in range [4..128]
   SmZeroHSInputControlPointWithInput, // When HS input control point count is 0, no input signature should exist.
 
   // Type system

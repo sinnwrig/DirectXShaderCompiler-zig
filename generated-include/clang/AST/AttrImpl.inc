@@ -2316,6 +2316,36 @@ const char *GuardedVarAttr::getSpelling() const {
   }
 }
 
+HLSLAllowSparseNodesAttr *HLSLAllowSparseNodesAttr::clone(ASTContext &C) const {
+  auto *A = new (C) HLSLAllowSparseNodesAttr(getLocation(), C, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void HLSLAllowSparseNodesAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    break;
+  case 0 : {
+    OS << " [[allowsparsenodes]]";
+    break;
+  }
+}
+}
+
+const char *HLSLAllowSparseNodesAttr::getSpelling() const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    return "(No spelling)";
+  case 0:
+    return "allowsparsenodes";
+  }
+}
+
 HLSLAllowUAVConditionAttr *HLSLAllowUAVConditionAttr::clone(ASTContext &C) const {
   auto *A = new (C) HLSLAllowUAVConditionAttr(getLocation(), C, getSpellingListIndex());
   A->Inherited = Inherited;
@@ -3051,6 +3081,66 @@ const char *HLSLLoopAttr::getSpelling() const {
   }
 }
 
+HLSLMaxRecordsAttr *HLSLMaxRecordsAttr::clone(ASTContext &C) const {
+  auto *A = new (C) HLSLMaxRecordsAttr(getLocation(), C, maxCount, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void HLSLMaxRecordsAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    break;
+  case 0 : {
+    OS << " [[MaxRecords(" << getMaxCount() << ")]]";
+    break;
+  }
+}
+}
+
+const char *HLSLMaxRecordsAttr::getSpelling() const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    return "(No spelling)";
+  case 0:
+    return "MaxRecords";
+  }
+}
+
+HLSLMaxRecordsSharedWithAttr *HLSLMaxRecordsSharedWithAttr::clone(ASTContext &C) const {
+  auto *A = new (C) HLSLMaxRecordsSharedWithAttr(getLocation(), C, name, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void HLSLMaxRecordsSharedWithAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    break;
+  case 0 : {
+    OS << " [[maxrecordssharedwith(" << getName()->getName() << ")]]";
+    break;
+  }
+}
+}
+
+const char *HLSLMaxRecordsSharedWithAttr::getSpelling() const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    return "(No spelling)";
+  case 0:
+    return "maxrecordssharedwith";
+  }
+}
+
 HLSLMaxTessFactorAttr *HLSLMaxTessFactorAttr::clone(ASTContext &C) const {
   auto *A = new (C) HLSLMaxTessFactorAttr(getLocation(), C, factor, getSpellingListIndex());
   A->Inherited = Inherited;
@@ -3198,6 +3288,321 @@ const char *HLSLNoPerspectiveAttr::getSpelling() const {
     return "(No spelling)";
   case 0:
     return "noperspective";
+  }
+}
+
+HLSLNodeArraySizeAttr *HLSLNodeArraySizeAttr::clone(ASTContext &C) const {
+  auto *A = new (C) HLSLNodeArraySizeAttr(getLocation(), C, count, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void HLSLNodeArraySizeAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    break;
+  case 0 : {
+    OS << " [[NodeArraySize(" << getCount() << ")]]";
+    break;
+  }
+}
+}
+
+const char *HLSLNodeArraySizeAttr::getSpelling() const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    return "(No spelling)";
+  case 0:
+    return "NodeArraySize";
+  }
+}
+
+HLSLNodeDispatchGridAttr *HLSLNodeDispatchGridAttr::clone(ASTContext &C) const {
+  auto *A = new (C) HLSLNodeDispatchGridAttr(getLocation(), C, x, y, z, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void HLSLNodeDispatchGridAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    break;
+  case 0 : {
+    OS << " [[nodedispatchgrid(" << getX() << ", " << getY() << ", " << getZ() << ")]]";
+    break;
+  }
+}
+}
+
+const char *HLSLNodeDispatchGridAttr::getSpelling() const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    return "(No spelling)";
+  case 0:
+    return "nodedispatchgrid";
+  }
+}
+
+HLSLNodeIdAttr *HLSLNodeIdAttr::clone(ASTContext &C) const {
+  auto *A = new (C) HLSLNodeIdAttr(getLocation(), C, getName(), arrayIndex, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void HLSLNodeIdAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    break;
+  case 0 : {
+    OS << " [[nodeid(\"" << getName() << "\", " << getArrayIndex() << ")]]";
+    break;
+  }
+}
+}
+
+const char *HLSLNodeIdAttr::getSpelling() const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    return "(No spelling)";
+  case 0:
+    return "nodeid";
+  }
+}
+
+HLSLNodeIsProgramEntryAttr *HLSLNodeIsProgramEntryAttr::clone(ASTContext &C) const {
+  auto *A = new (C) HLSLNodeIsProgramEntryAttr(getLocation(), C, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void HLSLNodeIsProgramEntryAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    break;
+  case 0 : {
+    OS << " [[nodeisprogramentry]]";
+    break;
+  }
+}
+}
+
+const char *HLSLNodeIsProgramEntryAttr::getSpelling() const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    return "(No spelling)";
+  case 0:
+    return "nodeisprogramentry";
+  }
+}
+
+HLSLNodeLaunchAttr *HLSLNodeLaunchAttr::clone(ASTContext &C) const {
+  auto *A = new (C) HLSLNodeLaunchAttr(getLocation(), C, getLaunchType(), getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void HLSLNodeLaunchAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    break;
+  case 0 : {
+    OS << " [[nodelaunch(\"" << getLaunchType() << "\")]]";
+    break;
+  }
+}
+}
+
+const char *HLSLNodeLaunchAttr::getSpelling() const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    return "(No spelling)";
+  case 0:
+    return "nodelaunch";
+  }
+}
+
+HLSLNodeLocalRootArgumentsTableIndexAttr *HLSLNodeLocalRootArgumentsTableIndexAttr::clone(ASTContext &C) const {
+  auto *A = new (C) HLSLNodeLocalRootArgumentsTableIndexAttr(getLocation(), C, index, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void HLSLNodeLocalRootArgumentsTableIndexAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    break;
+  case 0 : {
+    OS << " [[nodelocalrootargumentstableindex(" << getIndex() << ")]]";
+    break;
+  }
+}
+}
+
+const char *HLSLNodeLocalRootArgumentsTableIndexAttr::getSpelling() const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    return "(No spelling)";
+  case 0:
+    return "nodelocalrootargumentstableindex";
+  }
+}
+
+HLSLNodeMaxDispatchGridAttr *HLSLNodeMaxDispatchGridAttr::clone(ASTContext &C) const {
+  auto *A = new (C) HLSLNodeMaxDispatchGridAttr(getLocation(), C, x, y, z, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void HLSLNodeMaxDispatchGridAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    break;
+  case 0 : {
+    OS << " [[nodemaxdispatchgrid(" << getX() << ", " << getY() << ", " << getZ() << ")]]";
+    break;
+  }
+}
+}
+
+const char *HLSLNodeMaxDispatchGridAttr::getSpelling() const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    return "(No spelling)";
+  case 0:
+    return "nodemaxdispatchgrid";
+  }
+}
+
+HLSLNodeMaxRecursionDepthAttr *HLSLNodeMaxRecursionDepthAttr::clone(ASTContext &C) const {
+  auto *A = new (C) HLSLNodeMaxRecursionDepthAttr(getLocation(), C, count, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void HLSLNodeMaxRecursionDepthAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    break;
+  case 0 : {
+    OS << " [[nodemaxrecursiondepth(" << getCount() << ")]]";
+    break;
+  }
+}
+}
+
+const char *HLSLNodeMaxRecursionDepthAttr::getSpelling() const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    return "(No spelling)";
+  case 0:
+    return "nodemaxrecursiondepth";
+  }
+}
+
+HLSLNodeObjectAttr *HLSLNodeObjectAttr::clone(ASTContext &C) const {
+  auto *A = new (C) HLSLNodeObjectAttr(getLocation(), C, type, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void HLSLNodeObjectAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+}
+
+const char *HLSLNodeObjectAttr::getSpelling() const {
+  return "(No spelling)";
+}
+
+HLSLNodeShareInputOfAttr *HLSLNodeShareInputOfAttr::clone(ASTContext &C) const {
+  auto *A = new (C) HLSLNodeShareInputOfAttr(getLocation(), C, getName(), arrayIndex, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void HLSLNodeShareInputOfAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    break;
+  case 0 : {
+    OS << " [[nodeshareinputof(\"" << getName() << "\", " << getArrayIndex() << ")]]";
+    break;
+  }
+}
+}
+
+const char *HLSLNodeShareInputOfAttr::getSpelling() const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    return "(No spelling)";
+  case 0:
+    return "nodeshareinputof";
+  }
+}
+
+HLSLNodeTrackRWInputSharingAttr *HLSLNodeTrackRWInputSharingAttr::clone(ASTContext &C) const {
+  auto *A = new (C) HLSLNodeTrackRWInputSharingAttr(getLocation(), C, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void HLSLNodeTrackRWInputSharingAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    break;
+  case 0 : {
+    OS << " [[nodetrackrwinputsharing]]";
+    break;
+  }
+}
+}
+
+const char *HLSLNodeTrackRWInputSharingAttr::getSpelling() const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    return "(No spelling)";
+  case 0:
+    return "nodetrackrwinputsharing";
   }
 }
 
@@ -3756,6 +4161,36 @@ const char *HLSLTriangleAdjAttr::getSpelling() const {
   }
 }
 
+HLSLUnboundedSparseNodesAttr *HLSLUnboundedSparseNodesAttr::clone(ASTContext &C) const {
+  auto *A = new (C) HLSLUnboundedSparseNodesAttr(getLocation(), C, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void HLSLUnboundedSparseNodesAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    break;
+  case 0 : {
+    OS << " [[unboundedsparsenodes]]";
+    break;
+  }
+}
+}
+
+const char *HLSLUnboundedSparseNodesAttr::getSpelling() const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    return "(No spelling)";
+  case 0:
+    return "unboundedsparsenodes";
+  }
+}
+
 HLSLUniformAttr *HLSLUniformAttr::clone(ASTContext &C) const {
   auto *A = new (C) HLSLUniformAttr(getLocation(), C, getSpellingListIndex());
   A->Inherited = Inherited;
@@ -3937,7 +4372,7 @@ const char *HLSLWaveSensitiveAttr::getSpelling() const {
 }
 
 HLSLWaveSizeAttr *HLSLWaveSizeAttr::clone(ASTContext &C) const {
-  auto *A = new (C) HLSLWaveSizeAttr(getLocation(), C, size, getSpellingListIndex());
+  auto *A = new (C) HLSLWaveSizeAttr(getLocation(), C, min, max, preferred, getSpellingListIndex());
   A->Inherited = Inherited;
   A->IsPackExpansion = IsPackExpansion;
   A->Implicit = Implicit;
@@ -3950,7 +4385,7 @@ void HLSLWaveSizeAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy
     llvm_unreachable("Unknown attribute spelling!");
     break;
   case 0 : {
-    OS << " [[wavesize(" << getSize() << ")]]";
+    OS << " [[wavesize(" << getMin() << ", " << getMax() << ", " << getPreferred() << ")]]";
     break;
   }
 }
@@ -7824,6 +8259,66 @@ const char *VKEarlyAndLateTestsAttr::getSpelling() const {
   }
 }
 
+VKExtBuiltinInputAttr *VKExtBuiltinInputAttr::clone(ASTContext &C) const {
+  auto *A = new (C) VKExtBuiltinInputAttr(getLocation(), C, builtInID, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void VKExtBuiltinInputAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    break;
+  case 0 : {
+    OS << " [[vk::ext_builtin_input(" << getBuiltInID() << ")]]";
+    break;
+  }
+}
+}
+
+const char *VKExtBuiltinInputAttr::getSpelling() const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    return "(No spelling)";
+  case 0:
+    return "ext_builtin_input";
+  }
+}
+
+VKExtBuiltinOutputAttr *VKExtBuiltinOutputAttr::clone(ASTContext &C) const {
+  auto *A = new (C) VKExtBuiltinOutputAttr(getLocation(), C, builtInID, getSpellingListIndex());
+  A->Inherited = Inherited;
+  A->IsPackExpansion = IsPackExpansion;
+  A->Implicit = Implicit;
+  return A;
+}
+
+void VKExtBuiltinOutputAttr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    break;
+  case 0 : {
+    OS << " [[vk::ext_builtin_output(" << getBuiltInID() << ")]]";
+    break;
+  }
+}
+}
+
+const char *VKExtBuiltinOutputAttr::getSpelling() const {
+  switch (SpellingListIndex) {
+  default:
+    llvm_unreachable("Unknown attribute spelling!");
+    return "(No spelling)";
+  case 0:
+    return "ext_builtin_output";
+  }
+}
+
 VKExtensionExtAttr *VKExtensionExtAttr::clone(ASTContext &C) const {
   auto *A = new (C) VKExtensionExtAttr(getLocation(), C, getName(), getSpellingListIndex());
   A->Inherited = Inherited;
@@ -8988,6 +9483,8 @@ const char *Attr::getSpelling() const {
     return cast<GuardedByAttr>(this)->getSpelling();
   case attr::GuardedVar:
     return cast<GuardedVarAttr>(this)->getSpelling();
+  case attr::HLSLAllowSparseNodes:
+    return cast<HLSLAllowSparseNodesAttr>(this)->getSpelling();
   case attr::HLSLAllowUAVCondition:
     return cast<HLSLAllowUAVConditionAttr>(this)->getSpelling();
   case attr::HLSLBranch:
@@ -9038,6 +9535,10 @@ const char *Attr::getSpelling() const {
     return cast<HLSLLinearAttr>(this)->getSpelling();
   case attr::HLSLLoop:
     return cast<HLSLLoopAttr>(this)->getSpelling();
+  case attr::HLSLMaxRecords:
+    return cast<HLSLMaxRecordsAttr>(this)->getSpelling();
+  case attr::HLSLMaxRecordsSharedWith:
+    return cast<HLSLMaxRecordsSharedWithAttr>(this)->getSpelling();
   case attr::HLSLMaxTessFactor:
     return cast<HLSLMaxTessFactorAttr>(this)->getSpelling();
   case attr::HLSLMaxVertexCount:
@@ -9048,6 +9549,28 @@ const char *Attr::getSpelling() const {
     return cast<HLSLNoInterpolationAttr>(this)->getSpelling();
   case attr::HLSLNoPerspective:
     return cast<HLSLNoPerspectiveAttr>(this)->getSpelling();
+  case attr::HLSLNodeArraySize:
+    return cast<HLSLNodeArraySizeAttr>(this)->getSpelling();
+  case attr::HLSLNodeDispatchGrid:
+    return cast<HLSLNodeDispatchGridAttr>(this)->getSpelling();
+  case attr::HLSLNodeId:
+    return cast<HLSLNodeIdAttr>(this)->getSpelling();
+  case attr::HLSLNodeIsProgramEntry:
+    return cast<HLSLNodeIsProgramEntryAttr>(this)->getSpelling();
+  case attr::HLSLNodeLaunch:
+    return cast<HLSLNodeLaunchAttr>(this)->getSpelling();
+  case attr::HLSLNodeLocalRootArgumentsTableIndex:
+    return cast<HLSLNodeLocalRootArgumentsTableIndexAttr>(this)->getSpelling();
+  case attr::HLSLNodeMaxDispatchGrid:
+    return cast<HLSLNodeMaxDispatchGridAttr>(this)->getSpelling();
+  case attr::HLSLNodeMaxRecursionDepth:
+    return cast<HLSLNodeMaxRecursionDepthAttr>(this)->getSpelling();
+  case attr::HLSLNodeObject:
+    return cast<HLSLNodeObjectAttr>(this)->getSpelling();
+  case attr::HLSLNodeShareInputOf:
+    return cast<HLSLNodeShareInputOfAttr>(this)->getSpelling();
+  case attr::HLSLNodeTrackRWInputSharing:
+    return cast<HLSLNodeTrackRWInputSharingAttr>(this)->getSpelling();
   case attr::HLSLNumThreads:
     return cast<HLSLNumThreadsAttr>(this)->getSpelling();
   case attr::HLSLOut:
@@ -9086,6 +9609,8 @@ const char *Attr::getSpelling() const {
     return cast<HLSLTriangleAttr>(this)->getSpelling();
   case attr::HLSLTriangleAdj:
     return cast<HLSLTriangleAdjAttr>(this)->getSpelling();
+  case attr::HLSLUnboundedSparseNodes:
+    return cast<HLSLUnboundedSparseNodesAttr>(this)->getSpelling();
   case attr::HLSLUniform:
     return cast<HLSLUniformAttr>(this)->getSpelling();
   case attr::HLSLUnorm:
@@ -9316,6 +9841,10 @@ const char *Attr::getSpelling() const {
     return cast<VKDepthUnchangedAttr>(this)->getSpelling();
   case attr::VKEarlyAndLateTests:
     return cast<VKEarlyAndLateTestsAttr>(this)->getSpelling();
+  case attr::VKExtBuiltinInput:
+    return cast<VKExtBuiltinInputAttr>(this)->getSpelling();
+  case attr::VKExtBuiltinOutput:
+    return cast<VKExtBuiltinOutputAttr>(this)->getSpelling();
   case attr::VKExtensionExt:
     return cast<VKExtensionExtAttr>(this)->getSpelling();
   case attr::VKImageFormat:
@@ -9520,6 +10049,8 @@ Attr *Attr::clone(ASTContext &C) const {
     return cast<GuardedByAttr>(this)->clone(C);
   case attr::GuardedVar:
     return cast<GuardedVarAttr>(this)->clone(C);
+  case attr::HLSLAllowSparseNodes:
+    return cast<HLSLAllowSparseNodesAttr>(this)->clone(C);
   case attr::HLSLAllowUAVCondition:
     return cast<HLSLAllowUAVConditionAttr>(this)->clone(C);
   case attr::HLSLBranch:
@@ -9570,6 +10101,10 @@ Attr *Attr::clone(ASTContext &C) const {
     return cast<HLSLLinearAttr>(this)->clone(C);
   case attr::HLSLLoop:
     return cast<HLSLLoopAttr>(this)->clone(C);
+  case attr::HLSLMaxRecords:
+    return cast<HLSLMaxRecordsAttr>(this)->clone(C);
+  case attr::HLSLMaxRecordsSharedWith:
+    return cast<HLSLMaxRecordsSharedWithAttr>(this)->clone(C);
   case attr::HLSLMaxTessFactor:
     return cast<HLSLMaxTessFactorAttr>(this)->clone(C);
   case attr::HLSLMaxVertexCount:
@@ -9580,6 +10115,28 @@ Attr *Attr::clone(ASTContext &C) const {
     return cast<HLSLNoInterpolationAttr>(this)->clone(C);
   case attr::HLSLNoPerspective:
     return cast<HLSLNoPerspectiveAttr>(this)->clone(C);
+  case attr::HLSLNodeArraySize:
+    return cast<HLSLNodeArraySizeAttr>(this)->clone(C);
+  case attr::HLSLNodeDispatchGrid:
+    return cast<HLSLNodeDispatchGridAttr>(this)->clone(C);
+  case attr::HLSLNodeId:
+    return cast<HLSLNodeIdAttr>(this)->clone(C);
+  case attr::HLSLNodeIsProgramEntry:
+    return cast<HLSLNodeIsProgramEntryAttr>(this)->clone(C);
+  case attr::HLSLNodeLaunch:
+    return cast<HLSLNodeLaunchAttr>(this)->clone(C);
+  case attr::HLSLNodeLocalRootArgumentsTableIndex:
+    return cast<HLSLNodeLocalRootArgumentsTableIndexAttr>(this)->clone(C);
+  case attr::HLSLNodeMaxDispatchGrid:
+    return cast<HLSLNodeMaxDispatchGridAttr>(this)->clone(C);
+  case attr::HLSLNodeMaxRecursionDepth:
+    return cast<HLSLNodeMaxRecursionDepthAttr>(this)->clone(C);
+  case attr::HLSLNodeObject:
+    return cast<HLSLNodeObjectAttr>(this)->clone(C);
+  case attr::HLSLNodeShareInputOf:
+    return cast<HLSLNodeShareInputOfAttr>(this)->clone(C);
+  case attr::HLSLNodeTrackRWInputSharing:
+    return cast<HLSLNodeTrackRWInputSharingAttr>(this)->clone(C);
   case attr::HLSLNumThreads:
     return cast<HLSLNumThreadsAttr>(this)->clone(C);
   case attr::HLSLOut:
@@ -9618,6 +10175,8 @@ Attr *Attr::clone(ASTContext &C) const {
     return cast<HLSLTriangleAttr>(this)->clone(C);
   case attr::HLSLTriangleAdj:
     return cast<HLSLTriangleAdjAttr>(this)->clone(C);
+  case attr::HLSLUnboundedSparseNodes:
+    return cast<HLSLUnboundedSparseNodesAttr>(this)->clone(C);
   case attr::HLSLUniform:
     return cast<HLSLUniformAttr>(this)->clone(C);
   case attr::HLSLUnorm:
@@ -9848,6 +10407,10 @@ Attr *Attr::clone(ASTContext &C) const {
     return cast<VKDepthUnchangedAttr>(this)->clone(C);
   case attr::VKEarlyAndLateTests:
     return cast<VKEarlyAndLateTestsAttr>(this)->clone(C);
+  case attr::VKExtBuiltinInput:
+    return cast<VKExtBuiltinInputAttr>(this)->clone(C);
+  case attr::VKExtBuiltinOutput:
+    return cast<VKExtBuiltinOutputAttr>(this)->clone(C);
   case attr::VKExtensionExt:
     return cast<VKExtensionExtAttr>(this)->clone(C);
   case attr::VKImageFormat:
@@ -10052,6 +10615,8 @@ void Attr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
     return cast<GuardedByAttr>(this)->printPretty(OS, Policy);
   case attr::GuardedVar:
     return cast<GuardedVarAttr>(this)->printPretty(OS, Policy);
+  case attr::HLSLAllowSparseNodes:
+    return cast<HLSLAllowSparseNodesAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLAllowUAVCondition:
     return cast<HLSLAllowUAVConditionAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLBranch:
@@ -10102,6 +10667,10 @@ void Attr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
     return cast<HLSLLinearAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLLoop:
     return cast<HLSLLoopAttr>(this)->printPretty(OS, Policy);
+  case attr::HLSLMaxRecords:
+    return cast<HLSLMaxRecordsAttr>(this)->printPretty(OS, Policy);
+  case attr::HLSLMaxRecordsSharedWith:
+    return cast<HLSLMaxRecordsSharedWithAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLMaxTessFactor:
     return cast<HLSLMaxTessFactorAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLMaxVertexCount:
@@ -10112,6 +10681,28 @@ void Attr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
     return cast<HLSLNoInterpolationAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLNoPerspective:
     return cast<HLSLNoPerspectiveAttr>(this)->printPretty(OS, Policy);
+  case attr::HLSLNodeArraySize:
+    return cast<HLSLNodeArraySizeAttr>(this)->printPretty(OS, Policy);
+  case attr::HLSLNodeDispatchGrid:
+    return cast<HLSLNodeDispatchGridAttr>(this)->printPretty(OS, Policy);
+  case attr::HLSLNodeId:
+    return cast<HLSLNodeIdAttr>(this)->printPretty(OS, Policy);
+  case attr::HLSLNodeIsProgramEntry:
+    return cast<HLSLNodeIsProgramEntryAttr>(this)->printPretty(OS, Policy);
+  case attr::HLSLNodeLaunch:
+    return cast<HLSLNodeLaunchAttr>(this)->printPretty(OS, Policy);
+  case attr::HLSLNodeLocalRootArgumentsTableIndex:
+    return cast<HLSLNodeLocalRootArgumentsTableIndexAttr>(this)->printPretty(OS, Policy);
+  case attr::HLSLNodeMaxDispatchGrid:
+    return cast<HLSLNodeMaxDispatchGridAttr>(this)->printPretty(OS, Policy);
+  case attr::HLSLNodeMaxRecursionDepth:
+    return cast<HLSLNodeMaxRecursionDepthAttr>(this)->printPretty(OS, Policy);
+  case attr::HLSLNodeObject:
+    return cast<HLSLNodeObjectAttr>(this)->printPretty(OS, Policy);
+  case attr::HLSLNodeShareInputOf:
+    return cast<HLSLNodeShareInputOfAttr>(this)->printPretty(OS, Policy);
+  case attr::HLSLNodeTrackRWInputSharing:
+    return cast<HLSLNodeTrackRWInputSharingAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLNumThreads:
     return cast<HLSLNumThreadsAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLOut:
@@ -10150,6 +10741,8 @@ void Attr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
     return cast<HLSLTriangleAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLTriangleAdj:
     return cast<HLSLTriangleAdjAttr>(this)->printPretty(OS, Policy);
+  case attr::HLSLUnboundedSparseNodes:
+    return cast<HLSLUnboundedSparseNodesAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLUniform:
     return cast<HLSLUniformAttr>(this)->printPretty(OS, Policy);
   case attr::HLSLUnorm:
@@ -10380,6 +10973,10 @@ void Attr::printPretty(raw_ostream &OS, const PrintingPolicy &Policy) const {
     return cast<VKDepthUnchangedAttr>(this)->printPretty(OS, Policy);
   case attr::VKEarlyAndLateTests:
     return cast<VKEarlyAndLateTestsAttr>(this)->printPretty(OS, Policy);
+  case attr::VKExtBuiltinInput:
+    return cast<VKExtBuiltinInputAttr>(this)->printPretty(OS, Policy);
+  case attr::VKExtBuiltinOutput:
+    return cast<VKExtBuiltinOutputAttr>(this)->printPretty(OS, Policy);
   case attr::VKExtensionExt:
     return cast<VKExtensionExtAttr>(this)->printPretty(OS, Policy);
   case attr::VKImageFormat:

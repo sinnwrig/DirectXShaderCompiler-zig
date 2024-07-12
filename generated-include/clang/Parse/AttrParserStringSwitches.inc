@@ -44,6 +44,7 @@
 .Case("callable_when", true)
 .Case("consumable", true)
 .Case("format", true)
+.Case("maxrecordssharedwith", true)
 .Case("loop", true)
 .Case("unroll", true)
 .Case("nounroll", true)

@@ -524,6 +524,13 @@ Record.push_back(SA->getDefaultState());
     Record.push_back(A->getSpellingListIndex());
     break;
   }
+  case attr::HLSLAllowSparseNodes: {
+    const HLSLAllowSparseNodesAttr *SA = cast<HLSLAllowSparseNodesAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    break;
+  }
   case attr::HLSLAllowUAVCondition: {
     Record.push_back(A->isImplicit());
     Record.push_back(A->getSpellingListIndex());
@@ -698,6 +705,22 @@ Record.push_back(SA->getDefaultState());
     Record.push_back(A->getSpellingListIndex());
     break;
   }
+  case attr::HLSLMaxRecords: {
+    const HLSLMaxRecordsAttr *SA = cast<HLSLMaxRecordsAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    Record.push_back(SA->getMaxCount());
+    break;
+  }
+  case attr::HLSLMaxRecordsSharedWith: {
+    const HLSLMaxRecordsSharedWithAttr *SA = cast<HLSLMaxRecordsSharedWithAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    AddIdentifierRef(SA->getName(), Record);
+    break;
+  }
   case attr::HLSLMaxTessFactor: {
     const HLSLMaxTessFactorAttr *SA = cast<HLSLMaxTessFactorAttr>(A);
     Record.push_back(SA->isInherited());
@@ -730,6 +753,98 @@ Record.push_back(SA->getDefaultState());
   }
   case attr::HLSLNoPerspective: {
     const HLSLNoPerspectiveAttr *SA = cast<HLSLNoPerspectiveAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    break;
+  }
+  case attr::HLSLNodeArraySize: {
+    const HLSLNodeArraySizeAttr *SA = cast<HLSLNodeArraySizeAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    Record.push_back(SA->getCount());
+    break;
+  }
+  case attr::HLSLNodeDispatchGrid: {
+    const HLSLNodeDispatchGridAttr *SA = cast<HLSLNodeDispatchGridAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    Record.push_back(SA->getX());
+    Record.push_back(SA->getY());
+    Record.push_back(SA->getZ());
+    break;
+  }
+  case attr::HLSLNodeId: {
+    const HLSLNodeIdAttr *SA = cast<HLSLNodeIdAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    AddString(SA->getName(), Record);
+    Record.push_back(SA->getArrayIndex());
+    break;
+  }
+  case attr::HLSLNodeIsProgramEntry: {
+    const HLSLNodeIsProgramEntryAttr *SA = cast<HLSLNodeIsProgramEntryAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    break;
+  }
+  case attr::HLSLNodeLaunch: {
+    const HLSLNodeLaunchAttr *SA = cast<HLSLNodeLaunchAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    AddString(SA->getLaunchType(), Record);
+    break;
+  }
+  case attr::HLSLNodeLocalRootArgumentsTableIndex: {
+    const HLSLNodeLocalRootArgumentsTableIndexAttr *SA = cast<HLSLNodeLocalRootArgumentsTableIndexAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    Record.push_back(SA->getIndex());
+    break;
+  }
+  case attr::HLSLNodeMaxDispatchGrid: {
+    const HLSLNodeMaxDispatchGridAttr *SA = cast<HLSLNodeMaxDispatchGridAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    Record.push_back(SA->getX());
+    Record.push_back(SA->getY());
+    Record.push_back(SA->getZ());
+    break;
+  }
+  case attr::HLSLNodeMaxRecursionDepth: {
+    const HLSLNodeMaxRecursionDepthAttr *SA = cast<HLSLNodeMaxRecursionDepthAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    Record.push_back(SA->getCount());
+    break;
+  }
+  case attr::HLSLNodeObject: {
+    const HLSLNodeObjectAttr *SA = cast<HLSLNodeObjectAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+Record.push_back(SA->getType());
+    break;
+  }
+  case attr::HLSLNodeShareInputOf: {
+    const HLSLNodeShareInputOfAttr *SA = cast<HLSLNodeShareInputOfAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    AddString(SA->getName(), Record);
+    Record.push_back(SA->getArrayIndex());
+    break;
+  }
+  case attr::HLSLNodeTrackRWInputSharing: {
+    const HLSLNodeTrackRWInputSharingAttr *SA = cast<HLSLNodeTrackRWInputSharingAttr>(A);
     Record.push_back(SA->isInherited());
     Record.push_back(A->isImplicit());
     Record.push_back(A->getSpellingListIndex());
@@ -878,6 +993,13 @@ Record.push_back(SA->getDefaultState());
     Record.push_back(A->getSpellingListIndex());
     break;
   }
+  case attr::HLSLUnboundedSparseNodes: {
+    const HLSLUnboundedSparseNodesAttr *SA = cast<HLSLUnboundedSparseNodesAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    break;
+  }
   case attr::HLSLUniform: {
     const HLSLUniformAttr *SA = cast<HLSLUniformAttr>(A);
     Record.push_back(SA->isInherited());
@@ -925,7 +1047,9 @@ Record.push_back(SA->getDefaultState());
     Record.push_back(SA->isInherited());
     Record.push_back(A->isImplicit());
     Record.push_back(A->getSpellingListIndex());
-    Record.push_back(SA->getSize());
+    Record.push_back(SA->getMin());
+    Record.push_back(SA->getMax());
+    Record.push_back(SA->getPreferred());
     break;
   }
   case attr::Hot: {
@@ -1753,6 +1877,22 @@ Record.push_back(SA->getVisibility());
     Record.push_back(SA->isInherited());
     Record.push_back(A->isImplicit());
     Record.push_back(A->getSpellingListIndex());
+    break;
+  }
+  case attr::VKExtBuiltinInput: {
+    const VKExtBuiltinInputAttr *SA = cast<VKExtBuiltinInputAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    Record.push_back(SA->getBuiltInID());
+    break;
+  }
+  case attr::VKExtBuiltinOutput: {
+    const VKExtBuiltinOutputAttr *SA = cast<VKExtBuiltinOutputAttr>(A);
+    Record.push_back(SA->isInherited());
+    Record.push_back(A->isImplicit());
+    Record.push_back(A->getSpellingListIndex());
+    Record.push_back(SA->getBuiltInID());
     break;
   }
   case attr::VKExtensionExt: {
