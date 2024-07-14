@@ -29,29 +29,29 @@ extern "C" {
 
 #include <stddef.h>
 
-typedef struct dxc_compiler_impl* dxc_compiler OBJECT_ATTRIBUTE;
-typedef struct dxc_compile_result_impl* dxc_compile_result OBJECT_ATTRIBUTE;
-typedef struct dxc_compile_error_impl* dxc_compile_error OBJECT_ATTRIBUTE;
-typedef struct dxc_compile_object_impl* dxc_compile_object OBJECT_ATTRIBUTE;
+typedef struct DxcCompilerImpl* DxcCompiler OBJECT_ATTRIBUTE;
+typedef struct DxcCompileResultImpl* DxcCompileResult OBJECT_ATTRIBUTE;
+typedef struct DxcCompileErrorImpl* DxcCompileError OBJECT_ATTRIBUTE;
+typedef struct DxcCompileObjectImpl* DxcCompileObject OBJECT_ATTRIBUTE;
 
 
-typedef struct dxc_include_result {
+typedef struct DxcIncludeResultImpl {
     const char* header_data; // UTF-8 or null
     size_t header_length;
-} dxc_include_result;
+} DxcIncludeResult;
 
-typedef dxc_include_result* (*dxc_include_func)(void* ctx, const char* header_name);
+typedef DxcIncludeResult* (*DxcIncludeFunc)(void* ctx, const char* header_name);
 
-typedef int (*dxc_free_include_func)(void* ctx, dxc_include_result* result);
+typedef int (*DxcFreeIncludeFunc)(void* ctx, DxcIncludeResult* result);
 
-typedef struct dxc_include_callbacks {
+typedef struct DxcIncludeCallbacksImpl {
     void* include_ctx;
-    dxc_include_func include_func;
-    dxc_free_include_func free_func;
-} dxc_include_callbacks;
+    DxcIncludeFunc include_func;
+    DxcFreeIncludeFunc free_func;
+} DxcIncludeCallbacks;
 
 
-typedef struct dxc_compile_options {
+typedef struct DxcCompileOptionsImpl {
     // Required
     char const* code;
     size_t code_len;
@@ -59,71 +59,71 @@ typedef struct dxc_compile_options {
     size_t args_len;
 
     // Optional
-    dxc_include_callbacks* include_callbacks; // nullable
-} dxc_compile_options;
+    DxcIncludeCallbacks* include_callbacks; // nullable
+} DxcCompileOptions;
 
 
 //----------------
-// dxc_compiler
+// DxcCompiler
 //----------------
 
 /// Initializes a DXC compiler
 ///
 /// Invoke machDxcDeinit when done with the compiler.
-DXC_EXPORT dxc_compiler dxc_initialize();
+DXC_EXPORT DxcCompiler DxcInitialize();
 
 /// Deinitializes the DXC compiler.
-DXC_EXPORT void dxc_finalize(dxc_compiler compiler);
+DXC_EXPORT void DxcFinalize(DxcCompiler compiler);
 
 //---------------------
-// dxc_compile_result
+// DxcCompileResult
 //---------------------
 
 /// Compiles the given code with the given dxc.exe CLI arguments
 ///
 /// Invoke DxcCompileResultDeinit when done with the result.
-DXC_EXPORT dxc_compile_result dxc_compile(
-    dxc_compiler compiler,
-    dxc_compile_options* options
+DXC_EXPORT DxcCompileResult DxcCompile(
+    DxcCompiler compiler,
+    DxcCompileOptions* options
 );
 
 /// Returns an error object, or null in the case of success.
 ///
 /// Invoke DxcCompileErrorDeinit when done with the error, iff it was non-null.
-DXC_EXPORT dxc_compile_error dxc_compile_result_get_error(dxc_compile_result err);
+DXC_EXPORT DxcCompileError DxcCompileResultGetError(DxcCompileResult err);
 
 /// Returns the compiled object code, or null if an error occurred.
-DXC_EXPORT dxc_compile_object dxc_compile_result_get_object(dxc_compile_result err);
+DXC_EXPORT DxcCompileObject DxcCompileResultGetObject(DxcCompileResult err);
 
 /// Deinitializes the DXC compiler.
-DXC_EXPORT void dxc_compile_result_deinit(dxc_compile_result err);
+DXC_EXPORT void DxcCompileResultRelease(DxcCompileResult err);
 
 //---------------------
-// dxc_compile_object
+// DxcCompileObject
 //---------------------
 
 /// Returns a pointer to the raw bytes of the compiled object file.
-DXC_EXPORT char const* dxc_compile_object_get_bytes(dxc_compile_object err);
+DXC_EXPORT char const* DxcCompileObjectGetBytes(DxcCompileObject err);
 
 /// Returns the length of the compiled object file.
-DXC_EXPORT size_t dxc_compile_object_get_bytes_length(dxc_compile_object err);
+DXC_EXPORT size_t DxcCompileObjectGetBytesLength(DxcCompileObject err);
 
 /// Deinitializes the compiled object, calling Get methods after this is illegal.
-DXC_EXPORT void dxc_compile_object_deinit(dxc_compile_object err);
+DXC_EXPORT void DxcCompileObjectRelease(DxcCompileObject err);
 
 //--------------------
-// dxc_compile_error
+// DxcCompileError
 //--------------------
 
 /// Returns a pointer to the null-terminated UTF-8 encoded error string. This includes
 /// compiler warnings, unless they were disabled in the compile arguments.
-DXC_EXPORT char const* dxc_compile_error_get_string(dxc_compile_error err);
+DXC_EXPORT char const* DxcCompileErrorGetString(DxcCompileError err);
 
 /// Returns the length of the error string.
-DXC_EXPORT size_t dxc_compile_error_get_string_length(dxc_compile_error err);
+DXC_EXPORT size_t DxcCompileErrorGetStringLength(DxcCompileError err);
 
 /// Deinitializes the error, calling Get methods after this is illegal.
-DXC_EXPORT void dxc_compile_error_deinit(dxc_compile_error err);
+DXC_EXPORT void DxcCompileErrorRelease(DxcCompileError err);
 
 #ifdef __cplusplus
 } // extern "C"

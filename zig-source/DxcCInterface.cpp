@@ -20,7 +20,7 @@
 #include <stddef.h>
 #include <string>
 
-#include "dxc_c_interface.h"
+#include "DxcCInterface.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -63,10 +63,10 @@ public:
         return E_NOINTERFACE;
     }
 
-    dxc_include_callbacks* callbacks;
+    DxcIncludeCallbacks* callbacks;
     IDxcUtils* utils;
 
-    DelegateIncludeHandler(dxc_include_callbacks* callbacks_ptr, IDxcUtils* util_ptr) { 
+    DelegateIncludeHandler(DxcIncludeCallbacks* callbacks_ptr, IDxcUtils* util_ptr) { 
         callbacks = callbacks_ptr;
         utils = util_ptr;
     }
@@ -80,7 +80,7 @@ public:
         if (filename_utf8 == nullptr)
             filename_utf8 = strdup(u8"");
 
-        dxc_include_result* include_result = callbacks->include_func(callbacks->include_ctx, filename_utf8);
+        DxcIncludeResult* include_result = callbacks->include_func(callbacks->include_ctx, filename_utf8);
 
         std::free(filename_utf8);
 
@@ -107,15 +107,15 @@ void DxcompilerInvokeDllShutdown();
 //----------------
 // DxcCompiler
 //----------------
-DXC_EXPORT dxc_compiler dxc_initialize() {
+DXC_EXPORT DxcCompiler DxcInitialize() {
     DxcompilerInvokeDllMain();
     CComPtr<IDxcCompiler3> dxcInstance;
     HRESULT hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcInstance));
     assert(SUCCEEDED(hr));
-    return reinterpret_cast<dxc_compiler>(dxcInstance.Detach());
+    return reinterpret_cast<DxcCompiler>(dxcInstance.Detach());
 }
 
-DXC_EXPORT void dxc_finalize(dxc_compiler compiler) {
+DXC_EXPORT void DxcFinalize(DxcCompiler compiler) {
     CComPtr<IDxcCompiler3> dxcInstance = CComPtr(reinterpret_cast<IDxcCompiler3*>(compiler));
     dxcInstance.Release();
     DxcompilerInvokeDllShutdown();
@@ -124,9 +124,9 @@ DXC_EXPORT void dxc_finalize(dxc_compiler compiler) {
 //---------------------
 // DxcCompileResult
 //---------------------
-DXC_EXPORT dxc_compile_result dxc_compile(
-    dxc_compiler compiler,
-    dxc_compile_options* options
+DXC_EXPORT DxcCompileResult DxcCompile(
+    DxcCompiler compiler,
+    DxcCompileOptions* options
 ) {
     CComPtr<IDxcCompiler3> dxcInstance = CComPtr(reinterpret_cast<IDxcCompiler3*>(compiler));
 
@@ -174,30 +174,31 @@ DXC_EXPORT dxc_compile_result dxc_compile(
     free(arguments);
     free(wtext_buf);
 
-    return reinterpret_cast<dxc_compile_result>(pCompileResult.Detach());
+    return reinterpret_cast<DxcCompileResult>(pCompileResult.Detach());
 }
 
-DXC_EXPORT dxc_compile_error dxc_compile_result_get_error(dxc_compile_result result) {
+DXC_EXPORT DxcCompileError DxcCompileResultGetError(DxcCompileResult result) {
     CComPtr<IDxcResult> pCompileResult = CComPtr(reinterpret_cast<IDxcResult*>(result));
     CComPtr<IDxcBlobUtf8> pErrors;
     pCompileResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&pErrors), nullptr);
     if (pErrors && pErrors->GetStringLength() > 0) {
-        return reinterpret_cast<dxc_compile_error>(pErrors.Detach());
+        return reinterpret_cast<DxcCompileError>(pErrors.Detach());
     }
     return nullptr;
 }
 
-DXC_EXPORT dxc_compile_object dxc_compile_result_get_object(dxc_compile_result result) {
+DXC_EXPORT DxcCompileObject DxcCompileResultGetObject(DxcCompileResult result) {
     CComPtr<IDxcResult> pCompileResult = CComPtr(reinterpret_cast<IDxcResult*>(result));
     CComPtr<IDxcBlob> pObject;
     pCompileResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&pObject), nullptr);
+
     if (pObject && pObject->GetBufferSize() > 0) {
-        return reinterpret_cast<dxc_compile_object>(pObject.Detach());
+        return reinterpret_cast<DxcCompileObject>(pObject.Detach());
     }
     return nullptr;
 }
 
-DXC_EXPORT void dxc_compile_result_deinit(dxc_compile_result result) {
+DXC_EXPORT void DxcCompileResultRelease(DxcCompileResult result) {
     CComPtr<IDxcResult> pCompileResult = CComPtr(reinterpret_cast<IDxcResult*>(result));
     pCompileResult.Release();
 }
@@ -205,17 +206,17 @@ DXC_EXPORT void dxc_compile_result_deinit(dxc_compile_result result) {
 //---------------------
 // DxcCompileObject
 //---------------------
-DXC_EXPORT char const* dxc_compile_object_get_bytes(dxc_compile_object object) {
+DXC_EXPORT char const* DxcCompileObjectGetBytes(DxcCompileObject object) {
     CComPtr<IDxcBlob> pObject = CComPtr(reinterpret_cast<IDxcBlob*>(object));
     return (char const*)(pObject->GetBufferPointer());
 }
 
-DXC_EXPORT size_t dxc_compile_object_get_bytes_length(dxc_compile_object object) {
+DXC_EXPORT size_t DxcCompileObjectGetBytesLength(DxcCompileObject object) {
     CComPtr<IDxcBlob> pObject = CComPtr(reinterpret_cast<IDxcBlob*>(object));
     return pObject->GetBufferSize();
 }
 
-DXC_EXPORT void dxc_compile_object_deinit(dxc_compile_object object) {
+DXC_EXPORT void DxcCompileObjectRelease(DxcCompileObject object) {
     CComPtr<IDxcBlob> pObject = CComPtr(reinterpret_cast<IDxcBlob*>(object));
     pObject.Release();
 }
@@ -223,17 +224,17 @@ DXC_EXPORT void dxc_compile_object_deinit(dxc_compile_object object) {
 //--------------------
 // DxcCompileError
 //--------------------
-DXC_EXPORT char const* dxc_compile_error_get_string(dxc_compile_error err) {
+DXC_EXPORT char const* DxcCompileErrorGetString(DxcCompileError err) {
     CComPtr<IDxcBlobUtf8> pErrors = CComPtr(reinterpret_cast<IDxcBlobUtf8*>(err));
     return (char const*)(pErrors->GetBufferPointer());
 }
 
-DXC_EXPORT size_t dxc_compile_error_get_string_length(dxc_compile_error err) {
+DXC_EXPORT size_t DxcCompileErrorGetStringLength(DxcCompileError err) {
     CComPtr<IDxcBlobUtf8> pErrors = CComPtr(reinterpret_cast<IDxcBlobUtf8*>(err));
     return pErrors->GetStringLength();
 }
 
-DXC_EXPORT void dxc_compile_error_deinit(dxc_compile_error err) {
+DXC_EXPORT void DxcCompileErrorRelease(DxcCompileError err) {
     CComPtr<IDxcBlobUtf8> pErrors = CComPtr(reinterpret_cast<IDxcBlobUtf8*>(err));
     pErrors.Release();
 }
