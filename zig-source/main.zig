@@ -2,6 +2,9 @@ const c = @cImport(
     @cInclude("DxcCInterface.h"),
 );
 
+const std = @import("std");
+const unicode = std.unicode;
+
 pub const Compiler = struct {
     handle: c.DxcCompiler,
 
@@ -14,7 +17,7 @@ pub const Compiler = struct {
         c.DxcFinalize(compiler.handle);
     }
 
-    pub fn compile(compiler: Compiler, code: []const u8, args: []const [*:0]const u8) Result {
+    pub fn compile(compiler: Compiler, code: []const u16, args: []const [*:0]const u16) Result {
         var options: c.DxcCompileOptions = .{
             .code = code.ptr,
             .code_len = code.len,
@@ -72,7 +75,7 @@ pub const Compiler = struct {
 test {
     const std = @import("std");
 
-    const code =
+    const code = []const u16
         \\ Texture1D<float4> tex[5] : register(t3);
         \\ SamplerState SS[3] : register(s2);
         \\
@@ -84,7 +87,8 @@ test {
         \\   return r;
         \\ };
     ;
-    const args = &[_][*:0]const u8{ "-E", "main", "-T", "ps_6_0", "-D", "MYDEFINE=1", "-Qstrip_debug", "-Qstrip_reflect" };
+    
+    const args = &[_][*:0]const u16{ "-E", "main", "-T", "ps_6_0", "-D", "MYDEFINE=1", "-Qstrip_debug", "-Qstrip_reflect" };
 
     const compiler = Compiler.init();
     defer compiler.deinit();
