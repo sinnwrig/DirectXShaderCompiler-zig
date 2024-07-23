@@ -1758,9 +1758,9 @@ static bool checkVKBuiltInAppertainsTo(Sema &S, const AttributeList &Attr, const
 }
 
 static bool checkVKCapabilityExtAppertainsTo(Sema &S, const AttributeList &Attr, const Decl *D) {
-  if (!isa<FunctionDecl>(D) && !isa<VarDecl>(D)) {
+  if (!isa<FunctionDecl>(D) && !isa<VarDecl>(D) && !isa<ParmVarDecl>(D) && !isa<FieldDecl>(D) && !isa<TypedefNameDecl>(D)) {
     S.Diag(Attr.getLoc(), diag::err_attribute_wrong_decl_type)
-      << Attr.getName() << ExpectedVariableOrFunction;
+      << Attr.getName() << ExpectedFunctionOrVariableOrParamOrFieldOrType;
     return false;
   }
   return true;
@@ -1895,9 +1895,9 @@ static bool checkVKExtBuiltinOutputAppertainsTo(Sema &S, const AttributeList &At
 }
 
 static bool checkVKExtensionExtAppertainsTo(Sema &S, const AttributeList &Attr, const Decl *D) {
-  if (!isa<FunctionDecl>(D) && !isa<VarDecl>(D)) {
+  if (!isa<FunctionDecl>(D) && !isa<VarDecl>(D) && !isa<ParmVarDecl>(D) && !isa<FieldDecl>(D) && !isa<TypedefNameDecl>(D)) {
     S.Diag(Attr.getLoc(), diag::err_attribute_wrong_decl_type)
-      << Attr.getName() << ExpectedVariableOrFunction;
+      << Attr.getName() << ExpectedFunctionOrVariableOrParamOrFieldOrType;
     return false;
   }
   return true;

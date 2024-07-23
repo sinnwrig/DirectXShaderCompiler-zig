@@ -730,6 +730,7 @@ DIAG(err_hlsl_unsupported_nested_typedef, CLASS_ERROR, (unsigned)diag::Severity:
 DIAG(err_hlsl_unsupported_operator, CLASS_ERROR, (unsigned)diag::Severity::Error, "operator is not supported", 0, SFINAE_SubstitutionFailure, false, true, 12)
 DIAG(err_hlsl_unsupported_payload_access_qualifier, CLASS_ERROR, (unsigned)diag::Severity::Error, "payload access qualifiers are only allowed for member variables of a payload structure", 0, SFINAE_SubstitutionFailure, false, true, 12)
 DIAG(err_hlsl_unsupported_payload_access_qualifier_struct, CLASS_ERROR, (unsigned)diag::Severity::Error, "payload access qualifiers are not supported on struct types.", 0, SFINAE_SubstitutionFailure, false, true, 12)
+DIAG(err_hlsl_unsupported_semantic_index, CLASS_ERROR, (unsigned)diag::Severity::Error, "'%0' is defined with semantic index %1, but only values 0 through %2 are supported", 0, SFINAE_SubstitutionFailure, false, true, 0)
 DIAG(err_hlsl_unsupported_string_decl, CLASS_ERROR, (unsigned)diag::Severity::Error, "%select{array|parameter|return value}0 of type string is not supported", 0, SFINAE_SubstitutionFailure, false, true, 0)
 DIAG(err_hlsl_unsupported_struct_op, CLASS_ERROR, (unsigned)diag::Severity::Error, "operator cannot be used with user-defined type %0", 0, SFINAE_SubstitutionFailure, false, true, 12)
 DIAG(err_hlsl_unsupported_subscript_base_rhs, CLASS_ERROR, (unsigned)diag::Severity::Error, "HLSL does not support having the base of a subscript operator in brackets", 0, SFINAE_SubstitutionFailure, false, true, 12)
