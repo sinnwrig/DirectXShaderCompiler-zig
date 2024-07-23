@@ -1,4 +1,4 @@
-\const c = @cImport(
+const c = @cImport(
     @cInclude("DxcCInterface.h"),
 );
 
