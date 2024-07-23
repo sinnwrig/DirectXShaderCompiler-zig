@@ -1,21 +1,24 @@
 const c = @cImport(
-    @cInclude("dxc_c_interface.h"),
+    @cInclude("DxcCInterface.h"),
 );
 
+const std = @import("std");
+const unicode = std.unicode;
+
 pub const Compiler = struct {
-    handle: c.dxc_compiler,
+    handle: c.DxcCompiler,
 
     pub fn init() Compiler {
-        const handle = c.dxc_initialize();
+        const handle = c.DxcInitialize();
         return .{ .handle = handle };
     }
 
     pub fn deinit(compiler: Compiler) void {
-        c.dxc_finalize(compiler.handle);
+        c.DxcFinalize(compiler.handle);
     }
 
-    pub fn compile(compiler: Compiler, code: []const u8, args: []const [*:0]const u8) Result {
-        var options: c.dxc_compile_options = .{
+    pub fn compile(compiler: Compiler, code: []const u16, args: []const [*:0]const u16) Result {
+        var options: c.DxcCompileOptions = .{
             .code = code.ptr,
             .code_len = code.len,
             .args = args.ptr,
@@ -23,47 +26,47 @@ pub const Compiler = struct {
             .include_callbacks = null,
         };
 
-        const result = c.dxc_compile(compiler.handle, @ptrCast(&options));
+        const result = c.DxcCompile(compiler.handle, @ptrCast(&options));
         return .{ .handle = result };
     }
 
     pub const Result = struct {
-        handle: c.dxc_compile_result,
+        handle: c.DxcCompileResult,
 
         pub fn deinit(result: Result) void {
-            c.dxc_compile_result_deinit(result.handle);
+            c.DxcCompileResultRelease(result.handle);
         }
 
         pub fn getError(result: Result) ?Error {
-            if (c.dxc_compile_result_get_error(result.handle)) |err| return .{ .handle = err };
+            if (c.DxcCompileResultGetError(result.handle)) |err| return .{ .handle = err };
             return null;
         }
 
         pub fn getObject(result: Result) Object {
-            return .{ .handle = c.dxc_compile_result_get_object(result.handle) };
+            return .{ .handle = c.DxcCompileResultGetObject(result.handle) };
         }
 
         pub const Error = struct {
-            handle: c.dxc_compile_error,
+            handle: c.DxcCompileError,
 
             pub fn deinit(err: Error) void {
-                c.dxc_compile_error_deinit(err.handle);
+                c.DxcCompileErrorRelease(err.handle);
             }
 
             pub fn getString(err: Error) []const u8 {
-                return c.dxc_compile_error_get_string(err.handle)[0..c.dxc_compile_error_get_string_length(err.handle)];
+                return c.DxcCompileErrorGetString(err.handle)[0..c.DxcCompileErrorGetStringLength(err.handle)];
             }
         };
 
         pub const Object = struct {
-            handle: c.dxc_compile_object,
+            handle: c.DxcCompileObject,
 
             pub fn deinit(obj: Object) void {
-                c.dxc_compile_object_deinit(obj.handle);
+                c.DxcCompileObjectRelease(obj.handle);
             }
 
             pub fn getBytes(obj: Object) []const u8 {
-                return c.dxc_compile_object_get_bytes(obj.handle)[0..c.dxc_compile_object_get_bytes_length(obj.handle)];
+                return c.DxcCompileObjectGetBytes(obj.handle)[0..c.DxcCompileObjectGetBytesLength(obj.handle)];
             }
         };
     };
@@ -72,7 +75,7 @@ pub const Compiler = struct {
 test {
     const std = @import("std");
 
-    const code =
+    const code = []const u16
         \\ Texture1D<float4> tex[5] : register(t3);
         \\ SamplerState SS[3] : register(s2);
         \\
@@ -84,7 +87,8 @@ test {
         \\   return r;
         \\ };
     ;
-    const args = &[_][*:0]const u8{ "-E", "main", "-T", "ps_6_0", "-D", "MYDEFINE=1", "-Qstrip_debug", "-Qstrip_reflect" };
+    
+    const args = &[_][*:0]const u16{ "-E", "main", "-T", "ps_6_0", "-D", "MYDEFINE=1", "-Qstrip_debug", "-Qstrip_reflect" };
 
     const compiler = Compiler.init();
     defer compiler.deinit();

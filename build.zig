@@ -110,7 +110,7 @@ pub fn build(b: *Build) !void {
         lib_dxilcompression_c_sources;
 
     dxcompiler.addCSourceFile(.{
-        .file = b.path("zig-source/dxc_c_interface.cpp"),
+        .file = b.path("zig-source/DxcCInterface.cpp"),
         .flags = &.{
             "-fms-extensions", // __uuidof and friends (on non-windows targets)
         },
@@ -185,7 +185,7 @@ pub fn build(b: *Build) !void {
 // ----------------
 
     // Zig bindings
-    const dxcompiler_zig = b.addModule("dxcompiler-zig", .{
+    const dxcompiler_zig = b.addModule("dxcompiler", .{
         .root_source_file = b.path("zig-source/main.zig"),
         .target = target,
         .optimize = optimize,
@@ -202,13 +202,13 @@ pub fn build(b: *Build) !void {
     if (build_shared)
     {
         const dxcompiler_shared = b.addSharedLibrary(.{
-            .name = "dxcompiler-shared",
+            .name = "dxcompiler",
             .optimize = optimize,
             .target = target,
         });
 
         dxcompiler_shared.addCSourceFile(.{
-            .file = b.path("zig-source/shared_main.cpp"),
+            .file = b.path("zig-source/SharedMain.cpp"),
             .flags = &.{ "-std=c++17" },
         }); 
 
