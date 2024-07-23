@@ -18,6 +18,23 @@ The included licenses apply to the following files:
 
 ## Changelog
 
+### Upcoming Release
+
+Place release notes for the upcoming release below this line and remove this line upon naming this release.
+
+### Version 1.8.2407
+
+This cumulative release contains numerous bug fixes and stability improvments.
+
+Here are some highlights:
+
+- dxc generates invalid alignment on groupshared matrix load/store instructions in [#6416](https://github.com/microsoft/DirectXShaderCompiler/issues/6416)
+- [Optimization] DXC is missing common factor optimization in some cases in [#6593](https://github.com/microsoft/DirectXShaderCompiler/issues/6593)
+- [SPIR-V] Implement WaveMutliPrefix* in [#6600](https://github.com/microsoft/DirectXShaderCompiler/issues/6600)
+- [SPIR-V] Implement SampleCmpLevel for SM6.7 in [#6613](https://github.com/microsoft/DirectXShaderCompiler/issues/6613)
+- Avoid adding types to default namespace in [#6646](https://github.com/microsoft/DirectXShaderCompiler/issues/6646)
+- Release notes once found in `README.md` can now be found in `docs/ReleaseNotes.md`
+
 ### Version 1.8.2405
 
 DX Compiler Release for May 2024
@@ -69,6 +86,8 @@ DX Compiler release for March 2024
   - Validation errors more accurately determine usage by the entry point
 - Improve debug info generation
 - Further improvements to Linux build quality
+- File paths arguments for `IDxcIncludeHandler::LoadSource` will now be normalized to use OS specific slashes
+  (`\` for windows, `/` for *nix) and no longer have double slashes except for UNC paths (`\\my\unc\path`).”
 
 ### Version 1.7.2308
 
