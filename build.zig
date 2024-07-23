@@ -168,6 +168,7 @@ pub fn build(b: *Build) !void {
             .header_path = b.path("external/SPIRV-Headers").getPath(b), // Absolute path for SPIRV-Headers
             .no_link = true, // Linker not in use
             .no_reduce = true, // Reducer not in use
+            .rebuild_headers = regenerate_headers,
         })) |dep| 
         {
             dxcompiler.linkLibrary(dep.artifact("SPIRV-Tools-opt"));
