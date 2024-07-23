@@ -19,6 +19,7 @@
 #include <cassert>
 #include <stddef.h>
 #include <string>
+#include <iostream>
 
 #include "DxcCInterface.h"
 
@@ -105,10 +106,13 @@ DXC_EXPORT DxcCompileResult DxcCompile(
     CComPtr<IDxcUtils> pUtils;
     DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&pUtils));
 
+    CComPtr<IDxcBlobEncoding> pSource;
+    pUtils->CreateBlob(options->code, options->code_len, DXC_CP_UTF8, &pSource);
+
     DxcBuffer sourceBuffer;
-    sourceBuffer.Ptr = options->code;
-    sourceBuffer.Size = options->code_len;
-    sourceBuffer.Encoding = DXC_CP_UTF16;
+    sourceBuffer.Ptr = pSource->GetBufferPointer();
+    sourceBuffer.Size = pSource->GetBufferSize();
+    sourceBuffer.Encoding = 0;
 
     DelegateIncludeHandler* handler = nullptr;
     if (options->include_callbacks != nullptr) // Leave include handler as default (nullptr) unless there's available callbacks
@@ -182,18 +186,18 @@ DXC_EXPORT void DxcCompileObjectRelease(DxcCompileObject object) {
 //--------------------
 // DxcCompileError
 //--------------------
-DXC_EXPORT LPCWSTR DxcCompileErrorGetString(DxcCompileError err) {
-    CComPtr<IDxcBlobWide> pErrors = CComPtr(reinterpret_cast<IDxcBlobWide*>(err));
-    return (LPCWSTR)(pErrors->GetBufferPointer());
+DXC_EXPORT char const* DxcCompileErrorGetString(DxcCompileError err) {
+    CComPtr<IDxcBlobUtf8> pErrors = CComPtr(reinterpret_cast<IDxcBlobUtf8*>(err));
+    return (char const*)(pErrors->GetBufferPointer());
 }
 
 DXC_EXPORT size_t DxcCompileErrorGetStringLength(DxcCompileError err) {
-    CComPtr<IDxcBlobWide> pErrors = CComPtr(reinterpret_cast<IDxcBlobWide*>(err));
+    CComPtr<IDxcBlobUtf8> pErrors = CComPtr(reinterpret_cast<IDxcBlobUtf8*>(err));
     return pErrors->GetStringLength();
 }
 
 DXC_EXPORT void DxcCompileErrorRelease(DxcCompileError err) {
-    CComPtr<IDxcBlobWide> pErrors = CComPtr(reinterpret_cast<IDxcBlobWide*>(err));
+    CComPtr<IDxcBlobUtf8> pErrors = CComPtr(reinterpret_cast<IDxcBlobUtf8*>(err));
     pErrors.Release();
 }
 

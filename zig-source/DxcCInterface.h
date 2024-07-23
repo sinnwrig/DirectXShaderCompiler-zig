@@ -37,7 +37,7 @@ typedef struct DxcCompileObjectImpl* DxcCompileObject OBJECT_ATTRIBUTE;
 
 
 typedef struct DxcIncludeResultImpl {
-    LPCWSTR header_data; // UTF-8 or null
+    const char* header_data; // UTF-8 or null
     size_t header_length;
 } DxcIncludeResult;
 
@@ -54,7 +54,7 @@ typedef struct DxcIncludeCallbacksImpl {
 
 typedef struct DxcCompileOptionsImpl {
     // Required
-    LPCWSTR code;
+    const char* code;
     size_t code_len;
 
     LPCWSTR* args;
@@ -117,9 +117,9 @@ DXC_EXPORT void DxcCompileObjectRelease(DxcCompileObject err);
 // DxcCompileError
 //--------------------
 
-/// Returns a pointer to a wide error string. This includes
+/// Returns a pointer to a utf-8 error string. This includes
 /// compiler warnings, unless they were disabled in the compile arguments.
-DXC_EXPORT LPCWSTR DxcCompileErrorGetString(DxcCompileError err);
+DXC_EXPORT char const* DxcCompileErrorGetString(DxcCompileError err);
 
 /// Returns the length of the error string.
 DXC_EXPORT size_t DxcCompileErrorGetStringLength(DxcCompileError err);
