@@ -27,6 +27,6 @@ Differences between _DirectXShaderCompiler-zig_ and _mach-dxcompiler_:
 - Options to enable SPIR-V bytecode generation.
 - Attempts to keep up-to-date with upstream DXC and SPIRV-Tools (at the potential detriment to stability).
 - Renamed the C API and internal functions to follow a more general _DXC/C_ naming convention.
-- Removed MSVC and DIA SDK builds due to the lack of support these libraries have for non-windows platforms. PRs welcome which re-add support for them, but I am uninterested and currently unable to add support for them from Linux.
+- Removed MSVC builds due to the lack of support these libraries have for non-windows platforms. PRs welcome which re-add suppor, but I am uninterested and currently unable to add support for them from Linux.
 - Moved SPIRV-Tools external dependency from [hexops/spirv-tools](https://github.com/hexops/spirv-tools) to [SPIRV-Tools-zig](https://github.com/sinnwrig/SPIRV-Tools-zig).
 - Addition of `-Dregenerate_headers` flag, which rebuilds python generated and tablegen'ned headers used by LLVM, Clang, and DXC into _generated-include_.
