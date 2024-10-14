@@ -77,7 +77,7 @@ fn configureLLVMTablegenExecutable(b: *Build, name: []const u8, files: []const [
         .target = target,
     });
 
-    const base_flags = [_][]const u8 {
+    const base_flags = [_][]const u8{
         "-Wno-unused-command-line-argument",
         "-Wno-unused-variable",
         "-Wno-missing-exception-spec",
@@ -111,10 +111,7 @@ fn configureLLVMTablegenExecutable(b: *Build, name: []const u8, files: []const [
     if (target.result.os.tag != .windows) 
         tablegen_exe.addIncludePath(b.path("external/DirectX-Headers/include/wsl/stubs"));
 
-    const moduletarget = tablegen_exe.rootModuleTarget();
-
-    tablegen_exe.addConfigHeader(llvmconf.addConfigHeader(b, moduletarget, .llvm_config_h));
-    tablegen_exe.addConfigHeader(llvmconf.addConfigHeader(b, moduletarget, .config_h));
+    llvmconf.addConfigHeaders(b, tablegen_exe);
 
     return tablegen_exe;
 }
@@ -141,7 +138,7 @@ fn ensureFile(b: *Build, file: Build.LazyPath) void
 const clang_path = "tools/clang/include/clang/";
 const clang_out = "clang/";
 
-const include_paths = [_][]const u8 {
+const include_paths = [_][]const u8{
     "-I", "./",
     "-I", "lib/Target",
     "-I", "include",
@@ -443,7 +440,7 @@ pub fn buildDXCHeaders(b: *Build, optimize: std.builtin.OptimizeMode) *std.Build
 }
 
 // find utils/TableGen | grep '\.cpp$' | xargs -I {} -n1 echo '"{}",' | pbcopy
-const llvm_utils_tablegen = [_][]const u8 {
+const llvm_utils_tablegen = [_][]const u8{
     "utils/TableGen/AsmMatcherEmitter.cpp",
     "utils/TableGen/AsmWriterEmitter.cpp",
     "utils/TableGen/AsmWriterInst.cpp",
@@ -474,7 +471,7 @@ const llvm_utils_tablegen = [_][]const u8 {
     "utils/TableGen/CTagsEmitter.cpp",
 };
 
-const lib_tablegen = [_][]const u8 {
+const lib_tablegen = [_][]const u8{
     "lib/TableGen/Error.cpp",
     "lib/TableGen/Main.cpp",
     "lib/TableGen/Record.cpp",
@@ -486,7 +483,7 @@ const lib_tablegen = [_][]const u8 {
 };
 
 // find tools/clang/utils/TableGen | grep '\.cpp$' | xargs -I {} -n1 echo '"{}",' | pbcopy
-const clang_tools_clang_utils_tablegen = [_][]const u8 {
+const clang_tools_clang_utils_tablegen = [_][]const u8{
     "tools/clang/utils/TableGen/ClangASTNodesEmitter.cpp",
     "tools/clang/utils/TableGen/ClangAttrEmitter.cpp",
     "tools/clang/utils/TableGen/ClangCommentCommandInfoEmitter.cpp",
@@ -499,7 +496,7 @@ const clang_tools_clang_utils_tablegen = [_][]const u8 {
 };
 
 // from lib/Support/CMakeLists.txt
-const lib_support_c = [_][]const u8 {
+const lib_support_c = [_][]const u8{
     "lib/Support/ConvertUTF.c",
     "lib/Support/regcomp.c",
     "lib/Support/regerror.c",
@@ -509,7 +506,7 @@ const lib_support_c = [_][]const u8 {
 };
 
 // from lib/Support/CMakeLists.txt
-const lib_support = [_][]const u8 {
+const lib_support = [_][]const u8{
     "lib/Support/APFloat.cpp",
     "lib/Support/APInt.cpp",
     "lib/Support/APSInt.cpp",
@@ -578,7 +575,7 @@ const lib_support = [_][]const u8 {
     "lib/Support/raw_os_ostream.cpp",
     "lib/Support/raw_ostream.cpp",
     "lib/Support/regmalloc.cpp",
-    "lib/Support/assert.cpp", 
+    "lib/Support/assert.cpp",
     "lib/Support/Atomic.cpp",
     "lib/Support/Errno.cpp",
     "lib/Support/Host.cpp",
@@ -597,9 +594,9 @@ const lib_support = [_][]const u8 {
     "lib/Support/TimeValue.cpp",
     "lib/Support/Valgrind.cpp",
     "lib/Support/Watchdog.cpp",
-};  
+};
 
 // From lib/MSSupport/CMakeLists.txt
-const lib_mssupport = [_][]const u8 {
+const lib_mssupport = [_][]const u8{
     "lib/MSSupport/MSFileSystemImpl.cpp",
 };

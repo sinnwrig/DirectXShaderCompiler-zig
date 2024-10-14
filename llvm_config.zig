@@ -2,9 +2,141 @@ const std = @import("std");
 const builtin = @import("builtin");
 const Build = std.Build;
 
+
+pub fn addConfigHeaders(b: *Build, step: *std.Build.Step.Compile) void {
+    // /tools/clang/include/clang/Config/config.h.cmake
+    step.addConfigHeader(b.addConfigHeader(
+        .{
+            .style = .{ .cmake = b.path("tools/clang/include/clang/Config/config.h.cmake") },
+            .include_path = "clang/Config/config.h",
+        },
+        .{
+            .BUG_REPORT_URL = "",
+            .CLANG_DEFAULT_OPENMP_RUNTIME = "",
+            .CLANG_LIBDIR_SUFFIX = "",
+            .CLANG_RESOURCE_DIR = "",
+            .C_INCLUDE_DIRS = "",
+            .DEFAULT_SYSROOT = "",
+            .GCC_INSTALL_PREFIX = "",
+            .CLANG_HAVE_LIBXML = 0,
+            .BACKEND_PACKAGE_STRING = "",
+            .HOST_LINK_VERSION = "",
+        },
+    ));
+
+    // /include/llvm/Config/AsmParsers.def.in
+    step.addConfigHeader(b.addConfigHeader(
+        .{
+            .style = .{ .cmake = b.path("include/llvm/Config/AsmParsers.def.in") },
+            .include_path = "llvm/Config/AsmParsers.def",
+        },
+        .{
+            .LLVM_ENUM_ASM_PARSERS = ""
+        },
+    ));
+
+    // /include/llvm/Config/Disassemblers.def.in
+    step.addConfigHeader(b.addConfigHeader(
+        .{
+            .style = .{ .cmake = b.path("include/llvm/Config/Disassemblers.def.in") },
+            .include_path = "llvm/Config/Disassemblers.def",
+        },
+        .{
+            .LLVM_ENUM_DISASSEMBLERS = "", 
+        },
+    ));
+
+    // /include/llvm/Config/Targets.def.in
+    step.addConfigHeader(b.addConfigHeader(
+        .{
+            .style = .{ .cmake = b.path("include/llvm/Config/Targets.def.in") },
+            .include_path = "llvm/Config/Targets.def",
+        },
+        .{
+            .LLVM_ENUM_TARGETS = "",
+        },
+    ));
+
+    // /include/llvm/Config/AsmPrinters.def.in
+    step.addConfigHeader(b.addConfigHeader(
+        .{
+            .style = .{ .cmake = b.path("include/llvm/Config/AsmPrinters.def.in") },
+            .include_path = "llvm/Config/AsmPrinters.def",
+        },
+        .{
+            .LLVM_ENUM_ASM_PRINTERS = "",
+        },
+    ));
+
+    // /include/llvm/Support/DataTypes.h.cmake
+    step.addConfigHeader(b.addConfigHeader(
+        .{
+            .style = .{ .cmake = b.path("include/llvm/Support/DataTypes.h.cmake") },
+            .include_path = "llvm/Support/DataTypes.h",
+        },
+        .{
+            .HAVE_INTTYPES_H = 1,
+            .HAVE_STDINT_H = 1,
+            .HAVE_UINT64_T = 1,
+            .HAVE_U_INT64_T = 0,
+        },
+    ));
+
+    // /tools/clang/include/clang/Basic/Version.inc.in
+    step.addConfigHeader(b.addConfigHeader(
+        .{
+            .style = .{ .cmake = b.path("tools/clang/include/clang/Basic/Version.inc.in") },
+            .include_path = "clang/Basic/Version.inc",
+        },
+        .{
+            .CLANG_VERSION = "3.7.0",
+            .CLANG_VERSION_MAJOR = 3,
+            .CLANG_VERSION_MINOR = 7,
+            .CLANG_HAS_VERSION_PATCHLEVEL = 0,
+            .CLANG_VERSION_PATCHLEVEL = 0,
+        },
+    ));
+
+    // /include/llvm/Config/abi-breaking.h.cmake
+    step.addConfigHeader(b.addConfigHeader(
+        .{
+            .style = .{ .cmake = b.path("include/llvm/Config/abi-breaking.h.cmake") },
+            .include_path = "llvm/Config/abi-breaking.h",
+        },
+        .{},
+    ));
+
+    // /include/llvm/Config/AsmParsers.def.in
+    step.addConfigHeader(b.addConfigHeader(
+        .{
+            .style = .{ .cmake = b.path("include/llvm/Config/AsmParsers.def.in") },
+            .include_path = "llvm/Config/AsmParsers.def",
+        },
+        .{
+            .LLVM_ENUM_ASM_PARSERS = ""
+        },
+    ));
+
+    const target = step.rootModuleTarget();
+    step.addConfigHeader(addConfigHeader(b, target, .llvm_config_h));
+    step.addConfigHeader(addConfigHeader(b, target, .config_h));
+
+    // /include/dxc/config.h.cmake
+    step.addConfigHeader(b.addConfigHeader(
+        .{
+            .style = .{ .cmake = b.path("include/dxc/config.h.cmake") },
+            .include_path = "dxc/config.h",
+        },
+        .{
+            .DXC_DISABLE_ALLOCATOR_OVERRIDES = false,
+        },
+    ));
+}
+
+
 // /include/llvm/Config/llvm-config.h.cmake
 // /include/llvm/Config/config.h.cmake (derives llvm-config.h.cmake)
-pub fn addConfigHeader(b: *Build, target: std.Target, which: anytype) *std.Build.Step.ConfigHeader {
+fn addConfigHeader(b: *Build, target: std.Target, which: anytype) *std.Build.Step.ConfigHeader {
     // Note: LLVM_HOST_TRIPLEs can be found by running $ llc --version | grep Default
     // Note: arm64 is an alias for aarch64, we always use aarch64 over arm64.
     const cross_platform = .{
@@ -237,11 +369,11 @@ pub fn addConfigHeader(b: *Build, target: std.Target, which: anytype) *std.Build
 
 // Merge struct types A and B
 fn Merge(comptime a: type, comptime b: type) type {
-    const a_fields = @typeInfo(a).Struct.fields;
-    const b_fields = @typeInfo(b).Struct.fields;
+    const a_fields = @typeInfo(a).@"struct".fields;
+    const b_fields = @typeInfo(b).@"struct".fields;
 
     return @Type(std.builtin.Type{
-        .Struct = .{
+        .@"struct" = .{
             .layout = .auto,
             .fields = a_fields ++ b_fields,
             .decls = &.{},
@@ -253,7 +385,7 @@ fn Merge(comptime a: type, comptime b: type) type {
 // Merge struct values A and B
 fn merge(a: anytype, b: anytype) Merge(@TypeOf(a), @TypeOf(b)) {
     var merged: Merge(@TypeOf(a), @TypeOf(b)) = undefined;
-    inline for (@typeInfo(@TypeOf(merged)).Struct.fields) |f| {
+    inline for (@typeInfo(@TypeOf(merged)).@"struct".fields) |f| {
         if (@hasField(@TypeOf(a), f.name)) @field(merged, f.name) = @field(a, f.name);
         if (@hasField(@TypeOf(b), f.name)) @field(merged, f.name) = @field(b, f.name);
     }

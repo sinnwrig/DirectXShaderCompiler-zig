@@ -55,7 +55,7 @@ pub fn build(b: *Build) !void {
     try cflags.appendSlice(base_flags);
     try cppflags.appendSlice(base_flags);
 
-    addConfigHeaders(b, dxcompiler);
+    llvmconf.addConfigHeaders(b, dxcompiler);
     addIncludes(b, dxcompiler);
 
     const cpp_sources =
@@ -245,7 +245,7 @@ pub fn build(b: *Build) !void {
 
         dxc_exe.addIncludePath(b.path("tools/clang/tools"));
 
-        addConfigHeaders(b, dxc_exe);
+        llvmconf.addConfigHeaders(b, dxc_exe);
         addIncludes(b, dxc_exe);
 
         dxc_exe.defineCMacro("NDEBUG", ""); // disable assertions
@@ -293,136 +293,6 @@ fn linkDxcDependencies(step: *std.Build.Step.Compile) void {
         step.linkSystemLibrary("ole32");
         step.linkSystemLibrary("oleaut32");
     }
-}
-
-fn addConfigHeaders(b: *Build, step: *std.Build.Step.Compile) void {
-    // /tools/clang/include/clang/Config/config.h.cmake
-    step.addConfigHeader(b.addConfigHeader(
-        .{
-            .style = .{ .cmake = b.path("tools/clang/include/clang/Config/config.h.cmake") },
-            .include_path = "clang/Config/config.h",
-        },
-        .{
-            .BUG_REPORT_URL = "",
-            .CLANG_DEFAULT_OPENMP_RUNTIME = "",
-            .CLANG_LIBDIR_SUFFIX = "",
-            .CLANG_RESOURCE_DIR = "",
-            .C_INCLUDE_DIRS = "",
-            .DEFAULT_SYSROOT = "",
-            .GCC_INSTALL_PREFIX = "",
-            .CLANG_HAVE_LIBXML = 0,
-            .BACKEND_PACKAGE_STRING = "",
-            .HOST_LINK_VERSION = "",
-        },
-    ));
-
-    // /include/llvm/Config/AsmParsers.def.in
-    step.addConfigHeader(b.addConfigHeader(
-        .{
-            .style = .{ .cmake = b.path("include/llvm/Config/AsmParsers.def.in") },
-            .include_path = "llvm/Config/AsmParsers.def",
-        },
-        .{
-            .LLVM_ENUM_ASM_PARSERS = ""
-        },
-    ));
-
-    // /include/llvm/Config/Disassemblers.def.in
-    step.addConfigHeader(b.addConfigHeader(
-        .{
-            .style = .{ .cmake = b.path("include/llvm/Config/Disassemblers.def.in") },
-            .include_path = "llvm/Config/Disassemblers.def",
-        },
-        .{
-            .LLVM_ENUM_DISASSEMBLERS = "", 
-        },
-    ));
-
-    // /include/llvm/Config/Targets.def.in
-    step.addConfigHeader(b.addConfigHeader(
-        .{
-            .style = .{ .cmake = b.path("include/llvm/Config/Targets.def.in") },
-            .include_path = "llvm/Config/Targets.def",
-        },
-        .{
-            .LLVM_ENUM_TARGETS = "",
-        },
-    ));
-
-    // /include/llvm/Config/AsmPrinters.def.in
-    step.addConfigHeader(b.addConfigHeader(
-        .{
-            .style = .{ .cmake = b.path("include/llvm/Config/AsmPrinters.def.in") },
-            .include_path = "llvm/Config/AsmPrinters.def",
-        },
-        .{
-            .LLVM_ENUM_ASM_PRINTERS = "",
-        },
-    ));
-
-    // /include/llvm/Support/DataTypes.h.cmake
-    step.addConfigHeader(b.addConfigHeader(
-        .{
-            .style = .{ .cmake = b.path("include/llvm/Support/DataTypes.h.cmake") },
-            .include_path = "llvm/Support/DataTypes.h",
-        },
-        .{
-            .HAVE_INTTYPES_H = 1,
-            .HAVE_STDINT_H = 1,
-            .HAVE_UINT64_T = 1,
-            .HAVE_U_INT64_T = 0,
-        },
-    ));
-
-    // /tools/clang/include/clang/Basic/Version.inc.in
-    step.addConfigHeader(b.addConfigHeader(
-        .{
-            .style = .{ .cmake = b.path("tools/clang/include/clang/Basic/Version.inc.in") },
-            .include_path = "clang/Basic/Version.inc",
-        },
-        .{
-            .CLANG_VERSION = "3.7.0",
-            .CLANG_VERSION_MAJOR = 3,
-            .CLANG_VERSION_MINOR = 7,
-            .CLANG_HAS_VERSION_PATCHLEVEL = 0,
-            .CLANG_VERSION_PATCHLEVEL = 0,
-        },
-    ));
-
-    // /include/llvm/Config/abi-breaking.h.cmake
-    step.addConfigHeader(b.addConfigHeader(
-        .{
-            .style = .{ .cmake = b.path("include/llvm/Config/abi-breaking.h.cmake") },
-            .include_path = "llvm/Config/abi-breaking.h",
-        },
-        .{},
-    ));
-
-    // /include/llvm/Config/AsmParsers.def.in
-    step.addConfigHeader(b.addConfigHeader(
-        .{
-            .style = .{ .cmake = b.path("include/llvm/Config/AsmParsers.def.in") },
-            .include_path = "llvm/Config/AsmParsers.def",
-        },
-        .{
-            .LLVM_ENUM_ASM_PARSERS = ""
-        },
-    ));
-
-    const target = step.rootModuleTarget();
-    step.addConfigHeader(llvmconf.addConfigHeader(b, target, .llvm_config_h));
-    step.addConfigHeader(llvmconf.addConfigHeader(b, target, .config_h));
-
-    // /include/dxc/config.h.cmake
-    step.addConfigHeader(b.addConfigHeader(
-        .{
-            .style = .{ .cmake = b.path("include/dxc/config.h.cmake") },
-            .include_path = "dxc/config.h",
-        },
-        .{
-            .DXC_DISABLE_ALLOCATOR_OVERRIDES = false,
-        },
-    ));
 }
 
 fn addIncludes(b: *Build, step: *std.Build.Step.Compile) void {
