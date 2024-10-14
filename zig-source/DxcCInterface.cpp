@@ -21,6 +21,7 @@
 #include <string>
 
 #include "DxcCInterface.h"
+#include "dxc/Support/FileIOHelper.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -180,14 +181,11 @@ DXC_EXPORT DxcCompileResult DxcCompile(
 DXC_EXPORT DxcCompileError DxcCompileResultGetError(DxcCompileResult result) {
     CComPtr<IDxcResult> pCompileResult = CComPtr(reinterpret_cast<IDxcResult*>(result));
     
-    if (pCompileResult->HasOutput(DXC_OUT_ERRORS))
-    {
-        CComPtr<IDxcBlobUtf8> pErrors;
-        pCompileResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&pErrors), nullptr);
+    CComPtr<IDxcBlobEncoding> pErrors = nullptr;
+    HRESULT hr = pCompileResult->GetErrorBuffer(&pErrors);
 
-        if (pErrors && pErrors->GetStringLength() > 0) {
-            return reinterpret_cast<DxcCompileError>(pErrors.Detach());
-        }
+    if (hr == S_OK && !hlsl::IsBlobNullOrEmpty(pErrors)) {
+        return reinterpret_cast<DxcCompileError>(pErrors.Detach());
     }
 
     return nullptr;
@@ -196,14 +194,11 @@ DXC_EXPORT DxcCompileError DxcCompileResultGetError(DxcCompileResult result) {
 DXC_EXPORT DxcCompileObject DxcCompileResultGetObject(DxcCompileResult result) {
     CComPtr<IDxcResult> pCompileResult = CComPtr(reinterpret_cast<IDxcResult*>(result));
 
-    if (pCompileResult->HasOutput(DXC_OUT_OBJECT))
-    {
-        CComPtr<IDxcBlob> pObject;
-        pCompileResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&pObject), nullptr);
+    CComPtr<IDxcBlob> pObject = nullptr;
+    HRESULT hr = pCompileResult->GetResult(&pObject);
 
-        if (pObject && pObject->GetBufferSize() > 0) {
-            return reinterpret_cast<DxcCompileObject>(pObject.Detach());
-        }
+    if (hr == S_OK && !hlsl::IsBlobNullOrEmpty(pObject)) {
+        return reinterpret_cast<DxcCompileObject>(pObject.Detach());
     }
 
     return nullptr;
