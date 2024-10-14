@@ -179,22 +179,33 @@ DXC_EXPORT DxcCompileResult DxcCompile(
 
 DXC_EXPORT DxcCompileError DxcCompileResultGetError(DxcCompileResult result) {
     CComPtr<IDxcResult> pCompileResult = CComPtr(reinterpret_cast<IDxcResult*>(result));
-    CComPtr<IDxcBlobUtf8> pErrors;
-    pCompileResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&pErrors), nullptr);
-    if (pErrors && pErrors->GetStringLength() > 0) {
-        return reinterpret_cast<DxcCompileError>(pErrors.Detach());
+    
+    if (pCompileResult->HasOutput(DXC_OUT_ERRORS))
+    {
+        CComPtr<IDxcBlobUtf8> pErrors;
+        pCompileResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&pErrors), nullptr);
+
+        if (pErrors && pErrors->GetStringLength() > 0) {
+            return reinterpret_cast<DxcCompileError>(pErrors.Detach());
+        }
     }
+
     return nullptr;
 }
 
 DXC_EXPORT DxcCompileObject DxcCompileResultGetObject(DxcCompileResult result) {
     CComPtr<IDxcResult> pCompileResult = CComPtr(reinterpret_cast<IDxcResult*>(result));
-    CComPtr<IDxcBlob> pObject;
-    pCompileResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&pObject), nullptr);
 
-    if (pObject && pObject->GetBufferSize() > 0) {
-        return reinterpret_cast<DxcCompileObject>(pObject.Detach());
+    if (pCompileResult->HasOutput(DXC_OUT_OBJECT))
+    {
+        CComPtr<IDxcBlob> pObject;
+        pCompileResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&pObject), nullptr);
+
+        if (pObject && pObject->GetBufferSize() > 0) {
+            return reinterpret_cast<DxcCompileObject>(pObject.Detach());
+        }
     }
+
     return nullptr;
 }
 
