@@ -3,6 +3,8 @@
     .version = "0.1.0",
     .paths = .{
         "build.zig",
+        "gen_headers.zig",
+        "llvm_config.zig",
         "build.zig.zon",
         "LICENSE",
         "LICENSE-APACHE",
